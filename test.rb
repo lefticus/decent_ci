@@ -138,6 +138,7 @@ class PotentialBuild
 
     @buildid = "#{@buildid}-PR#{@pull_id}" if !@pull_id.nil?
 
+    @created_dirs = []
     @logger = Logger.new(STDOUT)
     @package_location = nil
     @test_results = nil
@@ -289,6 +290,9 @@ class PotentialBuild
       src_dir = "#{build_base_name}-release"
       build_dir = "#{src_dir}/build"
 
+      @created_dirs << srd_dir
+      @created_dirs << build_dir
+
       checkout src_dir
       build src_dir, build_dir, "Release"
 
@@ -347,6 +351,9 @@ class PotentialBuild
       src_dir = build_base_name
       build_dir = "#{build_base_name}/build"
 
+      @created_dirs << srd_dir
+      @created_dirs << build_dir
+
       checkout_succeeded  = checkout src_dir
       build_succeeded = build src_dir, build_dir, "Debug" if checkout_succeeded
       test build_dir if build_succeeded 
@@ -357,6 +364,10 @@ class PotentialBuild
     hash = {}
     instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var) }
     return hash
+  end
+
+  def cleanup
+    FileUtils.rm_rf(@created_dirs)
   end
 
   def post_results
@@ -581,5 +592,6 @@ b.potential_builds.each { |p|
   p.do_package
   p.do_test
   p.post_results
+  p.clean_up
 }
 
