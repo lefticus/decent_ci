@@ -478,10 +478,9 @@ eos
 
     github_document = 
 <<-eos
-device_id: #{(failed) ? "Failed" : "Succeeded"}
+#{device_id}: #{(failed) ? "Failed" : "Succeeded"}
 
-#{build_badge}
-#{test_badge}
+#{build_badge} #{test_badge}
 
 eos
     if !@commit_sha.nil? && @repository == @config.repository
@@ -576,7 +575,7 @@ b.query_releases
 b.query_branches
 b.query_pull_requests
 
-# b.filter_potential_builds
+b.filter_potential_builds
 
 b.potential_builds.each { |p|
   p.do_package
