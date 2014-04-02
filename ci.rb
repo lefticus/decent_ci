@@ -591,7 +591,7 @@ class Build
 
 end
 
-b = Build.new(Configuration.new("d2a821665446e86f90b15fc57d50d7a5a202247f", "ChaiScript/chaiscript-build-results", "_posts", "https://chaiscript.github.io/chaiscript-build-results/", "lefticus/cpp_project_with_errors", "gcc", "4.8.1", "x86_64", "Linux", "ubuntu"))
+b = Build.new(Configuration.new("", "ChaiScript/chaiscript-build-results", "_posts", "https://chaiscript.github.io/chaiscript-build-results/", "lefticus/cpp_project_with_errors", "gcc", "4.8.1", "x86_64", "Linux", "ubuntu"))
 
 b.query_releases
 b.query_branches
