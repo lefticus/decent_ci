@@ -15,32 +15,12 @@ class CodeMessage
     @message = message
   end
 
-  def filename
-    @filename
-  end
-
-  def linenumber
-    @linenumber
-  end
-  
-  def colnumber
-    @colnumber
-  end
-
-  def messagetype
-    @messagetype
-  end
-
   def is_warning
     @messagetype =~ /.*warn.*/i
   end
 
   def is_error
     @messagetype =~ /.*err.*/i
-  end
-
-  def message
-    @message
   end
 
   def inspect
@@ -71,7 +51,7 @@ class TestResult
 end
 
 class Configuration
-  def initialize(token, results_repository, results_path, repository, compiler, compiler_version, architecture, os, os_distribution)
+  def initialize(token, results_repository, results_path, base_url, repository, compiler, compiler_version, architecture, os, os_distribution)
     @token = token
     @results_repository = results_repository
     @results_path = results_path
@@ -81,6 +61,7 @@ class Configuration
     @architecture = architecture
     @os = os
     @os_distribution = os_distribution
+    @base_url = base_url
   end
 
   def token
@@ -95,6 +76,9 @@ class Configuration
     @results_path
   end
 
+  def base_url
+    @base_url
+  end
 
   def repository
     @repository
@@ -231,6 +215,20 @@ class PotentialBuild
     "#{short_build_base_name}.#{package_extension}"
   end
 
+  def needs_release_package
+    if @release_assets.nil?
+      return true
+    end
+
+    @release_assets.each { |f|
+      if f.name == package_full_name
+        return false
+      end
+    }
+    return true
+  end
+
+
   def relative_path(p)
     return Pathname.new(p).realpath.relative_path_from(Pathname.new(build_base_name).realdirpath)
   end
@@ -252,6 +250,7 @@ class PotentialBuild
   end
 
   def checkout(src_dir)
+    # TODO update this to be a merge, not just a checkout of the pull request branch
     out, err, result = runScript(
       ["mkdir #{src_dir}",
        "cd #{src_dir} && git init",
@@ -286,7 +285,7 @@ class PotentialBuild
   end
 
   def do_package
-    if is_release && @needs_run
+    if is_release && @needs_run && needs_release_package
       src_dir = "#{build_base_name}-release"
       build_dir = "#{src_dir}/build"
 
@@ -295,7 +294,6 @@ class PotentialBuild
 
       begin 
         @package_location = package build_dir
-        puts "Package successfully built at: #{@package_location}"
       rescue => e
         @logger.error("Error creating package #{e}")
       end
@@ -311,20 +309,14 @@ class PotentialBuild
         xml = Hash.from_xml(File.open(path).read)
         testresults = xml["Site"]["Testing"]
         testresults.each { |t, n|
-          puts "key: #{t} value: #{n}"
           if t == "Test"
-            puts "key: #{t}"
             r = n["Results"]
-            puts "Results: #{r}"
             if r
               nm = r["NamedMeasurement"]
-              puts nm
 
               if !nm.nil?
                 nm.each { |measurement|
-                  puts measurement
                   if measurement["name"] == "Execution Time"
-                    puts "MADE IT"
                     results << TestResult.new(n["Name"], n["Status"], measurement["Value"]);
                   end
                 }
@@ -359,9 +351,7 @@ class PotentialBuild
       build_succeeded = build src_dir, build_dir, "Debug" if checkout_succeeded
       test build_dir if build_succeeded 
     end
-  end 
-
-
+  end
 
   def inspect
     hash = {}
@@ -405,6 +395,7 @@ class PotentialBuild
 <<-eos
 ---
 title: #{build_base_name}
+permalink: #{build_base_name}.html
 tags: data
 layout: ci_results
 date: #{DateTime.now.utc.strftime("%F %T")}
@@ -434,6 +425,74 @@ device_id: #{device_id}
 
 eos
 
+    test_failed = false
+    if @test_results.nil?
+      test_color = "red"
+      test_failed = true
+      test_string = "NA"
+    else
+      if test_results_total == 0
+        test_percent == 100.0
+      else 
+        test_percent = (test_results_passed / test_results_total) * 100.0
+      end
+
+      if test_percent > 99.99
+        test_color = "green"
+      elsif test_percent > 90.0
+        test_color = "yellow"
+      else
+        test_color = "red"
+        test_failed = true
+      end
+      test_string = "#{test_percent}%25"
+    end
+
+    test_badge = "<a href='#{@config.base_url}/#{build_base_name}.html'>![Test Badge](http://img.shields.io/badge/tests%20passed-#{test_string}-#{test_color}.svg)</a>"
+
+    build_failed = false
+    if build_errors > 0
+      build_color = "red"
+      build_string = "failing"
+      build_failed = true
+    elsif build_warnings > 0
+      build_color = "yellow"
+      build_string = "warnings"
+    else
+      build_color = "green"
+      build_string = "passing"
+    end
+
+    build_badge = "<a href='#{@config.base_url}/#{build_base_name}.html'>![Build Badge](http://img.shields.io/badge/build%20status-#{build_string}-#{build_color}.svg)</a>"
+
+    failed = build_failed || test_failed
+    github_status = failed ? "failure" : "success"
+
+    if build_failed
+      github_status_message = "Build Failed"
+    elsif test_failed
+      github_status_message = "Tests Failed"
+    else
+      github_status_message = "OK (#{test_results_passed} of #{test_results_total} tests passed)"
+    end
+
+    github_document = 
+<<-eos
+device_id: #{(failed) ? "Failed" : "Succeeded"}
+
+#{build_badge}
+#{test_badge}
+
+eos
+    if !@commit_sha.nil? && @repository == @config.repository
+      response = @client.create_commit_comment(@config.repository, @commit_sha, github_document)
+    elsif !pull_request_issue_id.nil?
+      response = @client.add_comment(@config.repository, pull_request_issue_id, github_document);
+    end
+
+    if !@commit_sha.nil?
+      response = @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id, :target_url=>"#{@config.base_url}/#{build_base_name}.html", :description=>github_status_message, :accept => Octokit::Client::Statuses::COMBINED_STATUS_MEDIA_TYPE)
+    end
 
     begin
       response = @client.create_contents(@config.results_repository,
@@ -466,7 +525,7 @@ class Build
     releases = @client.releases(@config.repository)
 
     releases.each { |r| 
-      @potential_builds << PotentialBuild.new(@client, @config, @config.repository, r.tag_name, nil, nil, r.url, r.releases, nil, nil, nil)
+      @potential_builds << PotentialBuild.new(@client, @config, @config.repository, r.tag_name, nil, nil, r.url, r.assets, nil, nil, nil)
     }
   end
 
@@ -511,15 +570,11 @@ class Build
 
 end
 
-b = Build.new(Configuration.new("d2a821665446e86f90b15fc57d50d7a5a202247f", "ChaiScript/chaiscript-build-results", "_posts", "lefticus/cpp_project_with_errors", "gcc", "4.8.1", "x86_64", "Linux", "ubuntu"))
+b = Build.new(Configuration.new("d2a821665446e86f90b15fc57d50d7a5a202247f", "ChaiScript/chaiscript-build-results", "_posts", "https://chaiscript.github.io/chaiscript-build-results/", "lefticus/cpp_project_with_errors", "gcc", "4.8.1", "x86_64", "Linux", "ubuntu"))
 
 b.query_releases
 b.query_branches
 b.query_pull_requests
-
-#b.potential_builds.each { |p|
-#  puts p.inspect
-#}
 
 # b.filter_potential_builds
 
