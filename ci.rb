@@ -5,6 +5,7 @@ require 'pathname'
 require 'active_support/core_ext/hash'
 require 'find'
 require 'logger'
+require 'fileutils'
 
 class CodeMessage
   def initialize(filename, linenumber, colnumber, messagetype, message)
@@ -290,7 +291,7 @@ class PotentialBuild
       src_dir = "#{build_base_name}-release"
       build_dir = "#{src_dir}/build"
 
-      @created_dirs << srd_dir
+      @created_dirs << src_dir
       @created_dirs << build_dir
 
       checkout src_dir
@@ -351,7 +352,7 @@ class PotentialBuild
       src_dir = build_base_name
       build_dir = "#{build_base_name}/build"
 
-      @created_dirs << srd_dir
+      @created_dirs << src_dir
       @created_dirs << build_dir
 
       checkout_succeeded  = checkout src_dir
@@ -366,11 +367,21 @@ class PotentialBuild
     return hash
   end
 
-  def cleanup
-    FileUtils.rm_rf(@created_dirs)
+  def clean_up
+    @created_dirs.each { |d|
+      begin 
+        FileUtils.rm_rf(d)
+      rescue => e
+        @logger.error("Error cleaning up directory #{e}")
+      end
+    }
   end
 
   def post_results
+    if !@needs_build
+      return  # nothing to do
+    end
+
     dateprefix = DateTime.now.utc.strftime("%F")
 
     test_results_data = []
