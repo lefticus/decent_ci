@@ -209,8 +209,37 @@ class PotentialBuild
     "#{short_build_base_name()}"
   end
 
+  def build_tool
+    if @config.os =~ /windows/i
+      return "c:\\Program Files (x86)\\MSBuild\\12.0\\Bin\\MSBuild.exe"
+    else
+      return "make"
+    end
+  end
+
+  def build_package_generator
+    if @config.os =~ /windows/i
+      return "NSIS"
+    else
+      return "DEB"
+    end
+  end
+
+
+  def build_generator
+    if @config.os =~ /windows/i
+      return "Visual Studio 12"
+    else
+      return "Unix Makefiles"
+    end
+  end
+
   def package_extension
-    "deb"
+    if @config.os =~ /windows/i
+      return "deb"
+    else
+      return "deb"
+    end
   end
 
   def package_full_name
@@ -231,9 +260,26 @@ class PotentialBuild
   end
 
 
+
   def relative_path(p)
     return Pathname.new(p).realpath.relative_path_from(Pathname.new(build_base_name).realdirpath)
   end
+
+
+  def process_msvc_results(stdout, stderr, result, builddir)
+    results = []
+    stdout.split("\n").each{ |err|
+      /\s+(?<filename>\S+)\((?<linenumber>[0-9]+)\): (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]/ =~ err
+
+      if !filename.nil? && !messagetype.nil? && messagetype != "info"
+        results << CodeMessage.new(relative_path(builddir + "/" + filename), linenumber, 0, messagetype, message)
+      end
+    }
+
+    @build_results = results
+    return result
+  end
+
 
   def process_gcc_results(stdout, stderr, result)
     results = []
@@ -253,9 +299,9 @@ class PotentialBuild
 
   def checkout(src_dir)
     # TODO update this to be a merge, not just a checkout of the pull request branch
+    FileUtils.mkdir_p src_dir
     out, err, result = runScript(
-      ["mkdir #{src_dir}",
-       "cd #{src_dir} && git init",
+      ["cd #{src_dir} && git init",
        "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} #{@refspec}" ])
 
     if !@commit_sha.nil? && @commit_sha != "" && result == 0
@@ -267,17 +313,40 @@ class PotentialBuild
   end
 
   def build(src_dir, build_dir, build_type)
-    out, err, result = runScript(
-      ["mkdir -p #{build_dir}",
-       "cd #{build_dir} && cmake ../ -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name} -DCMAKE_BUILD_TYPE:STRING=#{build_type}",
-       "cd #{build_dir} && make -j3"])
+    FileUtils.mkdir_p build_dir
 
-    return process_gcc_results(out,err,result)
+
+    out, err, result = runScript(
+      ["cd #{build_dir} && cmake ../ -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{build_generator}\""])
+
+    solution_path = nil
+
+    Find.find(build_dir) do |path|
+      if path =~ /.*\.sln/i
+        solution_path = path
+        break
+      end
+    end
+
+    if solution_path.nil?
+      raise "generated solution file not found"
+    end
+
+    solution_path = Pathname.new(solution_path).relative_path_from(Pathname.new(build_dir))
+    
+    out, err, result = runScript(
+       ["cd #{build_dir} && \"#{build_tool}\" #{solution_path} /p:Configuration=#{build_type}"])
+
+    if @config.os =~ /windows/i
+      return process_msvc_results(out,err,result,build_dir)
+    else
+      return process_gcc_results(out,err,result)
+    end
   end
 
-  def package(build_dir)
+  def package(build_dir, build_type)
     pack_stdout, pack_stderr, pack_result = runScript(
-      ["cd #{build_dir} && cpack -G DEB "])
+      ["cd #{build_dir} && cpack -G #{build_package_generator} -C #{build_type}"])
 
     if pack_result != 0
       raise "Error building package: #{pack_stderr}"
@@ -298,7 +367,7 @@ class PotentialBuild
       build src_dir, build_dir, "Release"
 
       begin 
-        @package_location = package build_dir
+        @package_location = package build_dir, "Release"
       rescue => e
         @logger.error("Error creating package #{e}")
       end
@@ -316,15 +385,19 @@ class PotentialBuild
         testresults.each { |t, n|
           if t == "Test"
             r = n["Results"]
-            if r
-              nm = r["NamedMeasurement"]
+            if n["Status"] == "notrun"
+              results << TestResult.new(n["Name"], n["Status"], 0)
+            else
+              if r
+                nm = r["NamedMeasurement"]
 
-              if !nm.nil?
-                nm.each { |measurement|
-                  if measurement["name"] == "Execution Time"
-                    results << TestResult.new(n["Name"], n["Status"], measurement["Value"]);
-                  end
-                }
+                if !nm.nil?
+                  nm.each { |measurement|
+                    if measurement["name"] == "Execution Time"
+                      results << TestResult.new(n["Name"], n["Status"], measurement["Value"]);
+                    end
+                  }
+                end
               end
             end
           end
@@ -342,8 +415,8 @@ class PotentialBuild
     }
   end
 
-  def test build_dir
-    test_stdout, test_stderr, test_result = runScript(["cd #{build_dir} && ctest -D ExperimentalTest"]);
+  def test(build_dir, build_type)
+    test_stdout, test_stderr, test_result = runScript(["cd #{build_dir} && ctest -D ExperimentalTest -C #{build_type}"]);
     @test_results = process_ctest_results build_dir, test_stdout, test_stderr, test_result
   end
 
@@ -357,7 +430,7 @@ class PotentialBuild
 
       checkout_succeeded  = checkout src_dir
       build_succeeded = build src_dir, build_dir, "Debug" if checkout_succeeded
-      test build_dir if build_succeeded 
+      test build_dir, "Debug" if build_succeeded 
     end
   end
 
@@ -591,7 +664,7 @@ class Build
 
 end
 
-b = Build.new(Configuration.new("", "ChaiScript/chaiscript-build-results", "_posts", "https://chaiscript.github.io/chaiscript-build-results/", "lefticus/cpp_project_with_errors", "gcc", "4.8.1", "x86_64", "Linux", "ubuntu"))
+b = Build.new(Configuration.new("", "ChaiScript/chaiscript-build-results", "_posts", "https://chaiscript.github.io/chaiscript-build-results/", "lefticus/cpp_project_with_errors", "msvc", "2013", "x86_64", "Windows", "8.1"))
 
 b.query_releases
 b.query_branches
@@ -602,7 +675,7 @@ b.filter_potential_builds
 b.potential_builds.each { |p|
   p.do_package
   p.do_test
-  p.post_results
-  p.clean_up
+  #p.post_results
+  #p.clean_up
 }
 
