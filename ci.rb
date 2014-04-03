@@ -236,7 +236,7 @@ class PotentialBuild
 
   def package_extension
     if @config.os =~ /windows/i
-      return "deb"
+      return "exe"
     else
       return "deb"
     end
@@ -451,7 +451,7 @@ class PotentialBuild
   end
 
   def post_results
-    if !@needs_build
+    if !@needs_run
       return  # nothing to do
     end
 
@@ -675,7 +675,7 @@ b.filter_potential_builds
 b.potential_builds.each { |p|
   p.do_package
   p.do_test
-  #p.post_results
-  #p.clean_up
+  p.post_results
+  p.clean_up
 }
 
