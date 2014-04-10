@@ -297,32 +297,12 @@ class PotentialBuild
       return false;
     end
 
-    if compiler[:name] =~ /visual studio/i
-      solution_path = nil
+    out, err, result = runScript(
+        ["cd #{build_dir} && cmake --build . --config #{build_type} --use-stderr"])
 
-      Find.find(build_dir) do |path|
-        if path =~ /.*\.sln/i
-          solution_path = path
-          break
-        end
-      end
-
-      if solution_path.nil?
-        raise "generated solution file not found"
-      end
-
-      solution_path = Pathname.new(solution_path).relative_path_from(Pathname.new(build_dir))
-
-      out, err, result = runScript(
-        ["cd #{build_dir} && \"#{compiler[:build_tool]}\" #{solution_path} /p:Configuration=#{build_type}"])
-
-      return process_msvc_results(compiler, out,err,result,build_dir)
-    else
-      out, err, result = runScript(
-        ["cd #{build_dir} && \"#{compiler[:build_tool]}\""])
-
-      return process_gcc_results(compiler, out,err,result)
-    end
+    msvc_success = process_msvc_results(compiler, out,err,result,build_dir)
+    gcc_success = process_gcc_results(compiler, out,err,result)
+    return msvc_success && gcc_success
   end
 
   def cmake_package(compiler, build_dir, build_type)
