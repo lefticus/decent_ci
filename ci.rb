@@ -63,7 +63,6 @@ class PotentialBuild
     @branch_name = branch_name
     @release_url = release_url
     @release_assets = release_assets
-    @needs_run = true
     @client = client
 
     @buildid = @tag_name ? @tag_name : @commit_sha
@@ -83,6 +82,10 @@ class PotentialBuild
     @build_results = nil
     @dateprefix = nil
 
+  end
+
+  def descriptive_string
+    return "#{@commit_sha} #{@branch_name} #{@tag_name} #{@buildid}"
   end
 
   def is_release
@@ -265,8 +268,10 @@ class PotentialBuild
     return "#{build_dir}/#{package_full_name compiler}"
   end
 
+
+
   def do_package compiler
-    if is_release && @needs_run && needs_release_package(compiler)
+    if is_release  && needs_release_package(compiler)
       src_dir = "#{build_base_name compiler}-release"
       build_dir = "#{src_dir}/build"
 
@@ -325,10 +330,12 @@ class PotentialBuild
     end
   end
 
-  def filter_build files, compiler
+  def needs_run files, compiler
     files.each{ |f|
-      @needs_run = false if f.end_with? results_file_name(compiler)
+      return false if f.end_with? results_file_name(compiler)
     }
+
+    return true
   end
 
   def cmake_test(compiler, build_dir, build_type)
@@ -337,22 +344,20 @@ class PotentialBuild
   end
 
   def do_test(compiler)
-    if @needs_run
-      src_dir = build_base_name compiler
-      build_dir = "#{build_base_name compiler}/build"
+    src_dir = build_base_name compiler
+    build_dir = "#{build_base_name compiler}/build"
 
-      @created_dirs << src_dir
-      @created_dirs << build_dir
+    @created_dirs << src_dir
+    @created_dirs << build_dir
 
-      checkout_succeeded  = checkout src_dir
+    checkout_succeeded  = checkout src_dir
 
-      case @config.engine
-      when "cmake"
-        build_succeeded = cmake_build compiler, src_dir, build_dir, "Debug" if checkout_succeeded
-        cmake_test compiler, build_dir, "Debug" if build_succeeded 
-      else
-        raise "Unknown Build Engine"
-      end
+    case @config.engine
+    when "cmake"
+      build_succeeded = cmake_build compiler, src_dir, build_dir, "Debug" if checkout_succeeded
+      cmake_test compiler, build_dir, "Debug" if build_succeeded 
+    else
+      raise "Unknown Build Engine"
     end
   end
 
@@ -377,10 +382,6 @@ class PotentialBuild
   end
 
   def post_results compiler, pending
-    if !@needs_run
-      return  # nothing to do
-    end
-
     if @dateprefix.nil?
       @dateprefix = DateTime.now.utc.strftime("%F")
     end
@@ -594,23 +595,18 @@ class Build
     }
   end
 
-  def filter_potential_builds compiler
-
-    begin
+  def get_results_files 
+    begin 
       files = @client.content @config.results_repository, :path=>@config.results_path
 
       file_names = []
       files.each { |f|
         file_names << f.name
       }
-
-      @potential_builds.each { |p|
-        p.filter_build file_names, compiler
-      }
-    rescue => e
-      # there was an error getting the file list, no big deal (I think), _posts might not exist yet
+    rescue Octokit::NotFound => e
+      # repository doesn't have a _posts folder yet
+      return []
     end
-
   end
 
   def potential_builds
@@ -686,7 +682,6 @@ puts "Token in use: #{configuration.token}"
 
 # go through the list of compilers specified and fill in reasonable defaults
 # if there are not any specified already
-#
 configuration.compilers.each { |compiler|
 
   if compiler[:architecture].nil? || compiler[:architecture] == ""
@@ -759,27 +754,43 @@ configuration.compilers.each { |compiler|
   else
     compiler[:package_mimetype] = "application/octet-stream"
   end
-
 }
 
 
+logger = Logger.new(STDOUT)
 
+logger.info "Loading configuration"
 b = Build.new(configuration);
 
+logger.info "Querying for updated branches"
 b.query_releases
 b.query_branches
 b.query_pull_requests
 
+logger.info "Looping over compilers"
+files = b.get_results_files
+
 configuration.compilers.each { |compiler|
-  b.filter_potential_builds compiler
 
   b.potential_builds.each { |p|
-    p.next_build
-    p.post_results compiler, true
-    p.do_package compiler
-    p.do_test compiler
-    p.post_results compiler, false
-    p.clean_up compiler
+
+    begin
+      # reset potential build for the next build attempt
+      p.next_build
+
+      if p.needs_run files, compiler
+        logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
+        p.post_results compiler, true
+        p.do_package compiler
+        p.do_test compiler
+        p.post_results compiler, false
+        p.clean_up compiler
+      else
+        logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
+      end
+    rescue => e
+
+    end
   }
 }
 
