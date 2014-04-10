@@ -81,6 +81,7 @@ class PotentialBuild
     @test_results = nil
     @build_results = nil
     @dateprefix = nil
+    @failure = nil
 
   end
 
@@ -174,6 +175,66 @@ class PotentialBuild
     return Pathname.new(p).realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
   end
 
+  def process_cmake_results(compiler, stdout, stderr, result, srcdir)
+    results = []
+
+    file = nil
+    line = nil
+    msg = ""
+    type = nil
+
+    @logger.info("Parsing cmake error results")
+
+    stderr.split("\n").each{ |err|
+
+      @logger.debug("Parsing cmake error Line: #{err}")
+      if err.strip == ""
+        if !file.nil? && !line.nil? && !msg.nil?
+          results << CodeMessage.new(relative_path(file, compiler), line, 0, type, msg)
+        end
+        file = nil
+        line = nil
+        msg = "" 
+        type = nil
+      else
+        if file.nil? 
+          /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(message\):$/ =~ err
+
+          if !filename.nil? && !linenumber.nil?
+            file = srcdir + "/" + filename
+            line = linenumber
+            type = messagetype.downcase
+          else
+            /(?<filename>.*):(?<linenumber>[0-9]+):$/ =~ err
+
+            if !filename.nil? && !linenumber.nil?
+              file = filename
+              line = linenumber
+              type = "error"
+            end
+          end
+
+        else
+          if msg != ""
+            msg << "\n"
+          end
+
+          msg << err
+        end
+      end
+    }
+
+    # get any lingering message from the last line
+    if !file.nil? && !line.nil? && !msg.nil?
+      results << CodeMessage.new(relative_path(file, compiler), line, 0, type, msg)
+    end
+
+    results.each { |r| 
+      @logger.debug("CMake error message parsed: #{r.inspect}")
+    }
+    @build_results = results
+    return result == 0
+  end
 
   def process_msvc_results(compiler, stdout, stderr, result, builddir)
     results = []
@@ -186,7 +247,7 @@ class PotentialBuild
     }
 
     @build_results = results
-    return result
+    return result == 0
   end
 
 
@@ -221,6 +282,7 @@ class PotentialBuild
 
   end
 
+
   def cmake_build(compiler, src_dir, build_dir, build_type)
     FileUtils.mkdir_p build_dir
 
@@ -228,6 +290,12 @@ class PotentialBuild
     out, err, result = runScript(
       ["cd #{build_dir} && cmake ../ -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name compiler} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""])
 
+
+    cmake_result = process_cmake_results(compiler, out, err, result, src_dir)
+
+    if !cmake_result
+      return false;
+    end
 
     if compiler[:name] =~ /visual studio/i
       solution_path = nil
@@ -259,7 +327,7 @@ class PotentialBuild
 
   def cmake_package(compiler, build_dir, build_type)
     pack_stdout, pack_stderr, pack_result = runScript(
-      ["cd #{build_dir} && cpack -G #{build_package_generator} -C #{build_type}"])
+      ["cd #{build_dir} && cpack -G #{compiler[:build_package_generator]} -C #{build_type}"])
 
     if pack_result != 0
       raise "Error building package: #{pack_stderr}"
@@ -361,6 +429,10 @@ class PotentialBuild
     end
   end
 
+  def unhandled_failure e
+    @failure = e
+  end
+
   def inspect
     hash = {}
     instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var) }
@@ -413,7 +485,7 @@ class PotentialBuild
       }
     end
 
-    json_data = {"build_results"=>build_results_data, "test_results"=>test_results_data}
+    json_data = {"build_results"=>build_results_data, "test_results"=>test_results_data, "failure" => @failure}
 
     json_document = 
 <<-eos
@@ -423,6 +495,7 @@ permalink: #{build_base_name compiler}.html
 tags: data
 layout: ci_results
 date: #{DateTime.now.utc.strftime("%F %T")}
+unhandled_failure: #{!@failure.nil?}
 build_error_count: #{build_errors}
 build_warning_count: #{build_warnings}
 test_count: #{test_results_total}
@@ -490,7 +563,7 @@ eos
 
     build_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Build Badge](http://img.shields.io/badge/build%20status-#{build_string}-#{build_color}.svg)</a>"
 
-    failed = build_failed || test_failed
+    failed = build_failed || test_failed || !@failure.nil?
     github_status = pending ? "pending" : (failed ? "failure" : "success")
 
     if pending 
@@ -504,25 +577,32 @@ eos
         github_status_message = "OK (#{test_results_passed} of #{test_results_total} tests passed)"
       end
     end
-    
 
-    github_document = 
+    if !@failure.nil?    
+      github_document = 
+<<-eos
+<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>Unhandled Fundamental Failure</a>
+eos
+    else
+      github_document = 
 <<-eos
 #{device_id compiler}: #{(failed) ? "Failed" : "Succeeded"}
 
 #{build_badge} #{test_badge}
 eos
+    end
 
     begin
       if pending
+        @logger.info("Posting pending results file");
         response = @client.create_contents(@config.results_repository,
                                            "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
                                            "Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}",
                                            json_document)
-        @logger.info("Results document sha set: #{response.content.sha}")
+        @logger.debug("Results document sha set: #{response.content.sha}")
 
         @results_document_sha = response.content.sha
-        
+
       else
         if @results_document_sha.nil?
           raise "Error, no prior results document sha set"
@@ -603,6 +683,8 @@ class Build
       files.each { |f|
         file_names << f.name
       }
+
+      return file_names
     rescue Octokit::NotFound => e
       # repository doesn't have a _posts folder yet
       return []
@@ -781,15 +863,19 @@ configuration.compilers.each { |compiler|
       if p.needs_run files, compiler
         logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
         p.post_results compiler, true
-        p.do_package compiler
-        p.do_test compiler
+        begin 
+          p.do_package compiler
+          p.do_test compiler
+        rescue => e
+          p.unhandled_failure e
+        end 
         p.post_results compiler, false
         p.clean_up compiler
       else
         logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
       end
     rescue => e
-
+      logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e}"
     end
   }
 }
