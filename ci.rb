@@ -34,10 +34,12 @@ class CodeMessage
 end
 
 class TestResult
-  def initialize(name, status, time)
+  def initialize(name, status, time, output, parsed_errors)
     @name = name
     @status = status
     @time = time
+    @output = output
+    @parsed_errors = parsed_errors
   end
 
   def passed
@@ -45,8 +47,17 @@ class TestResult
   end
 
   def inspect
-    hash = {}
-    instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var) }
+    parsed_errors_array = []
+    @parsed_errors.each { |e|
+      parsed_errors_array << e.inspect
+    }
+
+    hash = {:name => @name,
+      :status => @status,
+      :time => @time,
+      :output => @output,
+      :parsed_errors => parsed_errors_array
+      }
     return hash
   end
 
@@ -82,7 +93,11 @@ class PotentialBuild
     @build_results = nil
     @dateprefix = nil
     @failure = nil
+    @test_run = false
+  end
 
+  def set_test_run new_test_run
+    @test_run = new_test_run
   end
 
   def descriptive_string
@@ -101,7 +116,7 @@ class PotentialBuild
     return @pull_id
   end
 
-  def runScript(commands)
+  def run_script(commands)
     allout = ""
     allerr = "" 
     allresult = 0
@@ -171,11 +186,19 @@ class PotentialBuild
 
 
 
-  def relative_path(p, compiler)
-    return Pathname.new(p).realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+  def relative_path(p, src_dir, build_dir, compiler)
+    begin
+      return Pathname.new("#{src_dir}/#{p}").realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+    rescue
+      begin
+        return Pathname.new("#{build_dir}/#{p}").realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+      rescue
+        return Pathname.new(p).realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+      end
+    end
   end
 
-  def process_cmake_results(compiler, stdout, stderr, result, srcdir)
+  def process_cmake_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
 
     file = nil
@@ -190,7 +213,7 @@ class PotentialBuild
       @logger.debug("Parsing cmake error Line: #{err}")
       if err.strip == ""
         if !file.nil? && !line.nil? && !msg.nil?
-          results << CodeMessage.new(relative_path(file, compiler), line, 0, type, msg)
+          results << CodeMessage.new(relative_path(file, src_dir, build_dir, compiler), line, 0, type, msg)
         end
         file = nil
         line = nil
@@ -201,7 +224,7 @@ class PotentialBuild
           /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(message\):$/ =~ err
 
           if !filename.nil? && !linenumber.nil?
-            file = srcdir + "/" + filename
+            file = src_dir + "/" + filename
             line = linenumber
             type = messagetype.downcase
           else
@@ -226,7 +249,7 @@ class PotentialBuild
 
     # get any lingering message from the last line
     if !file.nil? && !line.nil? && !msg.nil?
-      results << CodeMessage.new(relative_path(file, compiler), line, 0, type, msg)
+      results << CodeMessage.new(relative_path(file, src_dir, build_dir, compiler), line, 0, type, msg)
     end
 
     results.each { |r| 
@@ -236,13 +259,32 @@ class PotentialBuild
     return result == 0
   end
 
-  def process_msvc_results(compiler, stdout, stderr, result, builddir)
+  def parse_generic_line(compiler, src_dir, build_dir, line)
+    /\s*(?<filename>\S+):(?<linenumber>[0-9]+): (?<message>.*)/ =~ line
+
+    if !filename.nil? && !message.nil?
+      return CodeMessage.new(relative_path(filename, src_dir, build_dir, compiler), linenumber, 0, "error", message)
+    else
+      return nil
+    end
+  end
+
+  def parse_msvc_line(compiler, src_dir, build_dir, line)
+    /\s+(?<filename>\S+)\((?<linenumber>[0-9]+)\): (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]/ =~ line
+
+    if !filename.nil? && !messagetype.nil? && messagetype != "info"
+      return CodeMessage.new(relative_path(filename, src_dir, build_dir, compiler), linenumber, 0, messagetype, message)
+    else
+      return nil
+    end
+  end
+
+  def process_msvc_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
     stdout.split("\n").each{ |err|
-      /\s+(?<filename>\S+)\((?<linenumber>[0-9]+)\): (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]/ =~ err
-
-      if !filename.nil? && !messagetype.nil? && messagetype != "info"
-        results << CodeMessage.new(relative_path(builddir + "/" + filename, compiler), linenumber, 0, messagetype, message)
+      msg = parse_msvc_line(compiler, src_dir, build_dir, err)
+      if !msg.nil?
+        results << msg
       end
     }
 
@@ -250,15 +292,24 @@ class PotentialBuild
     return result == 0
   end
 
+  def parse_gcc_line(compiler, src_path, build_path, line)
+    /(?<filename>\S+):(?<linenumber>[0-9]+):(?<colnumber>[0-9]+): (?<messagetype>\S+): (?<message>.*)/ =~ line
 
-  def process_gcc_results(compiler, stdout, stderr, result)
+    if !filename.nil? && !messagetype.nil? && messagetype != "info"
+      return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, colnumber, messagetype, message)
+    else
+      return nil
+    end
+
+  end
+
+  def process_gcc_results(compiler, src_path, build_path, stdout, stderr, result)
     results = []
 
-    stderr.split("\n").each { |err|
-      /(?<filename>\S+):(?<linenumber>[0-9]+):(?<colnumber>[0-9]+): (?<messagetype>\S+): (?<message>.*)/ =~ err
-
-      if !filename.nil? && !messagetype.nil? && messagetype != "info"
-        results << CodeMessage.new(relative_path(filename, compiler), linenumber, colnumber, messagetype, message)
+    stderr.split("\n").each { |line|
+      msg = parse_gcc_line(compiler, src_path, build_path, line)
+      if !msg.nil?
+        results << msg
       end
     }
 
@@ -270,12 +321,12 @@ class PotentialBuild
   def checkout(src_dir)
     # TODO update this to be a merge, not just a checkout of the pull request branch
     FileUtils.mkdir_p src_dir
-    out, err, result = runScript(
+    out, err, result = run_script(
       ["cd #{src_dir} && git init",
        "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} #{@refspec}" ])
 
     if !@commit_sha.nil? && @commit_sha != "" && result == 0
-      out, err, result = runScript( ["cd #{src_dir} && git checkout #{@commit_sha}"] );
+      out, err, result = run_script( ["cd #{src_dir} && git checkout #{@commit_sha}"] );
     end
 
     return result == 0
@@ -287,26 +338,26 @@ class PotentialBuild
     FileUtils.mkdir_p build_dir
 
 
-    out, err, result = runScript(
+    out, err, result = run_script(
       ["cd #{build_dir} && cmake ../ -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name compiler} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""])
 
 
-    cmake_result = process_cmake_results(compiler, out, err, result, src_dir)
+    cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result)
 
     if !cmake_result
       return false;
     end
 
-    out, err, result = runScript(
+    out, err, result = run_script(
         ["cd #{build_dir} && cmake --build . --config #{build_type} --use-stderr"])
 
-    msvc_success = process_msvc_results(compiler, out,err,result,build_dir)
-    gcc_success = process_gcc_results(compiler, out,err,result)
+    msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
+    gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
     return msvc_success && gcc_success
   end
 
   def cmake_package(compiler, build_dir, build_type)
-    pack_stdout, pack_stderr, pack_result = runScript(
+    pack_stdout, pack_stderr, pack_result = run_script(
       ["cd #{build_dir} && cpack -G #{compiler[:build_package_generator]} -C #{build_type}"])
 
     if pack_result != 0
@@ -344,7 +395,22 @@ class PotentialBuild
     end
   end
 
-  def process_ctest_results build_dir, stdout, stderr, result
+  def parse_error_messages compiler, src_dir, build_dir, output
+    results = []
+    output.split("\n").each{ |l|
+      msg = parse_gcc_line(compiler, src_dir, build_dir, l)
+      msg = parse_msvc_line(compiler, src_dir, build_dir, l) if msg.nil?
+      msg = parse_generic_line(compiler, src_dir, build_dir, l) if msg.nil?
+
+      results << msg if !msg.nil?
+    }
+
+    return results
+  end
+
+
+
+  def process_ctest_results compiler, src_dir, build_dir, stdout, stderr, result
     Find.find(build_dir) do |path|
       if path =~ /.*Test.xml/
         results = []
@@ -358,15 +424,27 @@ class PotentialBuild
               results << TestResult.new(n["Name"], n["Status"], 0)
             else
               if r
+                m = r["Measurement"]
+                value = nil
+                errors = nil
+
+                if !m.nil?
+                  value = m["Value"]
+                  if !value.nil?
+                    errors = parse_error_messages(compiler, src_dir, build_dir, value)
+                  end
+                end
+
                 nm = r["NamedMeasurement"]
 
                 if !nm.nil?
                   nm.each { |measurement|
                     if measurement["name"] == "Execution Time"
-                      results << TestResult.new(n["Name"], n["Status"], measurement["Value"]);
+                      results << TestResult.new(n["Name"], n["Status"], measurement["Value"], value, errors);
                     end
                   }
                 end
+
               end
             end
           end
@@ -379,6 +457,9 @@ class PotentialBuild
   end
 
   def needs_run files, compiler
+    return true if @test_run
+
+
     files.each{ |f|
       return false if f.end_with? results_file_name(compiler)
     }
@@ -386,9 +467,9 @@ class PotentialBuild
     return true
   end
 
-  def cmake_test(compiler, build_dir, build_type)
-    test_stdout, test_stderr, test_result = runScript(["cd #{build_dir} && ctest -D ExperimentalTest -C #{build_type}"]);
-    @test_results = process_ctest_results build_dir, test_stdout, test_stderr, test_result
+  def cmake_test(compiler, src_dir, build_dir, build_type)
+    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir} && ctest -D ExperimentalTest -C #{build_type}"]);
+    @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
   end
 
   def do_test(compiler)
@@ -403,7 +484,7 @@ class PotentialBuild
     case @config.engine
     when "cmake"
       build_succeeded = cmake_build compiler, src_dir, build_dir, "Debug" if checkout_succeeded
-      cmake_test compiler, build_dir, "Debug" if build_succeeded 
+      cmake_test compiler, src_dir, build_dir, "Debug" if build_succeeded 
     else
       raise "Unknown Build Engine"
     end
@@ -572,50 +653,56 @@ eos
 eos
     end
 
-    begin
-      if pending
-        @logger.info("Posting pending results file");
-        response = @client.create_contents(@config.results_repository,
-                                           "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
-                                           "Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}",
-                                           json_document)
-        @logger.debug("Results document sha set: #{response.content.sha}")
+    if !@test_run
+      begin
+        if pending
+          @logger.info("Posting pending results file");
+          response = @client.create_contents(@config.results_repository,
+                                             "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
+          "Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}",
+          json_document)
+          @logger.debug("Results document sha set: #{response.content.sha}")
 
-        @results_document_sha = response.content.sha
+          @results_document_sha = response.content.sha
 
-      else
-        if @results_document_sha.nil?
-          raise "Error, no prior results document sha set"
+        else
+          if @results_document_sha.nil?
+            raise "Error, no prior results document sha set"
+          end
+
+          @logger.info("Updating contents with sha #{@results_document_sha}")
+          response = @client.update_contents(@config.results_repository,
+                                             "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
+          "Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
+          @results_document_sha,
+            json_document)
         end
-
-        @logger.info("Updating contents with sha #{@results_document_sha}")
-        response = @client.update_contents(@config.results_repository,
-                                           "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
-                                           "Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
-                                           @results_document_sha,
-                                           json_document)
+      rescue => e
+        @logger.error "Error creating / updating results contents file: #{e}"
+        raise e
       end
-    rescue => e
-      @logger.error "Error creating / updating results contents file: #{e}"
-      raise e
-    end
 
-    if !pending
-      if !@commit_sha.nil? && @repository == @config.repository
-        response = @client.create_commit_comment(@config.repository, @commit_sha, github_document)
-      elsif !pull_request_issue_id.nil?
-        response = @client.add_comment(@config.repository, pull_request_issue_id, github_document);
+      if !pending
+        if !@commit_sha.nil? && @repository == @config.repository
+          response = @client.create_commit_comment(@config.repository, @commit_sha, github_document)
+        elsif !pull_request_issue_id.nil?
+          response = @client.add_comment(@config.repository, pull_request_issue_id, github_document);
+        end
       end
+
+      if !@commit_sha.nil?
+        response = @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message, :accept => Octokit::Client::Statuses::COMBINED_STATUS_MEDIA_TYPE)
+      end
+
+      if !@package_location.nil?
+        @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s)
+      end
+    else 
+      File.open("#{@dateprefix}-#{results_file_name compiler}", "w+") { |f| f.write(json_document) }
+      File.open("#{@dateprefix}-COMMENT-#{results_file_name compiler}", "w+") { |f| f.write(github_document) }
     end
 
-    if !@commit_sha.nil?
-      response = @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message, :accept => Octokit::Client::Statuses::COMBINED_STATUS_MEDIA_TYPE)
-    end
 
-
-    if !@package_location.nil?
-      @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s)
-    end
   end
 
 end
@@ -839,6 +926,7 @@ configuration.compilers.each { |compiler|
     begin
       # reset potential build for the next build attempt
       p.next_build
+      p.set_test_run true
 
       if p.needs_run files, compiler
         logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
