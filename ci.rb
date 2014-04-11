@@ -48,9 +48,12 @@ class TestResult
 
   def inspect
     parsed_errors_array = []
-    @parsed_errors.each { |e|
-      parsed_errors_array << e.inspect
-    }
+
+    if !@parsed_errors.nil?
+      @parsed_errors.each { |e|
+        parsed_errors_array << e.inspect
+      }
+    end
 
     hash = {:name => @name,
       :status => @status,
@@ -91,6 +94,7 @@ class PotentialBuild
     @package_location = nil
     @test_results = nil
     @build_results = nil
+    @package_results = nil
     @dateprefix = nil
     @failure = nil
     @test_run = false
@@ -184,8 +188,6 @@ class PotentialBuild
     return true
   end
 
-
-
   def relative_path(p, src_dir, build_dir, compiler)
     begin
       return Pathname.new("#{src_dir}/#{p}").realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
@@ -193,12 +195,16 @@ class PotentialBuild
       begin
         return Pathname.new("#{build_dir}/#{p}").realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
       rescue
-        return Pathname.new(p).realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+        begin 
+          return Pathname.new(p).realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+        rescue
+          return Pathname.new(p)
+        end
       end
     end
   end
 
-  def process_cmake_results(compiler, src_dir, build_dir, stdout, stderr, result)
+  def process_cmake_results(compiler, src_dir, build_dir, stdout, stderr, result, is_package)
     results = []
 
     file = nil
@@ -221,10 +227,10 @@ class PotentialBuild
         type = nil
       else
         if file.nil? 
-          /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(message\):$/ =~ err
+          /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(\S+\):$/ =~ err
 
           if !filename.nil? && !linenumber.nil?
-            file = src_dir + "/" + filename
+            file = filename
             line = linenumber
             type = messagetype.downcase
           else
@@ -255,7 +261,13 @@ class PotentialBuild
     results.each { |r| 
       @logger.debug("CMake error message parsed: #{r.inspect}")
     }
-    @build_results = results
+
+    if is_package
+      @package_results = results
+    else
+      @build_results = results
+    end
+
     return result == 0
   end
 
@@ -342,7 +354,7 @@ class PotentialBuild
       ["cd #{build_dir} && cmake ../ -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name compiler} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""])
 
 
-    cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result)
+    cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
 
     if !cmake_result
       return false;
@@ -356,11 +368,13 @@ class PotentialBuild
     return msvc_success && gcc_success
   end
 
-  def cmake_package(compiler, build_dir, build_type)
+  def cmake_package(compiler, src_dir, build_dir, build_type)
     pack_stdout, pack_stderr, pack_result = run_script(
       ["cd #{build_dir} && cpack -G #{compiler[:build_package_generator]} -C #{build_type}"])
 
-    if pack_result != 0
+    cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stdout, pack_stderr, pack_result, true)
+
+    if !cmake_result
       raise "Error building package: #{pack_stderr}"
     end
 
@@ -370,7 +384,9 @@ class PotentialBuild
 
 
   def do_package compiler
-    if is_release  && needs_release_package(compiler)
+    @logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
+
+    if is_release # && needs_release_package(compiler)
       src_dir = "#{build_base_name compiler}-release"
       build_dir = "#{src_dir}/build"
 
@@ -387,7 +403,7 @@ class PotentialBuild
       end
 
       begin 
-        @package_location = cmake_package compiler, build_dir, "Release"
+        @package_location = cmake_package compiler, src_dir, build_dir, "Release"
       rescue => e
         @logger.error("Error creating package #{e}")
       end
@@ -546,7 +562,22 @@ class PotentialBuild
       }
     end
 
-    json_data = {"build_results"=>build_results_data, "test_results"=>test_results_data, "failure" => @failure}
+    package_errors = 0
+    package_warnings = 0
+    package_results_data = []
+
+    if !@package_results.nil?
+      @package_results.each { |b|
+        package_errors += 1 if b.is_error
+        package_warnings += 1 if b.is_warning
+
+        package_results_data << b.inspect
+      }
+    end
+
+
+
+    json_data = {"build_results"=>build_results_data, "test_results"=>test_results_data, "failure" => @failure, "package_results"=>package_results_data}
 
     json_document = 
 <<-eos
@@ -559,6 +590,8 @@ date: #{DateTime.now.utc.strftime("%F %T")}
 unhandled_failure: #{!@failure.nil?}
 build_error_count: #{build_errors}
 build_warning_count: #{build_warnings}
+package_error_count: #{package_errors}
+package_warning_count: #{package_warnings}
 test_count: #{test_results_total}
 test_passed_count: #{test_results_passed}
 repository: #{@repository}
@@ -926,7 +959,7 @@ configuration.compilers.each { |compiler|
     begin
       # reset potential build for the next build attempt
       p.next_build
-      p.set_test_run true
+#      p.set_test_run true
 
       if p.needs_run files, compiler
         logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
