@@ -263,6 +263,9 @@ class PotentialBuild
         type = nil
       else
         if file.nil? 
+          /^CPack Error: (?<message>.*)/ =~ err
+          results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", message) if !message.nil?
+
           /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(\S+\):$/ =~ err
 
           if !filename.nil? && !linenumber.nil?
@@ -554,13 +557,15 @@ class PotentialBuild
   end
 
   def clean_up compiler
-    @created_dirs.each { |d|
-      begin 
-        FileUtils.rm_rf(d)
-      rescue => e
-        @logger.error("Error cleaning up directory #{e}")
-      end
-    }
+    if !@test_run
+      @created_dirs.each { |d|
+        begin 
+          FileUtils.rm_rf(d)
+        rescue => e
+          @logger.error("Error cleaning up directory #{e}")
+        end
+      }
+    end
   end
 
   def next_build
@@ -839,7 +844,7 @@ if RUBY_PLATFORM  =~ /darwin/i
 
   /.* Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\.(?<ver_patch>[0-9]+).*:.*/ =~ ver_string
   # the darwin version number - 4 = the point release of macosx
-  os_release = "10.#{ver_major - 4}"
+  os_release = "10.#{ver_major.to_i - 4}"
 
 elsif RUBY_PLATFORM =~ /linux/i
   os_version = "Linux"
@@ -890,7 +895,8 @@ configuration = OpenStruct.new({
   :repository => "lefticus/cpp_project_with_errors",
 #  :repository => "NREL/EnergyPlusTeam",
 #  :compilers => [{:name => "Visual Studio", :version => "12", :architecture => ""}, {:name => "Visual Studio", :version => "12", :architecture => "Win64"} ],
-  :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
+#  :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
+  :compilers => [{:name => "clang", :version => "5.0", :architecture => ""} ],
   :os => os_version,
   :os_release => os_release,
   :engine => "cmake",
@@ -1001,7 +1007,7 @@ configuration.compilers.each { |compiler|
     begin
       # reset potential build for the next build attempt
       p.next_build
-      p.set_test_run true
+      # p.set_test_run true
 
       if p.needs_run files, compiler
         logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
