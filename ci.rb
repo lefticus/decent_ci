@@ -266,6 +266,9 @@ class PotentialBuild
           /^CPack Error: (?<message>.*)/ =~ err
           results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", message) if !message.nil?
 
+          /^CMake Error: (?<message>.*)/ =~ err
+          results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", message) if !message.nil?
+
           /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(\S+\):$/ =~ err
 
           if !filename.nil? && !linenumber.nil?
@@ -323,7 +326,7 @@ class PotentialBuild
   def parse_msvc_line(compiler, src_dir, build_dir, line)
     /\s+(?<filename>\S+)\((?<linenumber>[0-9]+)\): (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]/ =~ line
 
-    if !filename.nil? && !messagetype.nil? && messagetype != "info"
+    if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
       return CodeMessage.new(relative_path(filename, src_dir, build_dir, compiler), linenumber, 0, messagetype, message)
     else
       return nil
@@ -347,7 +350,7 @@ class PotentialBuild
   def parse_gcc_line(compiler, src_path, build_path, line)
     /(?<filename>\S+):(?<linenumber>[0-9]+):(?<colnumber>[0-9]+): (?<messagetype>\S+): (?<message>.*)/ =~ line
 
-    if !filename.nil? && !messagetype.nil? && messagetype != "info"
+    if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
       return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, colnumber, messagetype, message)
     else
       return nil
@@ -401,7 +404,7 @@ class PotentialBuild
     end
 
     out, err, result = run_script(
-        ["cd #{build_dir} && cmake --build . --config #{build_type} --use-stderr -- -j3 "])
+        ["cd #{build_dir} && cmake --build . --config #{build_type} --use-stderr -- -j4 "])
 
     msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
     gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
@@ -892,11 +895,11 @@ configuration = OpenStruct.new({
   :results_repository => "ChaiScript/chaiscript-build-results",
   :results_path => "_posts",
   :results_base_url => "https://chaiscript.github.io/chaiscript-build-results/",
-  :repository => "lefticus/cpp_project_with_errors",
-#  :repository => "NREL/EnergyPlusTeam",
+#  :repository => "lefticus/cpp_project_with_errors",
+  :repository => "NREL/EnergyPlusTeam",
 #  :compilers => [{:name => "Visual Studio", :version => "12", :architecture => ""}, {:name => "Visual Studio", :version => "12", :architecture => "Win64"} ],
-#  :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
-  :compilers => [{:name => "clang", :version => "5.0", :architecture => ""} ],
+  :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
+#  :compilers => [{:name => "clang", :version => "5.0", :architecture => ""} ],
   :os => os_version,
   :os_release => os_release,
   :engine => "cmake",
@@ -1007,7 +1010,7 @@ configuration.compilers.each { |compiler|
     begin
       # reset potential build for the next build attempt
       p.next_build
-      # p.set_test_run true
+      p.set_test_run true
 
       if p.needs_run files, compiler
         logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
