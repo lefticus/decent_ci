@@ -398,7 +398,7 @@ class PotentialBuild
     end
 
     out, err, result = run_script(
-        ["cd #{build_dir} && cmake --build . --config #{build_type} --use-stderr"])
+        ["cd #{build_dir} && cmake --build . --config #{build_type} --use-stderr -- -j3 "])
 
     msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
     gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
@@ -661,7 +661,7 @@ eos
       test_string = "NA"
     else
       if test_results_total == 0
-        test_percent == 100.0
+        test_percent = 100.0
       else 
         test_percent = (test_results_passed / test_results_total) * 100.0
       end
@@ -888,6 +888,7 @@ configuration = OpenStruct.new({
   :results_path => "_posts",
   :results_base_url => "https://chaiscript.github.io/chaiscript-build-results/",
   :repository => "lefticus/cpp_project_with_errors",
+#  :repository => "NREL/EnergyPlusTeam",
 #  :compilers => [{:name => "Visual Studio", :version => "12", :architecture => ""}, {:name => "Visual Studio", :version => "12", :architecture => "Win64"} ],
   :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
   :os => os_version,
@@ -1009,6 +1010,7 @@ configuration.compilers.each { |compiler|
           p.do_package compiler
           p.do_test compiler
         rescue => e
+          logger.error "Logging unhandled failure #{e}"
           p.unhandled_failure e
         end 
         p.post_results compiler, false
