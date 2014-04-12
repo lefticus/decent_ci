@@ -9,6 +9,13 @@ require 'fileutils'
 require 'ostruct'
 
 class CodeMessage
+  include Comparable
+  attr_reader :filename
+  attr_reader :linenumber
+  attr_reader :colnumber
+  attr_reader :messagetype
+  attr_reader :message
+
   def initialize(filename, linenumber, colnumber, messagetype, message)
     @filename = filename
     @linenumber = linenumber
@@ -29,6 +36,35 @@ class CodeMessage
     hash = {}
     instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var) }
     return hash
+  end
+
+  def hash 
+    return inspect.hash
+  end
+
+  def eql?(other)
+    return (self <=> other) == 0
+  end
+
+  def <=> (other)
+    f = @filename <=> other.filename
+    l = @linenumber.to_i <=> other.linenumber.to_i
+    c = @colnumber.to_i <=> other.colnumber.to_i
+    mt = @messagetype <=> other.messagetype
+    m = @message <=> other.message
+
+    if f != 0 
+      return f
+    elsif l != 0
+      return l
+    elsif c != 0
+      return c
+    elsif mt != 0
+      return mt
+    else
+      return m
+    end
+
   end
 
 end
@@ -93,8 +129,8 @@ class PotentialBuild
     @logger = Logger.new(STDOUT)
     @package_location = nil
     @test_results = nil
-    @build_results = nil
-    @package_results = nil
+    @build_results = SortedSet.new()
+    @package_results = SortedSet.new()
     @dateprefix = nil
     @failure = nil
     @test_run = false
@@ -263,9 +299,9 @@ class PotentialBuild
     }
 
     if is_package
-      @package_results = results
+      @package_results.merge(results)
     else
-      @build_results = results
+      @build_results.merge(results)
     end
 
     return result == 0
@@ -300,13 +336,9 @@ class PotentialBuild
       end
     }
 
-    if @build_results.nil?
-      @build_results = results
-    else
-      @build_results.concat(results)
-    end
+    @build_results.merge(results)
 
-    return result == 0
+    return result == 0 
   end
 
   def parse_gcc_line(compiler, src_path, build_path, line)
@@ -330,11 +362,7 @@ class PotentialBuild
       end
     }
 
-    if @build_results.nil?
-      @build_results = results
-    else
-      @build_results.concat(results)
-    end
+    @build_results.merge(results)
 
     return result == 0
   end
@@ -860,8 +888,8 @@ configuration = OpenStruct.new({
   :results_path => "_posts",
   :results_base_url => "https://chaiscript.github.io/chaiscript-build-results/",
   :repository => "lefticus/cpp_project_with_errors",
-  :compilers => [{:name => "Visual Studio", :version => "12", :architecture => ""}, {:name => "Visual Studio", :version => "12", :architecture => "Win64"} ],
-#  :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
+#  :compilers => [{:name => "Visual Studio", :version => "12", :architecture => ""}, {:name => "Visual Studio", :version => "12", :architecture => "Win64"} ],
+  :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
   :os => os_version,
   :os_release => os_release,
   :engine => "cmake",
@@ -972,7 +1000,7 @@ configuration.compilers.each { |compiler|
     begin
       # reset potential build for the next build attempt
       p.next_build
-#      p.set_test_run true
+      p.set_test_run true
 
       if p.needs_run files, compiler
         logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
