@@ -300,7 +300,12 @@ class PotentialBuild
       end
     }
 
-    @build_results = results
+    if @build_results.nil?
+      @build_results = results
+    else
+      @build_results.concat(results)
+    end
+
     return result == 0
   end
 
@@ -325,7 +330,11 @@ class PotentialBuild
       end
     }
 
-    @build_results = results
+    if @build_results.nil?
+      @build_results = results
+    else
+      @build_results.concat(results)
+    end
 
     return result == 0
   end
@@ -815,9 +824,9 @@ else
 
   os_release = nil
 
-  case ver_major
+  case ver_major.to_i
   when 5
-    case ver_minor
+    case ver_minor.to_i
     when 0
       os_release = "2000"
     when 1
@@ -826,7 +835,7 @@ else
       os_release = "2003"
     end
   when 6
-    case ver_minor
+    case ver_minor.to_i
     when 0
       os_release = "Vista"
     when 1
@@ -851,8 +860,8 @@ configuration = OpenStruct.new({
   :results_path => "_posts",
   :results_base_url => "https://chaiscript.github.io/chaiscript-build-results/",
   :repository => "lefticus/cpp_project_with_errors",
-#  :compilers => [{:name => "Visual Studio", :version => "12", :architecture => ""}, {:name => "Visual Studio", :version => "12", :architecture => "Win64"} ],
-  :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
+  :compilers => [{:name => "Visual Studio", :version => "12", :architecture => ""}, {:name => "Visual Studio", :version => "12", :architecture => "Win64"} ],
+#  :compilers => [{:name => "gcc", :version => "4.8", :architecture => ""} ],
   :os => os_version,
   :os_release => os_release,
   :engine => "cmake",
@@ -867,7 +876,11 @@ puts "Token in use: #{configuration.token}"
 configuration.compilers.each { |compiler|
 
   if compiler[:architecture].nil? || compiler[:architecture] == ""
-    compiler[:architecture_description] = RbConfig::CONFIG["host_cpu"]
+    if compiler[:name] == "Visual Studio"
+      compiler[:architecture_description] = "i386"
+    else
+      compiler[:architecture_description] = RbConfig::CONFIG["host_cpu"]
+    end
   else
     compiler[:architecture_description] = compiler[:architecture]
   end
