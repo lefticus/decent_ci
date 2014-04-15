@@ -8,6 +8,7 @@ require 'logger'
 require 'fileutils'
 require 'ostruct'
 require 'yaml'
+require 'base64'
 
 class CodeMessage
   include Comparable
@@ -105,16 +106,18 @@ end
 
 class PotentialBuild
 
-  def initialize(client, config, repository, tag_name, commit_sha, branch_name, release_url, release_assets, 
+  def initialize(client, token, repository, tag_name, commit_sha, branch_name, release_url, release_assets, 
                  pull_id, pull_request_base_repository, pull_request_base_ref)
-    @config = config
+    @logger = Logger.new(STDOUT)
+    @client = client
+    @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name))
+    @config.repository_name = @client.repo(repository).name
     @repository = repository
     @tag_name = tag_name
     @commit_sha = commit_sha
     @branch_name = branch_name
     @release_url = release_url
     @release_assets = release_assets
-    @client = client
 
     @buildid = @tag_name ? @tag_name : @commit_sha
     @refspec = @tag_name ? @tag_name : @branch_name
@@ -127,7 +130,6 @@ class PotentialBuild
     @buildid = "#{@buildid}-PR#{@pull_id}" if !@pull_id.nil?
 
     @created_dirs = []
-    @logger = Logger.new(STDOUT)
     @package_location = nil
     @test_results = nil
     @build_results = SortedSet.new()
@@ -136,6 +138,270 @@ class PotentialBuild
     @failure = nil
     @test_run = false
   end
+
+  def compilers
+    return @config.compilers
+  end
+
+  # Cross-platform way of finding an executable in the $PATH.
+  #
+  #   which('ruby') #=> /usr/bin/ruby
+  def which(cmd)
+    exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
+    ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+      exts.each { |ext|
+        exe = File.join(path, "#{cmd}#{ext}")
+        return exe if File.executable? exe
+      }
+    end
+    return nil
+  end
+
+  def load_configuration(location, ref)
+    def load_yaml(name, location, ref)
+      if !location.nil?
+        begin
+          contents = @client.content(location, {:path=>name, :ref=>ref} ).content
+          return YAML.load(Base64.decode64(contents.to_s))
+        rescue => e
+          @logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e}")
+
+          path = File.expand_path(name, location)
+          @logger.info("Attempting to load yaml config file: #{path}")
+          if File.exists?(path)
+            return YAML.load_file(path)
+          else
+            @logger.info("yaml file does not exist: #{path}")
+            return nil
+          end
+        end
+      else
+        return nil
+      end
+    end
+
+    def symbolize(obj)
+      return obj.reduce({}) do |memo, (k, v)|
+        memo.tap { |m| m[k.to_sym] = symbolize(v) }
+      end if obj.is_a? Hash
+
+      return obj.reduce([]) do |memo, v| 
+        memo << symbolize(v); memo
+      end if obj.is_a? Array
+
+      obj
+    end
+
+    if RUBY_PLATFORM  =~ /darwin/i
+      os_distribution = nil
+      os_version = "MacOS"
+      ver_string = `uname -v`.strip
+
+      /.* Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\.(?<ver_patch>[0-9]+).*:.*/ =~ ver_string
+      # the darwin version number - 4 = the point release of macosx
+      os_release = "10.#{ver_major.to_i - 4}"
+
+    elsif RUBY_PLATFORM =~ /linux/i
+      os_distribution = `lsb_release -is`.strip
+      os_version = "Linux"
+      os_release = "#{`lsb_release -is`.strip}-#{`lsb_release -rs`.strip}"
+    else
+      os_distribution = nil
+      os_version = "Windows"
+      ver_string = `cmd /c ver`.strip
+
+      /.* \[Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\..*\]/ =~ ver_string
+
+      os_release = nil
+
+      case ver_major.to_i
+      when 5
+        case ver_minor.to_i
+        when 0
+          os_release = "2000"
+        when 1
+          os_release = "XP"
+        when 2
+          os_release = "2003"
+        end
+      when 6
+        case ver_minor.to_i
+        when 0
+          os_release = "Vista"
+        when 1
+          os_release = "7"
+        when 2
+          os_release = "8"
+        when 3
+          os_release = "8.1"
+        end
+      end
+
+
+      if os_release.nil?
+        os_release = "Unknown-#{ver_major}.#{ver_minor}"
+      end
+    end
+
+    yaml_base_name = ".ci"
+    yaml_name = "#{yaml_base_name}.yaml"
+    yaml_os_name = "#{yaml_base_name}-#{os_version}.yaml"
+    yaml_os_distribution_name = nil
+
+    if !os_distribution.nil?
+      yaml_os_distribution_name = "#{yaml_base_name}-#{os_version}-#{os_distribution}.yaml"
+    end
+
+    yaml_os_release_name = "#{yaml_base_name}-#{os_version}-#{os_release}.yaml"
+
+    base_yaml = load_yaml(yaml_name, location, ref)
+    @logger.debug("Base yaml loaded: #{base_yaml}") if !base_yaml.nil?
+    os_yaml = load_yaml(yaml_os_name, location, ref)
+    @logger.debug("os yaml loaded: #{os_yaml}") if !os_yaml.nil?
+    os_distribution_yaml = load_yaml(yaml_os_distribution_name, location, ref)
+    @logger.debug("os distribution yaml loaded: #{os_distribution_yaml}") if !os_distribution_yaml.nil?
+    os_distribution_release_yaml = load_yaml(yaml_os_release_name, location, ref)
+    @logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") if !os_distribution_release_yaml.nil?
+
+
+    result_yaml = {
+      :os => os_version,
+      :os_release => os_release,
+      :engine => "cmake"
+    }
+
+    result_yaml.merge!(base_yaml) if !base_yaml.nil?
+    result_yaml.merge!(os_yaml) if !os_yaml.nil?
+    result_yaml.merge!(os_distribution_yaml) if !os_distribution_yaml.nil?
+    result_yaml.merge!(os_distribution_release_yaml) if !os_distribution_release_yaml.nil?
+
+    result_yaml = symbolize(result_yaml)
+
+    @logger.info("Final merged configuration: #{result_yaml}")
+
+
+    configuration = OpenStruct.new(result_yaml)
+
+    raise "No compilers defined" if configuration.compilers.nil?
+
+    # go through the list of compilers specified and fill in reasonable defaults
+    # if there are not any specified already
+    configuration.compilers.each { |compiler|
+
+      @logger.debug("Working on compiler: #{compiler[:name]}")
+      if compiler[:architecture].nil? || compiler[:architecture] == ""
+        if compiler[:name] == "Visual Studio"
+          compiler[:architecture_description] = "i386"
+        else
+          compiler[:architecture_description] = RbConfig::CONFIG["host_cpu"]
+        end
+      else
+        compiler[:architecture_description] = compiler[:architecture]
+      end
+
+      if compiler[:version].nil?
+        case compiler[:name]
+        when "Visual Studio"
+          raise "Version number for visual studio must be provided"
+        when "clang"
+          /.*clang version (?<version>([0-9]+\.?)+).*/ =~ `clang --version`
+          compiler[:version] = version
+        when "gcc"
+          compiler[:version] = `gcc -dumpversion`
+        end
+      end
+
+      if compiler[:name] != "Visual Studio" && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
+        case compiler[:name]
+        when "clang"
+          potential_name = which("clang-#{compiler[:version]}")
+          if !potential_name.nil?
+            compiler[:cc_bin] = potential_name
+            compiler[:cxx_bin] = which("clang++-#{compiler[:version]}")
+          else
+            compiler[:cc_bin] = which("clang")
+            compiler[:cxx_bin] = which("clang++")
+          end
+        when "gcc"
+          potential_name = which("gcc-#{compiler[:version]}")
+          if !potential_name.nil?
+            compiler[:cc_bin] = potential_name
+            compiler[:cxx_bin] = which("g++-#{compiler[:version]}")
+          else
+            compiler[:cc_bin] = which("gcc")
+            compiler[:cxx_bin] = which("g++")
+          end
+        end
+
+        if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?  || !(`#{compiler[:cc_bin]} --version` =~ /.*#{compiler[:version]}/) || !(`#{compiler[:cxx_bin]} --version` =~ /.*#{compiler[:version]}/)
+
+          raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
+        end
+      end
+
+
+
+      description = compiler[:name].gsub(/\s+/, "")
+
+      if !compiler[:version].nil? && compiler[:version] != ""
+        description = "#{description}-#{compiler[:version]}"
+      end
+
+      compiler[:description] = description
+
+      if compiler[:build_package_generator].nil? || compiler[:build_package_generator] == ""
+        case configuration.os
+        when "Windows"
+          compiler[:build_package_generator] = "NSIS"
+        when "Linux"
+          if configuration.os_release =~ /.*ubuntu.*/i || configuration.os_release =~ /.*deb.*/i || configuration.os_release =~ /.*mint.*/i
+            compiler[:build_package_generator] = "DEB"
+          else
+            compiler[:build_package_generator] = "RPM"
+          end
+        when "MacOS"
+          compiler[:build_package_generator] = "PackageMaker"
+        end
+      end
+
+      if compiler[:build_generator].nil? || compiler[:build_generator] == ""
+        case compiler[:name]
+        when /.*Visual Studio.*/i
+          generator = "Visual Studio #{compiler[:version]}"
+          if compiler[:architecture] =~ /.*64.*/
+            generator = "#{generator} Win64"
+          end
+          compiler[:build_generator] = generator
+        else
+          compiler[:build_generator] = "Unix Makefiles"
+        end
+      end
+
+      if compiler[:package_extension].nil? || compiler[:package_extension] == ""
+        case compiler[:build_package_generator]
+        when /.*NSIS.*/
+          compiler[:package_extension] = "exe"
+        when /.*PackageMaker.*/
+          compiler[:package_extension] = "dmg"
+        when /T.*/
+          /T(?<tar_type>[0-9]+)/ =~ compiler[:build_package_generator]
+          compiler[:package_extension] = "tar.#{tar_type.downcase}"
+        else
+          compiler[:package_extension] = compiler[:build_package_generator].downcase
+        end
+      end
+
+      case compiler[:package_extension]
+      when "deb"
+        compiler[:package_mimetype] = "application/x-deb"
+      else
+        compiler[:package_mimetype] = "application/octet-stream"
+      end
+    }
+
+    return configuration
+  end
+
 
   def set_test_run new_test_run
     @test_run = new_test_run
@@ -521,9 +787,22 @@ class PotentialBuild
     end
   end
 
-  def needs_run files, compiler
+  def needs_run compiler
     return true if @test_run
 
+    files = []
+    begin 
+      files = @client.content @config.results_repository, :path=>@config.results_path
+
+      file_names = []
+      files.each { |f|
+        file_names << f.name
+      }
+
+      return file_names
+    rescue Octokit::NotFound => e
+      # repository doesn't have a _posts folder yet
+    end
 
     files.each{ |f|
       return false if f.end_with? results_file_name(compiler)
@@ -792,55 +1071,52 @@ eos
 end
 
 class Build
-  def initialize(config)
-    @config = config
-    @client = Octokit::Client.new(:access_token=>config.token)
+  def initialize(token, repository)
+    @client = Octokit::Client.new(:access_token=>token)
+    @token = token
+    @repository = repository
     @user = @client.user
     @user.login
     @potential_builds = []
-
-    @config.repository_name = @client.repo(@config.repository).name
-  end
+    @logger = Logger.new(STDOUT)
+   end
 
   def query_releases
-    releases = @client.releases(@config.repository)
+    releases = @client.releases(@repository)
 
-    releases.each { |r| 
-      @potential_builds << PotentialBuild.new(@client, @config, @config.repository, r.tag_name, nil, nil, r.url, r.assets, nil, nil, nil)
+    releases.each { |r|
+      begin 
+        @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.url, r.assets, nil, nil, nil)
+      rescue => e
+        @logger.info("Skipping potential build: #{e} #{r}")
+      end
     }
   end
 
   def query_branches
-    branches = @client.branches(@config.repository)
+    branches = @client.branches(@repository)
 
     branches.each { |b| 
-      @potential_builds << PotentialBuild.new(@client, @config, @config.repository, nil, b.commit.sha, b.name, nil, nil, nil, nil, nil)
+      begin 
+        @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, nil, nil, nil, nil, nil)
+      rescue => e
+        @logger.info("Skipping potential build: #{e} #{b}")
+      end
     }
   end
 
   def query_pull_requests
-    pull_requests = @client.pull_requests(@config.repository, :state=>"open")
+    pull_requests = @client.pull_requests(@repository, :state=>"open")
 
     pull_requests.each { |p| 
-      @potential_builds << PotentialBuild.new(@client, @config, p.head.repo.full_name, nil, p.head.sha, p.head.ref, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
+      begin 
+        @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
+      rescue => e
+        @logger.info("Skipping potential build: #{e} #{p}")
+      end
     }
   end
 
-  def get_results_files 
-    begin 
-      files = @client.content @config.results_repository, :path=>@config.results_path
-
-      file_names = []
-      files.each { |f|
-        file_names << f.name
-      }
-
-      return file_names
-    rescue Octokit::NotFound => e
-      # repository doesn't have a _posts folder yet
-      return []
-    end
-  end
 
   def potential_builds
     @potential_builds
@@ -848,301 +1124,51 @@ class Build
 end
 
 
-# Cross-platform way of finding an executable in the $PATH.
-#
-#   which('ruby') #=> /usr/bin/ruby
-def which(cmd)
-  exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
-  ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
-    exts.each { |ext|
-      exe = File.join(path, "#{cmd}#{ext}")
-      return exe if File.executable? exe
-    }
-  end
-  return nil
-end
 
 @logger = Logger.new(STDOUT)
 
-def load_yaml(location, name)
-  if !location.nil?
-    path = File.expand_path(location, name)
-    @logger.info("Attempting to load yaml config file: #{path}")
-    if File.exists?(path)
-      return YAML.load_file(path)
-    else
-      @logger.info("yaml file does not exist: #{path}")
-      return nil
-    end
-  end
-end
 
-def symbolize(obj)
-  return obj.reduce({}) do |memo, (k, v)|
-    memo.tap { |m| m[k.to_sym] = symbolize(v) }
-  end if obj.is_a? Hash
+@logger.info "Args: #{ARGV.length}"
 
-  return obj.reduce([]) do |memo, v| 
-    memo << symbolize(v); memo
-  end if obj.is_a? Array
+for conf in 1..ARGV.length-1
+  @logger.info "Loading configuration #{ARGV[conf]}"
+  b = Build.new(ARGV[0], ARGV[conf])
 
-  obj
-end
+  @logger.info "Querying for updated branches"
+  b.query_releases
+  b.query_branches
+  b.query_pull_requests
 
-
-
-def load_configuration(location, token)
-  if RUBY_PLATFORM  =~ /darwin/i
-    os_distribution = nil
-    os_version = "MacOS"
-    ver_string = `uname -v`.strip
-
-    /.* Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\.(?<ver_patch>[0-9]+).*:.*/ =~ ver_string
-    # the darwin version number - 4 = the point release of macosx
-    os_release = "10.#{ver_major.to_i - 4}"
-
-  elsif RUBY_PLATFORM =~ /linux/i
-    os_distribution = `lsb_release -is`.strip
-    os_version = "Linux"
-    os_release = "#{`lsb_release -is`.strip}-#{`lsb_release -rs`.strip}"
-  else
-    os_distribution = nil
-    os_version = "Windows"
-    ver_string = `cmd /c ver`.strip
-
-    /.* \[Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\..*\]/ =~ ver_string
-
-    os_release = nil
-
-    case ver_major.to_i
-    when 5
-      case ver_minor.to_i
-      when 0
-        os_release = "2000"
-      when 1
-        os_release = "XP"
-      when 2
-        os_release = "2003"
-      end
-    when 6
-      case ver_minor.to_i
-      when 0
-        os_release = "Vista"
-      when 1
-        os_release = "7"
-      when 2
-        os_release = "8"
-      when 3
-        os_release = "8.1"
-      end
-    end
-
-
-    if os_release.nil?
-      os_release = "Unknown-#{ver_major}.#{ver_minor}"
-    end
-  end
-
-  yaml_base_name = ".ci"
-  yaml_name = "#{yaml_base_name}.yaml"
-  yaml_os_name = "#{yaml_base_name}-#{os_version}.yaml"
-  yaml_os_distribution_name = nil
-
-  if !os_distribution.nil?
-    yaml_os_distribution_name = "#{yaml_base_name}-#{os_version}-#{os_distribution}.yaml"
-  end
-
-  yaml_os_release_name = "#{yaml_base_name}-#{os_version}-#{os_release}.yaml"
-
-  base_yaml = load_yaml(yaml_name, location)
-  @logger.debug("Base yaml loaded: #{base_yaml}") if !base_yaml.nil?
-  os_yaml = load_yaml(yaml_os_name, location)
-  @logger.debug("os yaml loaded: #{os_yaml}") if !base_yaml.nil?
-  os_distribution_yaml = load_yaml(yaml_os_distribution_name, location)
-  @logger.debug("os distribution yaml loaded: #{os_distribution_yaml}") if !base_yaml.nil?
-  os_distribution_release_yaml = load_yaml(yaml_os_release_name, location)
-  @logger.debug("os distribution yaml loaded: #{os_distribution_release_yaml}") if !base_yaml.nil?
-
-
-  result_yaml = {
-    :os => os_version,
-    :os_release => os_release,
-    :engine => "cmake",
-    :token => token
-  }
-
-  result_yaml.merge!(base_yaml) if !base_yaml.nil?
-  result_yaml.merge!(os_yaml) if !os_yaml.nil?
-  result_yaml.merge!(os_distribution_yaml) if !os_distribution_yaml.nil?
-  result_yaml.merge!(os_distribution_release_yaml) if !os_distribution_release_yaml.nil?
-
-  result_yaml = symbolize(result_yaml)
-
-  @logger.info("Final merged configuration: #{result_yaml}")
-
-
-  configuration = OpenStruct.new(result_yaml)
-
-
-  # go through the list of compilers specified and fill in reasonable defaults
-  # if there are not any specified already
-  configuration.compilers.each { |compiler|
-
-    @logger.debug("Working on compiler: #{compiler[:name]}")
-    if compiler[:architecture].nil? || compiler[:architecture] == ""
-      if compiler[:name] == "Visual Studio"
-        compiler[:architecture_description] = "i386"
-      else
-        compiler[:architecture_description] = RbConfig::CONFIG["host_cpu"]
-      end
-    else
-      compiler[:architecture_description] = compiler[:architecture]
-    end
-
-    if compiler[:version].nil?
-      case compiler[:name]
-      when "Visual Studio"
-        raise "Version number for visual studio must be provided"
-      when "clang"
-        /.*clang version (?<version>([0-9]+\.?)+).*/ =~ `clang --version`
-        compiler[:version] = version
-      when "gcc"
-        compiler[:version] = `gcc -dumpversion`
-      end
-    end
-
-    if compiler[:name] != "Visual Studio" && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
-      case compiler[:name]
-      when "clang"
-        potential_name = which("clang-#{compiler[:version]}")
-        if !potential_name.nil?
-          compiler[:cc_bin] = potential_name
-          compiler[:cxx_bin] = which("clang++-#{compiler[:version]}")
-        else
-          compiler[:cc_bin] = which("clang")
-          compiler[:cxx_bin] = which("clang++")
-        end
-      when "gcc"
-        potential_name = which("gcc-#{compiler[:version]}")
-        if !potential_name.nil?
-          compiler[:cc_bin] = potential_name
-          compiler[:cxx_bin] = which("g++-#{compiler[:version]}")
-        else
-          compiler[:cc_bin] = which("gcc")
-          compiler[:cxx_bin] = which("g++")
-        end
-      end
-
-      if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?  || !(`#{compiler[:cc_bin]} --version` =~ /.*#{compiler[:version]}/) || !(`#{compiler[:cxx_bin]} --version` =~ /.*#{compiler[:version]}/)
-
-        raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
-      end
-    end
-
-
-
-    description = compiler[:name].gsub(/\s+/, "")
-
-    if !compiler[:version].nil? && compiler[:version] != ""
-      description = "#{description}-#{compiler[:version]}"
-    end
-
-    compiler[:description] = description
-
-    if compiler[:build_package_generator].nil? || compiler[:build_package_generator] == ""
-      case configuration.os
-      when "Windows"
-        compiler[:build_package_generator] = "NSIS"
-      when "Linux"
-        if configuration.os_release =~ /.*ubuntu.*/i || configuration.os_release =~ /.*deb.*/i || configuration.os_release =~ /.*mint.*/i
-          compiler[:build_package_generator] = "DEB"
-        else
-          compiler[:build_package_generator] = "RPM"
-        end
-      when "MacOS"
-        compiler[:build_package_generator] = "PackageMaker"
-      end
-    end
-
-    if compiler[:build_generator].nil? || compiler[:build_generator] == ""
-      case compiler[:name]
-      when /.*Visual Studio.*/i
-        generator = "Visual Studio #{compiler[:version]}"
-        if compiler[:architecture] =~ /.*64.*/
-          generator = "#{generator} Win64"
-        end
-        compiler[:build_generator] = generator
-      else
-        compiler[:build_generator] = "Unix Makefiles"
-      end
-    end
-
-    if compiler[:package_extension].nil? || compiler[:package_extension] == ""
-      case compiler[:build_package_generator]
-      when /.*NSIS.*/
-        compiler[:package_extension] = "exe"
-      when /.*PackageMaker.*/
-        compiler[:package_extension] = "dmg"
-      when /T.*/
-        /T(?<tar_type>[0-9]+)/ =~ compiler[:build_package_generator]
-        compiler[:package_extension] = "tar.#{tar_type.downcase}"
-      else
-        compiler[:package_extension] = compiler[:build_package_generator].downcase
-      end
-    end
-
-    case compiler[:package_extension]
-    when "deb"
-      compiler[:package_mimetype] = "application/x-deb"
-    else
-      compiler[:package_mimetype] = "application/octet-stream"
-    end
-  }
-
-  return configuration
-end
-
-
-
-@logger.info "Loading configuration"
-configuration = load_configuration(".", ARGV[0])
-b = Build.new(configuration)
-
-@logger.info "Querying for updated branches"
-b.query_releases
-b.query_branches
-b.query_pull_requests
-
-@logger.info "Looping over compilers"
-files = b.get_results_files
-
-configuration.compilers.each { |compiler|
 
   b.potential_builds.each { |p|
 
-    begin
-      # reset potential build for the next build attempt
-      p.next_build
-      p.set_test_run true
+    @logger.info "Looping over compilers"
+    p.compilers.each { |compiler|
 
-      if p.needs_run files, compiler
-        @logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
-        p.post_results compiler, true
-        begin 
-          p.do_package compiler
-          p.do_test compiler
-        rescue => e
-          @logger.error "Logging unhandled failure #{e}"
-          p.unhandled_failure e
-        end 
-        p.post_results compiler, false
-        p.clean_up compiler
-      else
-        @logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
+      begin
+        # reset potential build for the next build attempt
+        p.next_build
+        p.set_test_run true
+
+        if p.needs_run compiler
+          @logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
+          p.post_results compiler, true
+          begin 
+            p.do_package compiler
+            p.do_test compiler
+          rescue => e
+            @logger.error "Logging unhandled failure #{e}"
+            p.unhandled_failure e
+          end 
+          p.post_results compiler, false
+          p.clean_up compiler
+        else
+          @logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
+        end
+      rescue => e
+        @logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e}"
       end
-    rescue => e
-      @logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e}"
-    end
+    }
   }
-}
+end
 
