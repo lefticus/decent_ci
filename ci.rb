@@ -869,7 +869,7 @@ class PotentialBuild
   end
 
   def cmake_test(compiler, src_dir, build_dir, build_type)
-    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir} && ctest -D ExperimentalTest -C #{build_type}"]);
+    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir} && ctest --timeout 3600 -D ExperimentalTest -C #{build_type}"]);
     @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
   end
 
