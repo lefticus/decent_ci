@@ -7,19 +7,19 @@ require_relative 'lib/build'
 
 @logger = Logger.new(STDOUT)
 
-if ARGV.length < 2
-  puts "Usage: #{__FILE__} <githubtoken> <repositoryname> (<repositoryname> ...)"
+if ARGV.length < 3
+  puts "Usage: #{__FILE__} <testruntrueorfalse> <githubtoken> <repositoryname> (<repositoryname> ...)"
   abort("Not enough arguments")
 end
 
 @logger.info "Args: #{ARGV.length}"
 
-for conf in 1..ARGV.length-1
+for conf in 2..ARGV.length-1
   @logger.info "Loading configuration #{ARGV[conf]}"
 
   # Loads the list of potential builds and their config files for the given
   # repository name
-  b = Build.new(ARGV[0], ARGV[conf])
+  b = Build.new(ARGV[1], ARGV[conf])
 
   @logger.info "Querying for updated branches"
   b.query_releases
@@ -36,7 +36,7 @@ for conf in 1..ARGV.length-1
       begin
         # reset potential build for the next build attempt
         p.next_build
-        p.set_test_run true
+        p.set_test_run !(ARGV[0] =~ /false/i)
 
         if p.needs_run compiler
           @logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
