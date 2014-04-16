@@ -16,6 +16,8 @@ require_relative 'codemessage.rb'
 require_relative 'testresult.rb'
 require_relative 'potentialbuild.rb'
 
+# Top level class that loads the list of potential builds from github
+#
 class Build
   def initialize(token, repository)
     @client = Octokit::Client.new(:access_token=>token)
@@ -51,6 +53,8 @@ class Build
     }
   end
 
+  # note, only builds 'external' pull_requests. Internal ones would have already
+  # been built as a branch
   def query_pull_requests
     pull_requests = @client.pull_requests(@repository, :state=>"open")
 

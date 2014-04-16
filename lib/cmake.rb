@@ -1,5 +1,6 @@
 # encoding: UTF-8 
 
+# contains functions necessary for working with the 'cmake' engine
 module CMake
   def cmake_build(compiler, src_dir, build_dir, build_type)
     FileUtils.mkdir_p build_dir

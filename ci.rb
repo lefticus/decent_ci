@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # encoding: UTF-8 
 
 require 'logger'
@@ -6,11 +7,18 @@ require_relative 'lib/build'
 
 @logger = Logger.new(STDOUT)
 
+if ARGV.length < 2
+  puts "Usage: #{__FILE__} <githubtoken> <repositoryname> (<repositoryname> ...)"
+  abort("Not enough arguments")
+end
 
 @logger.info "Args: #{ARGV.length}"
 
 for conf in 1..ARGV.length-1
   @logger.info "Loading configuration #{ARGV[conf]}"
+
+  # Loads the list of potential builds and their config files for the given
+  # repository name
   b = Build.new(ARGV[0], ARGV[conf])
 
   @logger.info "Querying for updated branches"
@@ -19,6 +27,7 @@ for conf in 1..ARGV.length-1
   b.query_pull_requests
 
 
+  # loop over each potential build
   b.potential_builds.each { |p|
 
     @logger.info "Looping over compilers"
@@ -50,4 +59,5 @@ for conf in 1..ARGV.length-1
     }
   }
 end
+
 

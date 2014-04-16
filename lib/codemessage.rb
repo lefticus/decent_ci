@@ -1,6 +1,6 @@
 # encoding: UTF-8 
 
-
+# warnings and errors from code compilation
 class CodeMessage
   include Comparable
   attr_reader :filename

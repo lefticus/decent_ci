@@ -12,6 +12,7 @@ require 'ostruct'
 require 'yaml'
 require 'base64'
 
+# Parsed test results for reporting back
 class TestResult
   def initialize(name, status, time, output, parsed_errors)
     @name = name

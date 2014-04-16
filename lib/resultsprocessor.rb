@@ -1,4 +1,8 @@
 # encoding: UTF-8 
+#
+
+
+# Implementation for parsing of build messages
 module ResultsProcessor
   def relative_path(p, src_dir, build_dir, compiler)
     begin

@@ -1,5 +1,7 @@
 # encoding: UTF-8 
 
+## tools for loading and parsing of yaml config files
+## and filling in the details 
 module Configuration
 
   # Cross-platform way of finding an executable in the $PATH.

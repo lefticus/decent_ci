@@ -18,6 +18,8 @@ require_relative 'cmake.rb'
 require_relative 'configuration.rb'
 require_relative 'resultsprocessor.rb'
 
+
+## Contains the logic flow for executing builds and parsing results
 class PotentialBuild
   include CMake
   include Configuration
