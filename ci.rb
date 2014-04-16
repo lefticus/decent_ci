@@ -149,12 +149,17 @@ class PotentialBuild
   # Cross-platform way of finding an executable in the $PATH.
   #
   #   which('ruby') #=> /usr/bin/ruby
-  def which(cmd)
+  def which(cmd, extra_paths=nil)
     exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
-    ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+    path_array = ENV['PATH'].split(File::PATH_SEPARATOR)
+    if !extra_paths.nil?
+      path_array = path_array.concat(extra_paths)
+    end
+
+    path_array.each do |path|
       exts.each { |ext|
         exe = File.join(path, "#{cmd}#{ext}")
-        return exe if File.executable? exe
+        return Pathname.new(exe).realpath.to_s if File.executable? exe
       }
     end
     return nil
@@ -162,12 +167,15 @@ class PotentialBuild
 
   def load_configuration(location, ref)
     def load_yaml(name, location, ref)
-      if !location.nil?
+
+      if !location.nil? && !name.nil?
         begin
-          contents = @client.content(location, {:path=>name, :ref=>ref} ).content
+          content = @client.content(location, {:path=>name, :ref=>ref} )
+          contents = content.content
           return YAML.load(Base64.decode64(contents.to_s))
+
         rescue => e
-          @logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e}")
+          @logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e} #{e.backtrace}")
 
           path = File.expand_path(name, location)
           @logger.info("Attempting to load yaml config file: #{path}")
@@ -266,6 +274,8 @@ class PotentialBuild
     os_distribution_release_yaml = load_yaml(yaml_os_release_name, location, ref)
     @logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") if !os_distribution_release_yaml.nil?
 
+    cmake_paths = ["C:\\Program Files\\CMake 2.8\\bin",
+                   "C:\\Program Files (x86)\\CMake 2.8\\bin"]
 
     result_yaml = {
       :os => os_version,
@@ -273,7 +283,10 @@ class PotentialBuild
       :engine => "cmake",
       :post_results_comment => true,
       :post_results_status => true,
-      :post_release_package => true
+      :post_release_package => true,
+      :cmake_bin => "\"#{which("cmake", cmake_paths)}\"",
+      :ctest_bin => "\"#{which("ctest", cmake_paths)}\"",
+      :cpack_bin => "\"#{which("cpack", cmake_paths)}\""
     }
 
     result_yaml.merge!(base_yaml) if !base_yaml.nil?
@@ -490,7 +503,12 @@ class PotentialBuild
     allresult = 0
 
     commands.each { |cmd|
-      stdout, stderr, result = run_with_timeout(cmd)
+      if @config.os == "Windows"
+        @logger.warn "Unable to set timeout for process execution on windows"
+        stdout, stderr, result = Open3::capture3(cmd)
+      else
+        stdout, stderr, result = run_with_timeout(cmd)
+      end
 
       stdout.split("\n").each { |l| 
         @logger.debug("cmd: #{cmd}: stdout: #{l}")
@@ -735,7 +753,7 @@ class PotentialBuild
     end
 
     out, err, result = run_script(
-      ["cd #{build_dir} && cmake ../ #{cmake_flags} -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name compiler} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""])
+      ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags} -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name compiler} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""])
 
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
@@ -744,8 +762,14 @@ class PotentialBuild
       return false;
     end
 
+    if @config.os != "Windows"
+      build_switches = "-j4"
+    else
+      build_switches = ""
+    end
+
     out, err, result = run_script(
-        ["cd #{build_dir} && cmake --build . --config #{build_type} --use-stderr -- -j4 "])
+        ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --use-stderr -- #{build_switches}"])
 
     msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
     gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
@@ -754,7 +778,7 @@ class PotentialBuild
 
   def cmake_package(compiler, src_dir, build_dir, build_type)
     pack_stdout, pack_stderr, pack_result = run_script(
-      ["cd #{build_dir} && cpack -G #{compiler[:build_package_generator]} -C #{build_type}"])
+      ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type}"])
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stdout, pack_stderr, pack_result, true)
 
@@ -878,7 +902,7 @@ class PotentialBuild
   end
 
   def cmake_test(compiler, src_dir, build_dir, build_type)
-    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir} && ctest --timeout 3600 -D ExperimentalTest -C #{build_type}"]);
+    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir} && #{@config.ctest_bin} --timeout 3600 -D ExperimentalTest -C #{build_type}"]);
     @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
   end
 
@@ -1159,7 +1183,7 @@ class Build
       begin 
         @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.url, r.assets, nil, nil, nil)
       rescue => e
-        @logger.info("Skipping potential build: #{e} #{r}")
+        @logger.info("Skipping potential build: #{e.backtrace} #{r}")
       end
     }
   end
@@ -1171,7 +1195,7 @@ class Build
       begin 
         @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, nil, nil, nil, nil, nil)
       rescue => e
-        @logger.info("Skipping potential build: #{e} #{b}")
+        @logger.info("Skipping potential build: #{e.backtrace} #{b}")
       end
     }
   end
@@ -1186,7 +1210,7 @@ class Build
         begin 
           @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
         rescue => e
-          @logger.info("Skipping potential build: #{e} #{p}")
+          @logger.info("Skipping potential build: #{e.backtrace} #{p}")
         end
       end
     }
@@ -1232,7 +1256,7 @@ for conf in 1..ARGV.length-1
             p.do_package compiler
             p.do_test compiler
           rescue => e
-            @logger.error "Logging unhandled failure #{e}"
+            @logger.error "Logging unhandled failure #{e} #{e.backtrace}"
             p.unhandled_failure e
           end 
           p.post_results compiler, false
