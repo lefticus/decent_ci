@@ -1,5 +1,8 @@
 results_repository : ChaiScript/chaiscript-build-results
 results_path : _posts
 results_base_url : https://chaiscript.github.io/chaiscript-build-results/
-# repository : NREL/EnergyPlusTeam
 repository : lefticus/cpp_project_with_errors
+post_results_comment : true
+post_results_status : true
+post_release_package : true
+

@@ -114,6 +114,7 @@ class PotentialBuild
     @client = client
     @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name))
     @config.repository_name = @client.repo(repository).name
+    @config.repository = repository
     @repository = repository
     @tag_name = tag_name
     @commit_sha = commit_sha
@@ -269,7 +270,10 @@ class PotentialBuild
     result_yaml = {
       :os => os_version,
       :os_release => os_release,
-      :engine => "cmake"
+      :engine => "cmake",
+      :post_results_comment => true,
+      :post_results_status => true,
+      :post_release_package => true
     }
 
     result_yaml.merge!(base_yaml) if !base_yaml.nil?
@@ -700,12 +704,20 @@ class PotentialBuild
   def checkout(src_dir)
     # TODO update this to be a merge, not just a checkout of the pull request branch
     FileUtils.mkdir_p src_dir
-    out, err, result = run_script(
-      ["cd #{src_dir} && git init",
-       "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} #{@refspec}" ])
 
-    if !@commit_sha.nil? && @commit_sha != "" && result == 0
-      out, err, result = run_script( ["cd #{src_dir} && git checkout #{@commit_sha}"] );
+    if @config.pull_id.nil?
+      out, err, result = run_script(
+        ["cd #{src_dir} && git init",
+         "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} #{@refspec}" ])
+
+      if !@commit_sha.nil? && @commit_sha != "" && result == 0
+        out, err, result = run_script( ["cd #{src_dir} && git checkout #{@commit_sha}"] );
+      end
+    else 
+      out, err, result = run_script(
+        ["cd #{src_dir} && git init",
+         "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} refs/pull/#{@config.pull_id}/head",
+         "cd #{src_dir} && git checkout FETCH_HEAD" ])
     end
 
     return result == 0
@@ -847,21 +859,18 @@ class PotentialBuild
   def needs_run compiler
     return true if @test_run
 
-    files = []
+    file_names = []
     begin 
       files = @client.content @config.results_repository, :path=>@config.results_path
 
-      file_names = []
       files.each { |f|
         file_names << f.name
       }
-
-      return file_names
     rescue Octokit::NotFound => e
       # repository doesn't have a _posts folder yet
     end
 
-    files.each{ |f|
+    file_names.each{ |f|
       return false if f.end_with? results_file_name(compiler)
     }
 
@@ -1107,7 +1116,7 @@ eos
         raise e
       end
 
-      if !pending
+      if !pending && @config.post_results_comment
         if !@commit_sha.nil? && @repository == @config.repository
           response = @client.create_commit_comment(@config.repository, @commit_sha, github_document)
         elsif !pull_request_issue_id.nil?
@@ -1115,11 +1124,11 @@ eos
         end
       end
 
-      if !@commit_sha.nil?
+      if !@commit_sha.nil? && @config.post_results_status
         response = @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message, :accept => Octokit::Client::Statuses::COMBINED_STATUS_MEDIA_TYPE)
       end
 
-      if !@package_location.nil?
+      if !@package_location.nil? && @config.post_release_package
         @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s)
       end
     else 
@@ -1171,10 +1180,14 @@ class Build
     pull_requests = @client.pull_requests(@repository, :state=>"open")
 
     pull_requests.each { |p| 
-      begin 
-        @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
-      rescue => e
-        @logger.info("Skipping potential build: #{e} #{p}")
+      if p.head.repo.full_name == p.base.repo.full_name
+        @logger.info("Skipping pullrequest originating from head repo");
+      else
+        begin 
+          @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
+        rescue => e
+          @logger.info("Skipping potential build: #{e} #{p}")
+        end
       end
     }
   end
@@ -1210,7 +1223,7 @@ for conf in 1..ARGV.length-1
       begin
         # reset potential build for the next build attempt
         p.next_build
-        p.set_test_run true
+#        p.set_test_run true
 
         if p.needs_run compiler
           @logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
@@ -1228,7 +1241,7 @@ for conf in 1..ARGV.length-1
           @logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
         end
       rescue => e
-        @logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e}"
+        @logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e} #{e.backtrace}"
       end
     }
   }
