@@ -22,7 +22,7 @@ module CMake
     end
 
     if @config.os != "Windows"
-      build_switches = "-j4"
+      build_switches = "-j2"
     else
       build_switches = ""
     end
