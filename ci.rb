@@ -27,7 +27,7 @@ for conf in 1..ARGV.length-1
       begin
         # reset potential build for the next build attempt
         p.next_build
-    #    p.set_test_run true
+        p.set_test_run true
 
         if p.needs_run compiler
           @logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
