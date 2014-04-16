@@ -32,6 +32,7 @@ class PotentialBuild
     @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name))
     @config.repository_name = @client.repo(repository).name
     @config.repository = repository
+    @config.token = token
     @repository = repository
     @tag_name = tag_name
     @commit_sha = commit_sha
