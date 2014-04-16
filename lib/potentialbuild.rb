@@ -109,13 +109,15 @@ class PotentialBuild
         rs, = Kernel.select([stdout, stderr], nil, nil, tick)
         # Try to read the data
         begin
-          rs.each { |r|
-            if r == stdout
-              out << stdout.read_nonblock(4096)
-            elsif r == stderr 
-              err << stderr.read_nonblock(4096)
-            end
-          }
+          if !rs.nil?
+            rs.each { |r|
+              if r == stdout
+                out << stdout.read_nonblock(4096)
+              elsif r == stderr 
+                err << stderr.read_nonblock(4096)
+              end
+            }
+          end
 
         rescue IO::WaitReadable
           # A read would block, so loop around for another select
