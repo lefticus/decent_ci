@@ -104,12 +104,18 @@ module ResultsProcessor
   end
 
   def parse_msvc_line(compiler, src_dir, build_dir, line)
-    /\s+(?<filename>\S+)\((?<linenumber>[0-9]+)\): (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]/ =~ line
+    /(?<filename>.+)\((?<linenumber>[0-9]+)\): (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) (\[.*\])?/ =~ line
 
     if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
-      return CodeMessage.new(relative_path(filename, src_dir, build_dir, compiler), linenumber, 0, messagetype, message)
+      return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir, compiler), linenumber, 0, messagetype, message)
     else
-      return nil
+      /(?<filename>.+) : (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) (\[.*\])?/ =~ line
+
+      if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
+        return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir, compiler), 0, 0, messagetype, message)
+      else
+        return nil
+      end
     end
   end
 

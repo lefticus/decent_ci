@@ -353,6 +353,7 @@ class PotentialBuild
     @build_results = SortedSet.new()
     @package_results = SortedSet.new()
     @dateprefix = nil
+    @failure = nil
   end
 
   def post_results compiler, pending
