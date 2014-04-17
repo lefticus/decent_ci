@@ -112,7 +112,7 @@ module Configuration
       end
     end
 
-    yaml_base_name = ".ci"
+    yaml_base_name = ".decent_ci"
     yaml_name = "#{yaml_base_name}.yaml"
     yaml_os_name = "#{yaml_base_name}-#{os_version}.yaml"
     yaml_os_distribution_name = nil
