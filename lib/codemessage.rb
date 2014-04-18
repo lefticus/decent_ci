@@ -44,14 +44,18 @@ class CodeMessage
     l = @linenumber.to_i <=> other.linenumber.to_i
     c = @colnumber.to_i <=> other.colnumber.to_i
     mt = @messagetype <=> other.messagetype
-    m = @message <=> other.message
+    m = @message[0..10] <=> other.message[0..10]
 
     if f != 0 
       return f
     elsif l != 0
       return l
-    else 
+    elsif c != 0
       return c
+    elsif mt != 0
+      return mt
+    else
+      return m
     end
   end
 
