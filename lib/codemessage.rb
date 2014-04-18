@@ -50,14 +50,9 @@ class CodeMessage
       return f
     elsif l != 0
       return l
-    elsif c != 0
+    else 
       return c
-    elsif mt != 0
-      return mt
-    else
-      return m
     end
-
   end
 
 end
