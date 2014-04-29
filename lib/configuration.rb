@@ -19,7 +19,7 @@ module Configuration
     path_array.each do |path|
       exts.each { |ext|
         exe = File.join(path, "#{cmd}#{ext}")
-        return Pathname.new(exe).realpath.to_s if File.executable? exe
+        return Pathname.new(exe).cleanpath.to_s if File.executable? exe
       }
     end
     return nil
