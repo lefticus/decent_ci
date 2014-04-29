@@ -214,7 +214,11 @@ module ResultsProcessor
           end
         }
 
-        return results
+        if results.empty?
+          return nil
+        else
+          return results
+        end
       end
 
     end
