@@ -276,6 +276,10 @@ module Configuration
       end
     }
 
+    if compiler[:cmake_extra_flags].nil?
+      compiler[:cmake_extra_flags] = ""
+    end
+
     return configuration
   end
 end

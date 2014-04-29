@@ -5,7 +5,7 @@ module CMake
   def cmake_build(compiler, src_dir, build_dir, build_type)
     FileUtils.mkdir_p build_dir
 
-    cmake_flags = ""
+    cmake_flags = "#{compiler[:cmake_extra_flags]} "
 
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\""
