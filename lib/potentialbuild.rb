@@ -240,6 +240,9 @@ class PotentialBuild
   end
 
 
+  def configuration
+    return @config
+  end
 
 
   def do_package compiler

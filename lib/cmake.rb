@@ -24,7 +24,7 @@ module CMake
     end
 
     if @config.os != "Windows"
-      build_switches = "-j2"
+      build_switches = "-j#{compiler[:num_parallel_builds]}"
     else
       build_switches = ""
     end

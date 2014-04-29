@@ -1,5 +1,7 @@
 # encoding: UTF-8 
 
+require_relative 'processor.rb'
+
 ## tools for loading and parsing of yaml config files
 ## and filling in the details 
 module Configuration
@@ -33,7 +35,7 @@ module Configuration
           return YAML.load(Base64.decode64(contents.to_s))
 
         rescue => e
-          @logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e} #{e.backtrace}")
+          @logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e}")
 
           path = File.expand_path(name, location)
           @logger.info("Attempting to load yaml config file: #{path}")
@@ -274,11 +276,20 @@ module Configuration
       else
         compiler[:package_mimetype] = "application/octet-stream"
       end
-    }
 
-    if compiler[:cmake_extra_flags].nil?
-      compiler[:cmake_extra_flags] = ""
-    end
+      if compiler[:cmake_extra_flags].nil?
+        compiler[:cmake_extra_flags] = ""
+      end
+
+      if compiler[:num_parallel_builds].nil?
+        numprocs = processor_count
+        if numprocs > 2
+          numprocs -= 1
+        end
+
+        compiler[:num_parallel_builds] = numprocs
+      end
+    }
 
     return configuration
   end
