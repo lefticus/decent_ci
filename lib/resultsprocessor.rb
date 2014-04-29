@@ -134,12 +134,18 @@ module ResultsProcessor
   end
 
   def parse_gcc_line(compiler, src_path, build_path, line)
-    /(?<filename>\S+):(?<linenumber>[0-9]+):(?<colnumber>[0-9]+): (?<messagetype>\S+): (?<message>.*)/ =~ line
+    /(?<filename>.*):(?<linenumber>[0-9]+):(?<colnumber>[0-9]+): (?<messagetype>\S+): (?<message>.*)/ =~ line
 
     if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
       return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, colnumber, messagetype, message)
     else
-      return nil
+      /(?<filename>.*):(?<linenumber>[0-9]+): (?<message>.*)/ =~ line
+
+      if !filename.nil? && !message.nil? && (message =~ /.*multiple definition.*/ || message =~ /.*undefined.*/)
+        return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, 0, "error", message)
+      else
+        return nil
+      end
     end
 
   end
