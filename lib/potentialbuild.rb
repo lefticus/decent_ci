@@ -321,6 +321,7 @@ class PotentialBuild
     case @config.engine
     when "cmake"
       build_succeeded = cmake_build compiler, src_dir, build_dir, "Debug" if checkout_succeeded
+      # build_succeeded = true
       cmake_test compiler, src_dir, build_dir, "Debug" if build_succeeded 
     else
       raise "Unknown Build Engine"

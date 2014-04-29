@@ -187,11 +187,18 @@ module ResultsProcessor
 
         xml = Hash.from_xml(File.open(path).read)
         testresults = xml["Site"]["Testing"]
-        testresults.each { |t, n|
-          if t == "Test"
+        t = testresults["Test"]
+        if !t.nil? 
+          tests = []
+          tests << t
+          tests.flatten!
+
+          tests.each { |n|
+            @logger.debug("N: #{n}")
+            @logger.debug("Results: #{n["Results"]}")
             r = n["Results"]
             if n["Status"] == "notrun"
-              results << TestResult.new(n["Name"], n["Status"], 0)
+              results << TestResult.new(n["Name"], n["Status"], 0, "", nil)
             else
               if r
                 m = r["Measurement"]
@@ -217,8 +224,8 @@ module ResultsProcessor
 
               end
             end
-          end
-        }
+          }
+        end
 
         if results.empty?
           return nil
