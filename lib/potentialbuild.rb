@@ -478,6 +478,13 @@ eos
 
     test_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Test Badge](http://img.shields.io/badge/tests%20passed-#{test_string}-#{test_color}.svg)</a>"
 
+    if compiler[:analyze_only] 
+      test_failed = false
+      test_badge = ""
+    end
+
+
+
     build_failed = false
     if build_errors > 0
       build_color = "red"
