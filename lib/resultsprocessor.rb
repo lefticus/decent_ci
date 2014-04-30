@@ -21,7 +21,8 @@ module ResultsProcessor
   end
 
   def recover_file_case(name)
-    if os_name =~ RbConfig::CONFIG["target_os"]
+    if RbConfig::CONFIG["target_os"] =~ /mingw|mswin/
+      require 'win32api'
       def get_short_win32_filename(long_name)
         max_path = 1024
         short_name = " " * max_path
@@ -158,7 +159,7 @@ module ResultsProcessor
     /(?<filename>.+)\((?<linenumber>[0-9]+)\): (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]?/ =~ line
 
     if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
-      return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir, compiler), linenumber, 0, messagetype, message)
+      return CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir, compiler), linenumber, 0, messagetype, message)
     else
       /(?<filename>.+) : (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]?/ =~ line
 
