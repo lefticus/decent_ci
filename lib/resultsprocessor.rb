@@ -20,6 +20,30 @@ module ResultsProcessor
     end
   end
 
+  def recover_file_case(name)
+    if os_name =~ RbConfig::CONFIG["target_os"]
+      def get_short_win32_filename(long_name)
+        max_path = 1024
+        short_name = " " * max_path
+        lfn_size = Win32API.new("kernel32",
+                                "GetShortPathName", ['P','P','L'],'L').call(long_name, short_name, max_path)
+        return (1..max_path).include?(lfn_size) ? short_name[0..lfn_size-1] : long_name
+      end
+
+      def get_long_win32_filename(short_name)
+        max_path = 1024
+        long_name = " " * max_path
+        lfn_size = Win32API.new("kernel32",
+                                "GetLongPathName", ['P','P','L'],'L').call(short_name, long_name, max_path)
+        return (1..max_path).include?(lfn_size) ? long_name[0..lfn_size-1] : short_name
+      end
+      return get_long_win32_filename(get_short_win32_filename(name))
+    else
+      return name
+    end
+
+  end
+
   def parse_cppcheck_line(compiler, src_path, build_path, line)
     /\[(?<filename>.*)\]:(?<linenumber>[0-9]+):(?<messagetype>\S+):(?<message>.*)/ =~ line
 
@@ -139,7 +163,7 @@ module ResultsProcessor
       /(?<filename>.+) : (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]?/ =~ line
 
       if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
-        return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir, compiler), 0, 0, messagetype, message)
+        return CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir, compiler), 0, 0, messagetype, message)
       else
         return nil
       end
