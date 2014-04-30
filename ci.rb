@@ -41,13 +41,13 @@ for conf in 2..ARGV.length-1
         if p.needs_run compiler
           @logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
           p.post_results compiler, true
-          begin 
+          begin
             p.do_package compiler
             p.do_test compiler
           rescue => e
             @logger.error "Logging unhandled failure #{e} #{e.backtrace}"
             p.unhandled_failure e
-          end 
+          end
           p.post_results compiler, false
           p.clean_up compiler
         else

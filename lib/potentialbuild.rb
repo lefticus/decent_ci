@@ -17,6 +17,7 @@ require_relative 'testresult.rb'
 require_relative 'cmake.rb'
 require_relative 'configuration.rb'
 require_relative 'resultsprocessor.rb'
+require_relative 'cppcheck.rb'
 
 
 ## Contains the logic flow for executing builds and parsing results
@@ -24,6 +25,7 @@ class PotentialBuild
   include CMake
   include Configuration
   include ResultsProcessor
+  include Cppcheck
 
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, release_url, release_assets, 
                  pull_id, pull_request_base_repository, pull_request_base_ref)
@@ -308,7 +310,6 @@ class PotentialBuild
     return true
   end
 
-
   def do_test(compiler)
     src_dir = build_base_name compiler
     build_dir = "#{build_base_name compiler}/build"
@@ -318,13 +319,17 @@ class PotentialBuild
 
     checkout_succeeded  = checkout src_dir
 
-    case @config.engine
-    when "cmake"
-      build_succeeded = cmake_build compiler, src_dir, build_dir, "Debug" if checkout_succeeded
-      # build_succeeded = true
-      cmake_test compiler, src_dir, build_dir, "Debug" if build_succeeded 
+    if compiler[:name] == "cppcheck"
+      cppcheck compiler, src_dir, build_dir
     else
-      raise "Unknown Build Engine"
+      case @config.engine
+      when "cmake"
+        build_succeeded = cmake_build compiler, src_dir, build_dir, "Debug" if checkout_succeeded
+        # build_succeeded = true
+        cmake_test compiler, src_dir, build_dir, "Debug" if build_succeeded 
+      else
+        raise "Unknown Build Engine"
+      end
     end
   end
 
@@ -386,11 +391,11 @@ class PotentialBuild
     if !@build_results.nil?
       @build_results.each { |b|
         build_errors += 1 if b.is_error
-        build_warnings += 1 if b.is_warning
-
         build_results_data << b.inspect
       }
+      build_warnings = @build_results.count - build_errors
     end
+
 
     package_errors = 0
     package_warnings = 0
@@ -441,6 +446,7 @@ pull_request_base_repository: #{@pull_request_base_repository}
 pull_request_base_ref: #{@pull_request_base_ref}
 device_id: #{device_id compiler}
 pending: #{pending}
+analyze_only: #{compiler[:analyze_only]}
 ---
 
 #{json_data.to_json}

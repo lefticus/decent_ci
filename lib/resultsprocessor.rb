@@ -20,6 +20,33 @@ module ResultsProcessor
     end
   end
 
+  def parse_cppcheck_line(compiler, src_path, build_path, line)
+    /\[(?<filename>.*)\]:(?<linenumber>[0-9]+):(?<messagetype>\S+):(?<message>.*)/ =~ line
+
+    if !filename.nil? && !messagetype.nil?
+      return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, 0, messagetype, message)
+    else
+      return nil
+    end
+  end
+
+
+  def process_cppcheck_results(compiler, src_dir, build_dir, stdout, stderr, result)
+    results = []
+
+    stderr.split("\n").each { |line|
+      @logger.debug("Parsing cppcheck line: #{line}")
+      msg = parse_cppcheck_line(compiler, src_dir, build_dir, line)
+      if !msg.nil?
+        results << msg
+      end
+    }
+
+    @build_results.merge(results)
+
+    return result == 0
+  end
+
   def process_cmake_results(compiler, src_dir, build_dir, stdout, stderr, result, is_package)
     results = []
 
@@ -141,6 +168,7 @@ module ResultsProcessor
     else
       /(?<filename>.*):(?<linenumber>[0-9]+): (?<message>.*)/ =~ line
 
+      # catch linker errors
       if !filename.nil? && !message.nil? && (message =~ /.*multiple definition.*/ || message =~ /.*undefined.*/)
         return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, 0, "error", message)
       else

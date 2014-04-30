@@ -187,10 +187,13 @@ module Configuration
           compiler[:version] = version
         when "gcc"
           compiler[:version] = `gcc -dumpversion`
+        when "cppcheck"
+          /.*Cppcheck (?<version>([0-9]+\.?)+).*/ =~ `cppcheck --version`
+          compiler[:version] = version
         end
       end
 
-      if compiler[:name] != "Visual Studio" && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
+      if compiler[:name] != "cppcheck" && compiler[:name] != "Visual Studio" && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
         case compiler[:name]
         when "clang"
           potential_name = which("clang-#{compiler[:version]}")
@@ -214,6 +217,23 @@ module Configuration
 
         if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?  || !(`#{compiler[:cc_bin]} --version` =~ /.*#{compiler[:version]}/) || !(`#{compiler[:cxx_bin]} --version` =~ /.*#{compiler[:version]}/)
 
+          raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
+        end
+      end
+
+      if compiler[:analyze_only].nil?
+        compiler[:analyze_only] = false
+      end
+
+      if compiler[:name] == "cppcheck" && compiler[:bin].nil?
+        potential_name = which("cppcheck-#{compiler[:version]}")
+        compiler[:analyze_only] = true
+        if !potential_name.nil?
+          compiler[:bin] = potential_name
+        else
+          compiler[:bin] = which("cppcheck")
+        end
+        if compiler[:bin].nil? || !(`#{compiler[:bin]} --version` =~ /.*#{compiler[:version]}/)
           raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
         end
       end
