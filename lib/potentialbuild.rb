@@ -60,6 +60,9 @@ class PotentialBuild
     @dateprefix = nil
     @failure = nil
     @test_run = false
+    @build_time = nil
+    @test_time = nil
+    @package_time = nil
   end
 
   def compilers
@@ -179,7 +182,7 @@ class PotentialBuild
   end
 
   def device_id compiler
-    "#{compiler[:architecture_description]}-#{@config.os}-#{@config.os_release}-#{compiler[:description]}"
+    "#{compiler[:architecture_description]}-#{@config.os}-#{@config.os_release}-#{compiler[:description]}#{ compiler[:build_type] =~ /release/i ? "" : "-#{compiler[:build_type]}" }"
   end
 
   def build_base_name compiler
@@ -259,18 +262,21 @@ class PotentialBuild
 
       checkout src_dir
 
+      start_time = Time.now
       case @config.engine
       when "cmake"
-        cmake_build compiler, src_dir, build_dir, "Release"
+        cmake_build compiler, src_dir, build_dir, compiler[:package_build_type]
       else
         raise "Unknown Build Engine"
       end
 
       begin 
-        @package_location = cmake_package compiler, src_dir, build_dir, "Release"
+        @package_location = cmake_package compiler, src_dir, build_dir, compiler[:package_build_type]
       rescue => e
         @logger.error("Error creating package #{e}")
       end
+      end_time = Time.now
+      @package_time = end_time - start_time
 
     end
   end
@@ -324,9 +330,15 @@ class PotentialBuild
     else
       case @config.engine
       when "cmake"
-        build_succeeded = cmake_build compiler, src_dir, build_dir, "Debug" if checkout_succeeded
+        start_time = Time.now
+        build_succeeded = cmake_build compiler, src_dir, build_dir, compiler[:test_build_type] if checkout_succeeded
+        build_time = Time.now
         # build_succeeded = true
-        cmake_test compiler, src_dir, build_dir, "Debug" if build_succeeded 
+        cmake_test compiler, src_dir, build_dir, compiler[:test_build_type] if build_succeeded 
+        end_time = Time.now
+
+        @build_time = build_time - start_time
+        @test_time = end_time - build_time
       else
         raise "Unknown Build Engine"
       end
@@ -363,6 +375,9 @@ class PotentialBuild
     @package_results = SortedSet.new()
     @dateprefix = nil
     @failure = nil
+    @build_time = nil
+    @test_time = nil
+    @package_time = nil
   end
 
   def post_results compiler, pending
@@ -447,6 +462,9 @@ pull_request_base_ref: #{@pull_request_base_ref}
 device_id: #{device_id compiler}
 pending: #{pending}
 analyze_only: #{compiler[:analyze_only]}
+build_time: #{@build_time}
+test_time: #{@test_time}
+package_time: #{@package_time}
 ---
 
 #{json_data.to_json}

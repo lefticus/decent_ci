@@ -263,6 +263,10 @@ module Configuration
         end
       end
 
+      if compiler[:build_type].nil? || compiler[:build_type] == ""
+        compiler[:build_type] = "Release"
+      end
+
       if compiler[:build_generator].nil? || compiler[:build_generator] == ""
         case compiler[:name]
         when /.*Visual Studio.*/i
