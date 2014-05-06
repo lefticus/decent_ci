@@ -7,14 +7,15 @@ module CMake
 
     cmake_flags = "#{compiler[:cmake_extra_flags]}"
 
+    env = {}
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
     else
-      cmake_flags = "-DCMAKE_CXX_FLAGS=\"/FC\" -DCMAKE_C_FLAGS=\"/FC\" #{cmake_flags}"
+      env = {"CXXFLAGS"=>"/FC", "CFLAGS"=>"/FC"}
     end
 
     out, err, result = run_script(
-      ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags} -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name compiler} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""])
+      ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags} -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name compiler} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
 
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)

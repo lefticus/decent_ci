@@ -99,12 +99,12 @@ class PotentialBuild
   #
   # If you've got a cleaner way of doing this, I'd be interested to see it.
   # If you think you can do it with Ruby's Timeout module, think again.
-  def run_with_timeout(command, timeout=60*60*4, tick=2)
+  def run_with_timeout(env, command, timeout=60*60*4, tick=2)
     out = ""
     err = ""
     begin
       # Start task in another thread, which spawns a process
-      stdin, stdout, stderr, thread = Open3.popen3(command)
+      stdin, stdout, stderr, thread = Open3.popen3(env, command)
       # Get the pid of the spawned process
       pid = thread[:pid]
       start = Time.now
@@ -147,7 +147,7 @@ class PotentialBuild
     return out.force_encoding("UTF-8"), err.force_encoding("UTF-8"), thread.value
   end
 
-  def run_script(commands)
+  def run_script(commands, env={})
     allout = ""
     allerr = "" 
     allresult = 0
@@ -155,9 +155,9 @@ class PotentialBuild
     commands.each { |cmd|
       if @config.os == "Windows"
         @logger.warn "Unable to set timeout for process execution on windows"
-        stdout, stderr, result = Open3::capture3(cmd)
+        stdout, stderr, result = Open3::capture3(env, cmd)
       else
-        stdout, stderr, result = run_with_timeout(cmd)
+        stdout, stderr, result = run_with_timeout(env, cmd)
       end
 
       stdout.split("\n").each { |l| 
@@ -265,13 +265,13 @@ class PotentialBuild
       start_time = Time.now
       case @config.engine
       when "cmake"
-        cmake_build compiler, src_dir, build_dir, compiler[:package_build_type]
+        cmake_build compiler, src_dir, build_dir, compiler[:build_type]
       else
         raise "Unknown Build Engine"
       end
 
       begin 
-        @package_location = cmake_package compiler, src_dir, build_dir, compiler[:package_build_type]
+        @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
       rescue => e
         @logger.error("Error creating package #{e}")
       end
@@ -331,10 +331,10 @@ class PotentialBuild
       case @config.engine
       when "cmake"
         start_time = Time.now
-        build_succeeded = cmake_build compiler, src_dir, build_dir, compiler[:test_build_type] if checkout_succeeded
+        build_succeeded = cmake_build compiler, src_dir, build_dir, compiler[:build_type] if checkout_succeeded
         build_time = Time.now
         # build_succeeded = true
-        cmake_test compiler, src_dir, build_dir, compiler[:test_build_type] if build_succeeded 
+        cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded 
         end_time = Time.now
 
         @build_time = build_time - start_time
