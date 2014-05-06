@@ -99,12 +99,12 @@ class PotentialBuild
   #
   # If you've got a cleaner way of doing this, I'd be interested to see it.
   # If you think you can do it with Ruby's Timeout module, think again.
-  def run_with_timeout(command, timeout=60*60*4, tick=2)
+  def run_with_timeout(env, command, timeout=60*60*4, tick=2)
     out = ""
     err = ""
     begin
       # Start task in another thread, which spawns a process
-      stdin, stdout, stderr, thread = Open3.popen3(command)
+      stdin, stdout, stderr, thread = Open3.popen3(env, command)
       # Get the pid of the spawned process
       pid = thread[:pid]
       start = Time.now
@@ -147,7 +147,7 @@ class PotentialBuild
     return out.force_encoding("UTF-8"), err.force_encoding("UTF-8"), thread.value
   end
 
-  def run_script(commands)
+  def run_script(commands, env={})
     allout = ""
     allerr = "" 
     allresult = 0
@@ -155,9 +155,9 @@ class PotentialBuild
     commands.each { |cmd|
       if @config.os == "Windows"
         @logger.warn "Unable to set timeout for process execution on windows"
-        stdout, stderr, result = Open3::capture3(cmd)
+        stdout, stderr, result = Open3::capture3(env, cmd)
       else
-        stdout, stderr, result = run_with_timeout(cmd)
+        stdout, stderr, result = run_with_timeout(env, cmd)
       end
 
       stdout.split("\n").each { |l| 
