@@ -445,9 +445,9 @@ package_warning_count: #{package_warnings}
 test_count: #{test_results_total}
 test_passed_count: #{test_results_passed}
 repository: #{@repository}
-compiler: #{@config.compiler}
-compiler_version: #{@config.compiler_version}
-architecture: #{@config.architecture}
+compiler: #{compiler[:name]}
+compiler_version: #{compiler[:version]}
+architecture: #{compiler[:architecture]}
 os: #{@config.os}
 os_release: #{@config.os_release}
 is_release: #{is_release}
