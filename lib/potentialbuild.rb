@@ -480,7 +480,7 @@ eos
       if test_results_total == 0
         test_percent = 100.0
       else 
-        test_percent = (test_results_passed / test_results_total) * 100.0
+        test_percent = (test_results_passed.to_f / test_results_total.to_f) * 100.0
       end
 
       if test_percent > 99.99
