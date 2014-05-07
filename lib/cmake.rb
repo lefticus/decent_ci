@@ -11,7 +11,7 @@ module CMake
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
     else
-      env = {"CXXFLAGS"=>"/FC", "CFLAGS"=>"/FC"}
+      env = {"CXXFLAGS"=>"/FC", "CFLAGS"=>"/FC", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
     end
 
     out, err, result = run_script(

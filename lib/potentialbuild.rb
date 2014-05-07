@@ -467,7 +467,7 @@ test_time: #{@test_time}
 package_time: #{@package_time}
 ---
 
-#{json_data.to_json}
+#{JSON.pretty_generate(json_data)}
 
 eos
 
