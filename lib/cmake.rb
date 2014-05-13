@@ -2,10 +2,10 @@
 
 # contains functions necessary for working with the 'cmake' engine
 module CMake
-  def cmake_build(compiler, src_dir, build_dir, build_type)
+  def cmake_build(compiler, src_dir, build_dir, install_dir, build_type)
     FileUtils.mkdir_p build_dir
 
-    cmake_flags = "#{compiler[:cmake_extra_flags]}"
+    cmake_flags = "#{compiler[:cmake_extra_flags]} -DCMAKE_INSTALL_PREFIX:PATH=\"#{install_dir}\""
 
     env = {}
     if !compiler[:cc_bin].nil?
@@ -56,5 +56,22 @@ module CMake
     test_stdout, test_stderr, test_result = run_script(["cd #{build_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"]);
     @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
   end
+
+  def cmake_install(compiler, src_dir, build_dir, install_dir, build_type)
+    if @config.os != "Windows"
+      build_switches = "-j#{compiler[:num_parallel_builds]}"
+    else
+      build_switches = ""
+    end
+
+    out, err, result = run_script(
+        ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --target install --use-stderr -- #{build_switches}"])
+
+    cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, true)
+    msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
+    gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
+    return msvc_success && gcc_success
+  end
+
 
 end

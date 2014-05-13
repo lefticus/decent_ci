@@ -62,6 +62,7 @@ class PotentialBuild
     @test_run = false
     @build_time = nil
     @test_time = nil
+    @install_time = nil
     @package_time = nil
   end
 
@@ -316,33 +317,132 @@ class PotentialBuild
     return true
   end
 
-  def do_test(compiler)
-    src_dir = build_base_name compiler
-    build_dir = "#{build_base_name compiler}/build"
+  def get_src_dir(compiler)
+    build_base_name compiler
+  end
+
+  def get_build_dir(compiler)
+    "#{build_base_name compiler}/build"
+  end
+
+  def get_install_dir(compiler)
+    "#{Dir.getwd}/#{build_base_name compiler}-install"
+  end
+
+  def needs_install(compiler)
+    return !Dir.directory?(get_install_dir compiler);
+  end
+
+  def get_regression_dir(compiler)
+    "#{build_base_name compiler}/regressions"
+  end
+
+
+  def do_build(compiler)
+    src_dir = get_src_dir compiler
+    build_dir = get_build_dir compiler
+    install_dir = get_install_dir compiler
 
     @created_dirs << src_dir
     @created_dirs << build_dir
 
+
     checkout_succeeded  = checkout src_dir
 
     if compiler[:name] == "cppcheck"
+      start_time = Time.now
       cppcheck compiler, src_dir, build_dir
+      @build_time = Time.now - start_time
     else
       case @config.engine
       when "cmake"
         start_time = Time.now
-        build_succeeded = cmake_build compiler, src_dir, build_dir, compiler[:build_type] if checkout_succeeded
-        build_time = Time.now
-        # build_succeeded = true
-        cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded 
-        end_time = Time.now
-
-        @build_time = build_time - start_time
-        @test_time = end_time - build_time
+        build_succeeded = cmake_build compiler, src_dir, build_dir, install_dir, compiler[:build_type] if checkout_succeeded
+        @build_time = Time.now - start_time
       else
         raise "Unknown Build Engine"
       end
     end
+  end
+
+  def do_test(compiler)
+    src_dir = get_src_dir compiler
+    build_dir = get_build_dir compiler
+
+    @created_dirs << src_dir
+    @created_dirs << build_dir
+
+    build_succeeded = do_build compiler
+
+    if compiler[:name] == "cppcheck"
+    else
+      case @config.engine
+      when "cmake"
+        start_time = Time.now
+        cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded 
+        @test_time = Time.now- start_time
+      else
+        raise "Unknown Build Engine"
+      end
+    end
+  end
+
+  def do_install(compiler)
+    src_dir = get_src_dir compiler
+    build_dir = get_build_dir compiler
+    install_dir = get_install_dir compiler
+
+    @created_dirs << src_dir
+    @created_dirs << build_dir
+
+    if compiler[:name] == "cppcheck"
+    else
+      case @config.engine
+      when "cmake"
+        start_time = Time.now
+        install_succeeded = cmake_install compiler, src_dir, build_dir, install_dir, compiler[:build_type]
+        @install_time = Time.now - start_time
+      else
+        raise "Unknown Build Engine"
+      end
+    end
+
+    return install_succeeded
+  end
+
+  def needs_regression_test(compiler)
+    if !@config.regression_script.nil?
+      return true;
+    end
+  end
+
+  def do_regression_test(compiler, base)
+    install_dir_1 = base.get_install_dir compiler
+    install_dir_2 = get_install_dir compiler
+
+    regression_dir = get_regression_dir compiler
+    @created_dirs << regression_dir
+
+    FileUtils.mkdir_p regression_dir
+
+
+    if !@config.regression_respository.nil?
+      out, err, result = run_script(
+        ["cd #{regression_dir} && git init",
+         "cd #{regression_dir} && git pull https://#{@config.token}@github.com/#{@config.regression_repository} #{@config.regression_refspec}" ])
+
+      if !@config.regression_commit_sha.nil? && @config.regression_commit_sha != "" && result == 0
+        out, err, result = run_script( ["cd #{regression_dir} && git checkout #{@config.regression_commit_sha}"] );
+      end
+    end
+
+    script = []
+    script << @config.regression_script
+    script.flatten!
+
+    out,err,result = run_script(script)
+
+    return result == 0
   end
 
   def unhandled_failure e
@@ -378,6 +478,7 @@ class PotentialBuild
     @build_time = nil
     @test_time = nil
     @package_time = nil
+    @install_time = nil
   end
 
   def post_results compiler, pending
@@ -465,6 +566,7 @@ analyze_only: #{compiler[:analyze_only]}
 build_time: #{@build_time}
 test_time: #{@test_time}
 package_time: #{@package_time}
+install_time: #{@install_time}
 ---
 
 #{JSON.pretty_generate(json_data)}

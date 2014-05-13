@@ -44,6 +44,16 @@ for conf in 2..ARGV.length-1
           begin
             p.do_package compiler
             p.do_test compiler
+            p.do_install compiler
+
+            if p.needs_regression_test compiler 
+              r = b.get_regression_base p
+              if r.needs_install compiler
+                r.do_build compiler
+                r.do_install compiler
+              end
+              p.do_regression_test compiler, r
+            end
           rescue => e
             @logger.error "Logging unhandled failure #{e} #{e.backtrace}"
             p.unhandled_failure e
