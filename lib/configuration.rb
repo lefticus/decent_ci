@@ -33,7 +33,8 @@ module Configuration
           content = @client.content(location, {:path=>name, :ref=>ref} )
           contents = content.content
           return YAML.load(Base64.decode64(contents.to_s))
-
+        rescue SyntaxError => e
+          raise "#{e.message} while parsing #{name}@#{ref}"
         rescue => e
           @logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e}")
 
