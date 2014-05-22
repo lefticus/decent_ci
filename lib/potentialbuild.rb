@@ -27,6 +27,10 @@ class PotentialBuild
   include ResultsProcessor
   include Cppcheck
 
+  attr_reader :tag_name
+  attr_reader :commit_sha
+  attr_reader :branch_name
+
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, release_url, release_assets, 
                  pull_id, pull_request_base_repository, pull_request_base_ref)
     @logger = Logger.new(STDOUT)
@@ -330,7 +334,7 @@ class PotentialBuild
   end
 
   def needs_install(compiler)
-    return !Dir.directory?(get_install_dir compiler);
+    return !File.directory?(get_install_dir compiler);
   end
 
   def get_regression_dir(compiler)
@@ -429,10 +433,10 @@ class PotentialBuild
     if !@config.regression_respository.nil?
       out, err, result = run_script(
         ["cd #{regression_dir} && git init",
-         "cd #{regression_dir} && git pull https://#{@config.token}@github.com/#{@config.regression_repository} #{@config.regression_refspec}" ])
+         "cd #{regression_dir} && git pull https://#{@config.token}@github.com/#{@config.regression_repository}" ])
 
       if !@config.regression_commit_sha.nil? && @config.regression_commit_sha != "" && result == 0
-        out, err, result = run_script( ["cd #{regression_dir} && git checkout #{@config.regression_commit_sha}"] );
+        out, err, result = run_script( ["cd #{regression_dir} && git checkout #{@config.regression_commit_sha}"] )
       end
     end
 
@@ -440,7 +444,9 @@ class PotentialBuild
     script << @config.regression_script
     script.flatten!
 
-    out,err,result = run_script(script)
+    @logger.debug("Running regression script: " + script.to_s)
+
+    out,err,result = run_script(script, {"REGRESSION_BASE"=>install_dir_1, "REGRESSION_CUR"=>install_dir_2})
 
     return result == 0
   end

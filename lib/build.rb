@@ -71,6 +71,25 @@ class Build
     }
   end
 
+  def get_regression_base t_potential_build
+    if t_potential_build.branch_name == "master"
+      return nil
+    elsif t_potential_build.branch_name == "develop"
+      @potential_builds.each { |p|
+        if p.branch_name == "master"
+          return p
+        end
+      }
+      return nil
+    else 
+      @potential_builds.each { |p|
+        if p.branch_name == "develop"
+          return p
+        end
+      }
+      return nil
+    end
+  end
 
   def potential_builds
     @potential_builds
