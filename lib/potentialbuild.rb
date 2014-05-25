@@ -383,7 +383,11 @@ class PotentialBuild
       case @config.engine
       when "cmake"
         start_time = Time.now
-        cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded 
+        if !ENV["DECENT_CI_SKIP_TEST"]
+          cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded 
+        else
+          @logger.debug("Skipping test, DECENT_CI_SKIP_TEST is set in the environment")
+        end
         @test_time = Time.now- start_time
       else
         raise "Unknown Build Engine"
@@ -415,14 +419,16 @@ class PotentialBuild
   end
 
   def needs_regression_test(compiler)
-    if !@config.regression_script.nil?
+    if !@config.regression_script.nil? && !compiler[:analyze_only]
       return true;
     end
   end
 
   def do_regression_test(compiler, base)
-    install_dir_1 = base.get_install_dir compiler
-    install_dir_2 = get_install_dir compiler
+    install_dir_1 = File.expand_path(base.get_install_dir compiler)
+    install_dir_2 = File.expand_path(get_install_dir compiler)
+    src_dir_1 = File.expand_path(base.get_src_dir compiler)
+    src_dir_2 = File.expand_path(get_src_dir compiler)
 
     regression_dir = get_regression_dir compiler
     @created_dirs << regression_dir
@@ -430,7 +436,7 @@ class PotentialBuild
     FileUtils.mkdir_p regression_dir
 
 
-    if !@config.regression_respository.nil?
+    if !@config.regression_repository.nil?
       out, err, result = run_script(
         ["cd #{regression_dir} && git init",
          "cd #{regression_dir} && git pull https://#{@config.token}@github.com/#{@config.regression_repository}" ])
@@ -444,9 +450,13 @@ class PotentialBuild
     script << @config.regression_script
     script.flatten!
 
+    script.map! { |line|
+      line = "cd #{regression_dir} && #{line}"
+    }
+
     @logger.debug("Running regression script: " + script.to_s)
 
-    out,err,result = run_script(script, {"REGRESSION_BASE"=>install_dir_1, "REGRESSION_CUR"=>install_dir_2})
+    out,err,result = run_script(script, {"REGRESSION_NUM_PROCESSES"=>compiler[:num_parallel_builds].to_s, "REGRESSION_BASE_INSTALL"=>install_dir_1, "REGRESSION_CUR_INSTALL"=>install_dir_2, "REGRESSION_BASE_SRC"=>src_dir_1, "REGRESSION_CUR_SRC"=>src_dir_2})
 
     return result == 0
   end
