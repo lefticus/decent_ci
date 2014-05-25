@@ -36,19 +36,21 @@ class Build
       begin 
         @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.url, r.assets, nil, nil, nil)
       rescue => e
-        @logger.info("Skipping potential build: #{e.backtrace} #{r}")
+        @logger.info("Skipping potential build: #{e.backtrace} #{r.tag_name}")
       end
     }
   end
 
   def query_branches
-    branches = @client.branches(@repository)
+    # todo properly handle paginated results from github
+    branches = @client.branches(@repository, :per_page => 100)
 
     branches.each { |b| 
+      @logger.debug("Querying potential build: #{b.name}")
       begin 
         @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, nil, nil, nil, nil, nil)
       rescue => e
-        @logger.info("Skipping potential build: #{e.backtrace} #{b}")
+        @logger.info("Skipping potential build: #{e.backtrace} #{b.name}")
       end
     }
   end
