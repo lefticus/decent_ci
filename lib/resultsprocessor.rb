@@ -59,7 +59,7 @@ module ResultsProcessor
     /(?<name>\S+);(?<status>\S+);(?<time>\S+);(?<message>.*)/ =~ line
 
     if !name.nil? && !status.nil?
-      return TestResult.new(name, status, time, message, nil)
+      return TestResult.new("regression.#{name}", status, time, message, nil)
     else
       return nil
     end
