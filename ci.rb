@@ -52,6 +52,7 @@ for conf in 2..ARGV.length-1
                 if r.needs_install compiler
                   r.do_build compiler
                   r.do_install compiler
+                  r.clean_up compiler
                 end
                 p.do_regression_test compiler, r
               end

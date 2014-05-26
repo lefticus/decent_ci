@@ -432,8 +432,22 @@ class PotentialBuild
 
     regression_dir = get_regression_dir compiler
     @created_dirs << regression_dir
-
     FileUtils.mkdir_p regression_dir
+
+    @created_dirs << install_dir_1 + "/Tests-Annual"
+    @created_dirs << install_dir_1 + "/Tests-DDOnly"
+    @created_dirs << install_dir_1 + "/Tests-ReverseDD-"
+    @created_dirs << install_dir_1 + "/Tests-ReverseDD"
+    @created_dirs << install_dir_1 + "/Tests"
+
+    @created_dirs << install_dir_2 + "/Tests-Annual"
+    @created_dirs << install_dir_2 + "/Tests-DDOnly"
+    @created_dirs << install_dir_2 + "/Tests-ReverseDD-"
+    @created_dirs << install_dir_2 + "/Tests-ReverseDD"
+    @created_dirs << install_dir_2 + "/Tests"
+
+
+
 
     start_time = Time.now
 
