@@ -435,6 +435,7 @@ class PotentialBuild
 
     FileUtils.mkdir_p regression_dir
 
+    start_time = Time.now
 
     if !@config.regression_repository.nil?
       out, err, result = run_script(
@@ -457,6 +458,15 @@ class PotentialBuild
     @logger.debug("Running regression script: " + script.to_s)
 
     out,err,result = run_script(script, {"REGRESSION_NUM_PROCESSES"=>compiler[:num_parallel_builds].to_s, "REGRESSION_BASE_INSTALL"=>install_dir_1, "REGRESSION_CUR_INSTALL"=>install_dir_2, "REGRESSION_BASE_SRC"=>src_dir_1, "REGRESSION_CUR_SRC"=>src_dir_2})
+
+    results = process_regression_results out,err,result
+    if @test_results.nil?
+      @test_results = results
+    else
+      @test_results.merge(results)
+    end
+
+    @test_time = Time.now - start_time
 
     return result == 0
   end

@@ -55,6 +55,31 @@ module ResultsProcessor
     end
   end
 
+  def parse_regression_line(line)
+    /(?<name>\S+);(?<status>\S+);(?<time>\S+);(?<message>.*)/ =~ line
+
+    if !name.nil? && !status.nil?
+      return TestResult.new(name, status, time, message, nil)
+    else
+      return nil
+    end
+  end
+
+  def process_regression_results(stdout, stderr, result)
+    results = []
+
+    stdout.split("\n").each { |line|
+      @logger.debug("Parsing regression line: #{line}")
+      msg = parse_regression_line(line)
+      if !msg.nil?
+        results << msg
+      end
+    }
+
+    return results
+  end
+
+
 
   def process_cppcheck_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
