@@ -463,7 +463,7 @@ class PotentialBuild
     if @test_results.nil?
       @test_results = results
     else
-      @test_results.merge(results)
+      @test_results = @test_results + results
     end
 
     @test_time = Time.now - start_time
