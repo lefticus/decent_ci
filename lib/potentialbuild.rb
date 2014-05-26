@@ -439,12 +439,14 @@ class PotentialBuild
     @created_dirs << install_dir_1 + "/Tests-ReverseDD-"
     @created_dirs << install_dir_1 + "/Tests-ReverseDD"
     @created_dirs << install_dir_1 + "/Tests"
+    @created_dirs << install_dir_1 + "/InputFiles"
 
     @created_dirs << install_dir_2 + "/Tests-Annual"
     @created_dirs << install_dir_2 + "/Tests-DDOnly"
     @created_dirs << install_dir_2 + "/Tests-ReverseDD-"
     @created_dirs << install_dir_2 + "/Tests-ReverseDD"
     @created_dirs << install_dir_2 + "/Tests"
+    @created_dirs << install_dir_2 + "/InputFiles"
 
 
 
