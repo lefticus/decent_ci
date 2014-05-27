@@ -482,7 +482,12 @@ class PotentialBuild
       @test_results = @test_results + results
     end
 
-    @test_time = Time.now - start_time
+    time = Time.now - start_time
+    if @test_time.nil?
+      @test_time = time
+    else
+      @test_time += time
+    end
 
     return result == 0
   end
