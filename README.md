@@ -22,11 +22,12 @@ Decent CI is tested on Windows, Linux and MacOS.
  2. Install python https://www.python.org/downloads/ add it to the path (needed for energyplus regressions)
  3. Install ruby 2.0+ http://rubyinstaller.org/downloads/ add it to the path
  4. Install cmake http://www.cmake.org/cmake/resources/software.html add it to the path
- 5. Download the updated windows ssl certificate file and add `SSL_CERT_FILE` environment variable pointing to it. See here: https://gist.github.com/fnichol/867550
- 6. `gem install octokit activesupport`
- 7. Get gist from here https://gist.github.com/lefticus/10914850
- 8. Create github token for the user
- 9. Launch git bash, execute `ruby ./run_ci.rb <build_folder> <true/false test mode> <token> <respository>`
+ 5. Install mingw fortran if desired (for EnergyPlus) add it to the path
+ 6. Download the updated windows ssl certificate file and add `SSL_CERT_FILE` environment variable pointing to it. See here: https://gist.github.com/fnichol/867550
+ 7. `gem install octokit activesupport`
+ 8. Get gist from here https://gist.github.com/lefticus/10914850
+ 9. Create github token for the user
+ 10. Launch git bash, execute `ruby ./run_ci.rb <build_folder> <true/false test mode> <token> <respository>`
 
 # MacOS Installation / Usage
 
@@ -38,7 +39,7 @@ Decent CI is tested on Windows, Linux and MacOS.
 
 # Linux Installation / Usage
 
- 1. `sudo apt-get install cmake git g++ ruby irb python` Make sure ruby installed is 1.9+
+ 1. `sudo apt-get install cmake git g++ ruby irb python gfortran` Make sure ruby installed is 1.9+
  2. `sudo gem install octokit activesupport`
  3. Get gist from here https://gist.github.com/lefticus/10914850
  4. Create github token for the user
