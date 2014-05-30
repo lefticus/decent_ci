@@ -16,15 +16,34 @@ Examples can be found in the [confs](confs) folder.
 
 Decent CI is tested on Windows, Linux and MacOS.
 
-To use on Windows you will need to install the official ruby 2.x and git sh packages.
+# Windows Installation / Usage
 
-You may need to follow these directions to deal with an ssl certificate error on Windows: https://gist.github.com/fnichol/867550
+ 1. Install git bash http://git-scm.com/download/win
+ 2. Install python https://www.python.org/downloads/ add it to the path (needed for energyplus regressions)
+ 3. Install ruby 2.0+ http://rubyinstaller.org/downloads/ add it to the path
+ 4. Install cmake http://www.cmake.org/cmake/resources/software.html add it to the path
+ 5. Download the updated windows ssl certificate file and add `SSL_CERT_FILE` environment variable pointing to it. See here: https://gist.github.com/fnichol/867550
+ 6. `gem install octokit activesupport`
+ 7. Get gist from here https://gist.github.com/lefticus/10914850
+ 8. Create github token for the user
+ 9. Launch git bash, execute `ruby ./run_ci.rb <build_folder> <true/false test mode> <token> <respository>`
 
-To install the required gems on MacOS you may need to follow these instructions http://stackoverflow.com/questions/22352838/ruby-gem-install-json-fails-on-mavericks-and-xcode-5-1-unknown-argument-mul
+# MacOS Installation / Usage
 
-A utility script, run_ci.rb, has been written to run the decent_ci scripts continuously in a loop:
+ 1. Install ruby gems octokit and activesupport. You will need to follow these instructions http://stackoverflow.com/questions/22352838/ruby-gem-install-json-fails-on-mavericks-and-xcode-5-1-unknown-argument-mul
+ 2. `sudo gem install octokit activesupport`
+ 3. Get gist from here https://gist.github.com/lefticus/10914850
+ 4. Create github token for the user
+ 5. Execute `ruby ./run_ci.rb <build_folder> <true/false test mode> <token> <respository>`
 
-https://gist.github.com/lefticus/10914850
+# Linux Installation / Usage
+
+ 1. `sudo apt-get install cmake git g++ ruby irb python` Make sure ruby installed is 1.9+
+ 2. `sudo gem install octokit activesupport`
+ 3. Get gist from here https://gist.github.com/lefticus/10914850
+ 4. Create github token for the user
+ 5. Execute `ruby ./run_ci.rb <build_folder> <true/false test mode> <token> <respository>`
+
 
 
 
