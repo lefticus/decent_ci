@@ -334,6 +334,7 @@ class PotentialBuild
   end
 
   def needs_install(compiler)
+    return true
     return !File.directory?(get_install_dir compiler);
   end
 
@@ -446,7 +447,6 @@ class PotentialBuild
     @created_dirs << install_dir_2 + "/Tests-ReverseDD-"
     @created_dirs << install_dir_2 + "/Tests-ReverseDD"
     @created_dirs << install_dir_2 + "/Tests"
-    @created_dirs << install_dir_2 + "/InputFiles"
 
 
 
