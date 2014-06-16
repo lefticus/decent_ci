@@ -2,7 +2,7 @@
 
 # contains functions necessary for working with the 'cmake' engine
 module CMake
-  def cmake_build(compiler, src_dir, build_dir, install_dir, build_type)
+  def cmake_build(compiler, src_dir, build_dir, install_dir, build_type, regression_dir, regression_baseline)
     FileUtils.mkdir_p build_dir
 
     cmake_flags = "#{compiler[:cmake_extra_flags]} -DCMAKE_INSTALL_PREFIX:PATH=\"#{install_dir}\""
@@ -10,8 +10,16 @@ module CMake
     env = {}
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
+      env = {"CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
     else
       env = {"CXXFLAGS"=>"/FC", "CFLAGS"=>"/FC", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
+    end
+
+    if !regression_baseline.nil?
+      env["REGRESSION_BASELINE"] = File.expand_path(regression_baseline.get_build_dir(compiler))
+      env["REGRESSION_DIR"] = File.expand_path(regression_dir)
+      env["REGRESSION_BASELINE_SHA"] = regression_baseline.commit_sha
+      env["COMMIT_SHA"] = @commit_sha
     end
 
     out, err, result = run_script(

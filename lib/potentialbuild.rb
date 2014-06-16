@@ -11,6 +11,7 @@ require 'fileutils'
 require 'ostruct'
 require 'yaml'
 require 'base64'
+require 'socket'
 
 require_relative 'codemessage.rb'
 require_relative 'testresult.rb'
@@ -31,7 +32,7 @@ class PotentialBuild
   attr_reader :commit_sha
   attr_reader :branch_name
 
-  def initialize(client, token, repository, tag_name, commit_sha, branch_name, release_url, release_assets, 
+  def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, 
                  pull_id, pull_request_base_repository, pull_request_base_ref)
     @logger = Logger.new(STDOUT)
     @client = client
@@ -45,6 +46,7 @@ class PotentialBuild
     @branch_name = branch_name
     @release_url = release_url
     @release_assets = release_assets
+    @author = author
 
     @buildid = @tag_name ? @tag_name : @commit_sha
     @refspec = @tag_name ? @tag_name : @branch_name
@@ -57,6 +59,7 @@ class PotentialBuild
     @buildid = "#{@buildid}-PR#{@pull_id}" if !@pull_id.nil?
 
     @created_dirs = []
+    @created_regression_dirs = []
     @package_location = nil
     @test_results = nil
     @build_results = SortedSet.new()
@@ -255,7 +258,7 @@ class PotentialBuild
   end
 
 
-  def do_package compiler
+  def do_package(compiler, regression_baseline)
     @logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
 
     if is_release # && needs_release_package(compiler)
@@ -270,7 +273,7 @@ class PotentialBuild
       start_time = Time.now
       case @config.engine
       when "cmake"
-        cmake_build compiler, src_dir, build_dir, compiler[:build_type]
+        cmake_build compiler, src_dir, build_dir, compiler[:build_type], regression_baseline
       else
         raise "Unknown Build Engine"
       end
@@ -343,7 +346,7 @@ class PotentialBuild
   end
 
 
-  def do_build(compiler)
+  def do_build(compiler, regression_baseline)
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
     install_dir = get_install_dir compiler
@@ -362,7 +365,7 @@ class PotentialBuild
       case @config.engine
       when "cmake"
         start_time = Time.now
-        build_succeeded = cmake_build compiler, src_dir, build_dir, install_dir, compiler[:build_type] if checkout_succeeded
+        build_succeeded = cmake_build compiler, src_dir, build_dir, install_dir, compiler[:build_type], get_regression_dir(compiler), regression_baseline if checkout_succeeded
         @build_time = Time.now - start_time
       else
         raise "Unknown Build Engine"
@@ -370,14 +373,14 @@ class PotentialBuild
     end
   end
 
-  def do_test(compiler)
+  def do_test(compiler, regression_baseline)
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
 
     @created_dirs << src_dir
     @created_dirs << build_dir
 
-    build_succeeded = do_build compiler
+    build_succeeded = do_build compiler, regression_baseline
 
     if compiler[:name] == "cppcheck"
     else
@@ -420,38 +423,17 @@ class PotentialBuild
   end
 
   def needs_regression_test(compiler)
-    if !@config.regression_script.nil? && !compiler[:analyze_only]
+    if (!@config.regression_script.nil? || !@config.regression_repository.nil?) && !compiler[:analyze_only]
       return true;
     end
   end
 
-  def do_regression_test(compiler, base)
-    install_dir_1 = File.expand_path(base.get_install_dir compiler)
-    install_dir_2 = File.expand_path(get_install_dir compiler)
-    src_dir_1 = File.expand_path(base.get_src_dir compiler)
-    src_dir_2 = File.expand_path(get_src_dir compiler)
-
+  def clone_regression_repository compiler
     regression_dir = get_regression_dir compiler
-    @created_dirs << regression_dir
+    @created_regression_dirs << regression_dir
     FileUtils.mkdir_p regression_dir
 
-    @created_dirs << install_dir_1 + "/Tests-Annual"
-    @created_dirs << install_dir_1 + "/Tests-DDOnly"
-    @created_dirs << install_dir_1 + "/Tests-ReverseDD-"
-    @created_dirs << install_dir_1 + "/Tests-ReverseDD"
-    @created_dirs << install_dir_1 + "/Tests"
-    @created_dirs << install_dir_1 + "/InputFiles"
 
-    @created_dirs << install_dir_2 + "/Tests-Annual"
-    @created_dirs << install_dir_2 + "/Tests-DDOnly"
-    @created_dirs << install_dir_2 + "/Tests-ReverseDD-"
-    @created_dirs << install_dir_2 + "/Tests-ReverseDD"
-    @created_dirs << install_dir_2 + "/Tests"
-
-
-
-
-    start_time = Time.now
 
     if !@config.regression_repository.nil?
       out, err, result = run_script(
@@ -462,6 +444,15 @@ class PotentialBuild
         out, err, result = run_script( ["cd #{regression_dir} && git checkout #{@config.regression_commit_sha}"] )
       end
     end
+  end
+
+  def do_regression_test(compiler, base)
+    regression_dir = get_regression_dir compiler
+
+    build_dir_1 = File.expand_path(base.get_build_dir compiler)
+    build_dir_2 = File.expand_path(get_build_dir compiler)
+    src_dir_1 = File.expand_path(base.get_src_dir compiler)
+    src_dir_2 = File.expand_path(get_src_dir compiler)
 
     script = []
     script << @config.regression_script
@@ -471,25 +462,32 @@ class PotentialBuild
       line = "cd #{regression_dir} && #{line}"
     }
 
+
     @logger.debug("Running regression script: " + script.to_s)
 
-    out,err,result = run_script(script, {"REGRESSION_NUM_PROCESSES"=>compiler[:num_parallel_builds].to_s, "REGRESSION_BASE_INSTALL"=>install_dir_1, "REGRESSION_CUR_INSTALL"=>install_dir_2, "REGRESSION_BASE_SRC"=>src_dir_1, "REGRESSION_CUR_SRC"=>src_dir_2})
+    if !script.empty?
+      start_time = Time.now
 
-    results = process_regression_results out,err,result
-    if @test_results.nil?
-      @test_results = results
+      out,err,result = run_script(script, {"REGRESSION_NUM_PROCESSES"=>compiler[:num_parallel_builds].to_s, "REGRESSION_BASE"=>build_dir_1, "REGRESSION_MOD"=>build_dir_2, "REGRESSION_BASE_SRC"=>src_dir_1, "REGRESSION_MOD_SRC"=>src_dir_2})
+
+      results = process_regression_results out,err,result
+      if @test_results.nil?
+        @test_results = results
+      else
+        @test_results = @test_results + results
+      end
+
+      time = Time.now - start_time
+      if @test_time.nil?
+        @test_time = time
+      else
+        @test_time += time
+      end
+
+      return result == 0
     else
-      @test_results = @test_results + results
+      return true
     end
-
-    time = Time.now - start_time
-    if @test_time.nil?
-      @test_time = time
-    else
-      @test_time += time
-    end
-
-    return result == 0
   end
 
   def unhandled_failure e
@@ -514,8 +512,21 @@ class PotentialBuild
     end
   end
 
+  def clean_up_regressions compiler
+    if !@test_run
+      @created_regression_dirs.each { |d|
+        begin 
+          FileUtils.rm_rf(d)
+        rescue => e
+          @logger.error("Error cleaning up directory #{e}")
+        end
+      }
+    end
+  end
+
   def next_build
     @created_dirs = []
+    @created_regression_dirs = []
     @package_location = nil
     @test_results = nil
     @build_results = SortedSet.new()
@@ -614,6 +625,8 @@ build_time: #{@build_time}
 test_time: #{@test_time}
 package_time: #{@package_time}
 install_time: #{@install_time}
+machine_name: #{Socket.gethostname}
+machine_ip: #{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}
 ---
 
 #{JSON.pretty_generate(json_data)}
@@ -690,7 +703,7 @@ eos
     else
       github_document = 
 <<-eos
-#{device_id compiler}: #{(failed) ? "Failed" : "Succeeded"}
+#{@refspec} (#{@author}) - #{device_id compiler}: #{github_status_message}
 
 #{build_badge} #{test_badge}
 eos

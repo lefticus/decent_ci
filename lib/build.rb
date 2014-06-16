@@ -34,9 +34,9 @@ class Build
 
     releases.each { |r|
       begin 
-        @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.url, r.assets, nil, nil, nil)
+        @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
       rescue => e
-        @logger.info("Skipping potential build: #{e.backtrace} #{r.tag_name}")
+        @logger.info("Skipping potential build: #{e} #{e.backtrace} #{r.tag_name}")
       end
     }
   end
@@ -47,10 +47,11 @@ class Build
 
     branches.each { |b| 
       @logger.debug("Querying potential build: #{b.name}")
+      branch_details = @client.branch(@repository, b.name)
       begin 
-        @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, nil, nil, nil, nil, nil)
+        @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, branch_details.commit.author.login, nil, nil, nil, nil, nil)
       rescue => e
-        @logger.info("Skipping potential build: #{e.backtrace} #{b.name}")
+        @logger.info("Skipping potential build: #{e} #{e.backtrace} #{b.name}")
       end
     }
   end
@@ -65,9 +66,9 @@ class Build
         @logger.info("Skipping pullrequest originating from head repo");
       else
         begin 
-          @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
+          @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p,head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
         rescue => e
-          @logger.info("Skipping potential build: #{e.backtrace} #{p}")
+          @logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
         end
       end
     }

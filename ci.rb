@@ -43,25 +43,32 @@ for conf in 2..ARGV.length-1
             @logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
             p.post_results compiler, true
             begin
-              p.do_package compiler
-              p.do_test compiler
-              p.do_install compiler
+              regression_base = b.get_regression_base p
+              if p.needs_regression_test compiler and regression_base
+                p.clone_regression_repository compiler
 
-              if p.needs_regression_test compiler 
-                r = b.get_regression_base p
-                if r.needs_install compiler
-                  r.do_build compiler
-                  r.do_install compiler
+                if !File.directory?(regression_base.get_build_dir(compiler))
+                  @logger.info "Beginning regression basline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
+                  regression_base.do_build compiler, nil
+                  regression_base.do_test compiler, nil
+                else
+                  @logger.info "Skipping already completed regression basline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
                 end
-                p.do_regression_test compiler, r
-                r.clean_up compiler
+              end
+
+              p.do_package compiler, regression_base
+              p.do_test compiler, regression_base
+
+              if regression_base
+                p.do_regression_test compiler, regression_base
+                p.clean_up_regressions compiler
               end
             rescue => e
               @logger.error "Logging unhandled failure #{e} #{e.backtrace}"
               p.unhandled_failure e
             end
             p.post_results compiler, false
-            p.clean_up compiler
+#            p.clean_up compiler
           else
             @logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
           end
