@@ -66,7 +66,7 @@ class Build
         @logger.info("Skipping pullrequest originating from head repo");
       else
         begin 
-          @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p,head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
+          @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p.head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
         rescue => e
           @logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
         end

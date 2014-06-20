@@ -61,7 +61,7 @@ module CMake
 
 
   def cmake_test(compiler, src_dir, build_dir, build_type)
-    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"]);
+    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{@config.tests_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"]);
     @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
   end
 

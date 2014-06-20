@@ -314,7 +314,12 @@ module Configuration
 
         compiler[:num_parallel_builds] = numprocs
       end
+
     }
+
+    if configuration.tests_dir.nil?
+      configuration.tests_dir = ""
+    end
 
     return configuration
   end
