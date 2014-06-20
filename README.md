@@ -39,7 +39,7 @@ Decent CI is tested on Windows, Linux and MacOS.
 
 # Linux Installation / Usage
 
- 1. `sudo apt-get install cmake git g++ ruby irb python gfortran` Make sure ruby installed is 1.9+
+ 1. `sudo apt-get install cmake git g++ ruby irb python gfortran cppcheck` Make sure ruby installed is 1.9+
  2. `sudo gem install octokit activesupport`
  3. Get gist from here https://gist.github.com/lefticus/10914850
  4. Create github token for the user
