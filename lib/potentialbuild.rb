@@ -34,7 +34,6 @@ class PotentialBuild
 
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, 
                  pull_id, pull_request_base_repository, pull_request_base_ref)
-    @logger = Logger.new(STDOUT)
     @client = client
     @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name))
     @config.repository_name = @client.repo(repository).name
@@ -162,22 +161,22 @@ class PotentialBuild
 
     commands.each { |cmd|
       if @config.os == "Windows"
-        @logger.warn "Unable to set timeout for process execution on windows"
+        $logger.warn "Unable to set timeout for process execution on windows"
         stdout, stderr, result = Open3::capture3(env, cmd)
       else
         stdout, stderr, result = run_with_timeout(env, cmd)
       end
 
       stdout.split("\n").each { |l| 
-        @logger.debug("cmd: #{cmd}: stdout: #{l}")
+        $logger.debug("cmd: #{cmd}: stdout: #{l}")
       }
 
       stderr.split("\n").each { |l| 
-        @logger.info("cmd: #{cmd}: stderr: #{l}")
+        $logger.info("cmd: #{cmd}: stderr: #{l}")
       }
 
       if cmd != commands.last && result != 0
-        @logger.error("Error running script command: #{stderr}")
+        $logger.error("Error running script command: #{stderr}")
         raise stderr
       end
 
@@ -259,7 +258,7 @@ class PotentialBuild
 
 
   def do_package(compiler, regression_baseline)
-    @logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
+    $logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
 
     if is_release # && needs_release_package(compiler)
       src_dir = "#{build_base_name compiler}-release"
@@ -281,7 +280,7 @@ class PotentialBuild
       begin 
         @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
       rescue => e
-        @logger.error("Error creating package #{e}")
+        $logger.error("Error creating package #{e}")
       end
       end_time = Time.now
       @package_time = end_time - start_time
@@ -390,7 +389,7 @@ class PotentialBuild
         if !ENV["DECENT_CI_SKIP_TEST"]
           cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded 
         else
-          @logger.debug("Skipping test, DECENT_CI_SKIP_TEST is set in the environment")
+          $logger.debug("Skipping test, DECENT_CI_SKIP_TEST is set in the environment")
         end
         @test_time = Time.now- start_time
       else
@@ -463,7 +462,7 @@ class PotentialBuild
     }
 
 
-    @logger.debug("Running regression script: " + script.to_s)
+    $logger.debug("Running regression script: " + script.to_s)
 
     if !script.empty?
       start_time = Time.now
@@ -506,7 +505,7 @@ class PotentialBuild
         begin 
           FileUtils.rm_rf(d)
         rescue => e
-          @logger.error("Error cleaning up directory #{e}")
+          $logger.error("Error cleaning up directory #{e}")
         end
       }
     end
@@ -518,7 +517,7 @@ class PotentialBuild
         begin 
           FileUtils.rm_rf(d)
         rescue => e
-          @logger.error("Error cleaning up directory #{e}")
+          $logger.error("Error cleaning up directory #{e}")
         end
       }
     end
@@ -712,12 +711,12 @@ eos
     if !@test_run
       begin
         if pending
-          @logger.info("Posting pending results file");
+          $logger.info("Posting pending results file");
           response = @client.create_contents(@config.results_repository,
                                              "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
           "Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}",
           json_document)
-          @logger.debug("Results document sha set: #{response.content.sha}")
+          $logger.debug("Results document sha set: #{response.content.sha}")
 
           @results_document_sha = response.content.sha
 
@@ -726,7 +725,7 @@ eos
             raise "Error, no prior results document sha set"
           end
 
-          @logger.info("Updating contents with sha #{@results_document_sha}")
+          $logger.info("Updating contents with sha #{@results_document_sha}")
           response = @client.update_contents(@config.results_repository,
                                              "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
           "Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
@@ -734,7 +733,7 @@ eos
             json_document)
         end
       rescue => e
-        @logger.error "Error creating / updating results contents file: #{e}"
+        $logger.error "Error creating / updating results contents file: #{e}"
         raise e
       end
 

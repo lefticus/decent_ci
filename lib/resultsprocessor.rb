@@ -69,7 +69,7 @@ module ResultsProcessor
     results = []
 
     stdout.split("\n").each { |line|
-      @logger.debug("Parsing regression line: #{line}")
+      $logger.debug("Parsing regression line: #{line}")
       msg = parse_regression_line(line)
       if !msg.nil?
         results << msg
@@ -85,7 +85,7 @@ module ResultsProcessor
     results = []
 
     stderr.split("\n").each { |line|
-      @logger.debug("Parsing cppcheck line: #{line}")
+      $logger.debug("Parsing cppcheck line: #{line}")
       msg = parse_cppcheck_line(compiler, src_dir, build_dir, line)
       if !msg.nil?
         results << msg
@@ -105,11 +105,11 @@ module ResultsProcessor
     msg = ""
     type = nil
 
-    @logger.info("Parsing cmake error results")
+    $logger.info("Parsing cmake error results")
 
     stderr.split("\n").each{ |err|
 
-      @logger.debug("Parsing cmake error Line: #{err}")
+      $logger.debug("Parsing cmake error Line: #{err}")
       if err.strip == ""
         if !file.nil? && !line.nil? && !msg.nil?
           results << CodeMessage.new(relative_path(file, src_dir, build_dir, compiler), line, 0, type, msg)
@@ -158,7 +158,7 @@ module ResultsProcessor
     end
 
     results.each { |r| 
-      @logger.debug("CMake error message parsed: #{r.inspect}")
+      $logger.debug("CMake error message parsed: #{r.inspect}")
     }
 
     if is_package
@@ -272,8 +272,8 @@ module ResultsProcessor
           tests.flatten!
 
           tests.each { |n|
-            @logger.debug("N: #{n}")
-            @logger.debug("Results: #{n["Results"]}")
+            $logger.debug("N: #{n}")
+            $logger.debug("Results: #{n["Results"]}")
             r = n["Results"]
             if n["Status"] == "notrun"
               results << TestResult.new(n["Name"], n["Status"], 0, "", nil)

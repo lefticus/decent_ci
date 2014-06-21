@@ -26,7 +26,6 @@ class Build
     @user = @client.user
     @user.login
     @potential_builds = []
-    @logger = Logger.new(STDOUT)
    end
 
   def query_releases
@@ -36,7 +35,7 @@ class Build
       begin 
         @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
       rescue => e
-        @logger.info("Skipping potential build: #{e} #{e.backtrace} #{r.tag_name}")
+        $logger.info("Skipping potential build: #{e} #{e.backtrace} #{r.tag_name}")
       end
     }
   end
@@ -46,12 +45,12 @@ class Build
     branches = @client.branches(@repository, :per_page => 100)
 
     branches.each { |b| 
-      @logger.debug("Querying potential build: #{b.name}")
+      $logger.debug("Querying potential build: #{b.name}")
       branch_details = @client.branch(@repository, b.name)
       begin 
         @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, branch_details.commit.author.login, nil, nil, nil, nil, nil)
       rescue => e
-        @logger.info("Skipping potential build: #{e} #{e.backtrace} #{b.name}")
+        $logger.info("Skipping potential build: #{e} #{e.backtrace} #{b.name}")
       end
     }
   end
@@ -63,12 +62,12 @@ class Build
 
     pull_requests.each { |p| 
       if p.head.repo.full_name == p.base.repo.full_name
-        @logger.info("Skipping pullrequest originating from head repo");
+        $logger.info("Skipping pullrequest originating from head repo");
       else
         begin 
           @potential_builds << PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p.head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
         rescue => e
-          @logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
+          $logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
         end
       end
     }

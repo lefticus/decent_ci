@@ -36,14 +36,14 @@ module Configuration
         rescue SyntaxError => e
           raise "#{e.message} while parsing #{name}@#{ref}"
         rescue => e
-          @logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e}")
+          $logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e}")
 
           path = File.expand_path(name, location)
-          @logger.info("Attempting to load yaml config file: #{path}")
+          $logger.info("Attempting to load yaml config file: #{path}")
           if File.exists?(path)
             return YAML.load_file(path)
           else
-            @logger.info("yaml file does not exist: #{path}")
+            $logger.info("yaml file does not exist: #{path}")
             return nil
           end
         end
@@ -127,13 +127,13 @@ module Configuration
     yaml_os_release_name = "#{yaml_base_name}-#{os_version}-#{os_release}.yaml"
 
     base_yaml = load_yaml(yaml_name, location, ref)
-    @logger.debug("Base yaml loaded: #{base_yaml}") if !base_yaml.nil?
+    $logger.debug("Base yaml loaded: #{base_yaml}") if !base_yaml.nil?
     os_yaml = load_yaml(yaml_os_name, location, ref)
-    @logger.debug("os yaml loaded: #{os_yaml}") if !os_yaml.nil?
+    $logger.debug("os yaml loaded: #{os_yaml}") if !os_yaml.nil?
     os_distribution_yaml = load_yaml(yaml_os_distribution_name, location, ref)
-    @logger.debug("os distribution yaml loaded: #{os_distribution_yaml}") if !os_distribution_yaml.nil?
+    $logger.debug("os distribution yaml loaded: #{os_distribution_yaml}") if !os_distribution_yaml.nil?
     os_distribution_release_yaml = load_yaml(yaml_os_release_name, location, ref)
-    @logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") if !os_distribution_release_yaml.nil?
+    $logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") if !os_distribution_release_yaml.nil?
 
     cmake_paths = ["C:\\Program Files\\CMake 2.8\\bin",
                    "C:\\Program Files (x86)\\CMake 2.8\\bin"]
@@ -157,7 +157,7 @@ module Configuration
 
     result_yaml = symbolize(result_yaml)
 
-    @logger.info("Final merged configuration: #{result_yaml}")
+    $logger.info("Final merged configuration: #{result_yaml}")
 
 
     configuration = OpenStruct.new(result_yaml)
@@ -168,7 +168,7 @@ module Configuration
     # if there are not any specified already
     configuration.compilers.each { |compiler|
 
-      @logger.debug("Working on compiler: #{compiler[:name]}")
+      $logger.debug("Working on compiler: #{compiler[:name]}")
       if compiler[:architecture].nil? || compiler[:architecture] == ""
         if compiler[:name] == "Visual Studio"
           compiler[:architecture_description] = "i386"
