@@ -321,6 +321,11 @@ module Configuration
       configuration.tests_dir = ""
     end
 
+    if configuration.aging_pull_requests_notification.nil?
+      configuration.aging_pull_requests_notification = true
+    end
+
     return configuration
   end
+
 end

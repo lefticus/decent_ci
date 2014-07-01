@@ -3,6 +3,7 @@
 
 require 'logger'
 require_relative 'lib/build'
+require_relative 'cleanup.rb'
 
 require 'optparse'
 
@@ -86,11 +87,62 @@ for conf in 2..ARGV.length-1
     # Loads the list of potential builds and their config files for the given
     # repository name
     b = Build.new(ARGV[1], ARGV[conf])
+    test_mode = !(ARGV[0] =~ /false/i)
 
     $logger.info "Querying for updated branches"
     b.query_releases
     b.query_branches
     b.query_pull_requests
+
+    did_daily_task = false
+
+    b.results_repositories.each { |repo, results_repo, results_path|
+      $logger.info "Checking daily task status for #{repo} #{results_repo} #{results_path}"
+
+      if test_mode || b.needs_daily_task(results_repo, results_path)
+        did_daily_task = true
+        $logger.info "Executing clean_up task"
+        begin
+          clean_up(ARGV[1], repo, results_repo, results_path)
+        rescue => e
+          $logger.error "Error running clean_up #{e} #{e.backtrace}"
+        end
+      end
+    }
+
+    if did_daily_task
+      b.get_pull_request_details.each { |d|
+
+        $logger.debug "PullRequestDetail: #{d}"
+
+        days = (DateTime.now() - DateTime.parse(d[:last_updated].to_s)).round()
+
+        references = ""
+
+        d[:notification_users].each { |u|
+          references += "@#{u} "
+        }
+
+        message_to_post = "#{references}it has been #{days} days since this pull request was last updated."
+
+        $logger.debug "Message: #{message_to_post}"
+
+        if days % 7 == 0 
+          if d[:aging_pull_requests_notifications]
+            $logger.info "Posting Message: #{message_to_post} to issue #{d[:id]}"
+            if !test_mode
+              b.client.add_comment(d[:repo], d[:id], message_to_post)
+            else
+              $logger.info "Not actually posting pull request, test mode"
+            end
+          else
+            $logger.info "Not posting pull request age message, posting is disabled for this branch"
+          end
+        else
+          $logger.info "Not posting pull request age message, only post every 7 days"
+        end
+      }
+    end
 
 
     # loop over each potential build
@@ -103,7 +155,7 @@ for conf in 2..ARGV.length-1
           begin
             # reset potential build for the next build attempt
             p.next_build
-            p.set_test_run !(ARGV[0] =~ /false/i)
+            p.set_test_run test_mode
 
             if p.needs_run compiler
               $logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
