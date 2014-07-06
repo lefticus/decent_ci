@@ -166,7 +166,7 @@ for conf in 2..ARGV.length-1
                   p.clone_regression_repository compiler
 
                   if !File.directory?(regression_base.get_build_dir(compiler))
-                    $logger.info "Beginning regression basline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
+                    $logger.info "Beginning regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
                     regression_base.do_build compiler, nil
                     regression_base.do_test compiler, nil
                   else
@@ -183,7 +183,7 @@ for conf in 2..ARGV.length-1
                 end
               rescue => e
                 $logger.error "Logging unhandled failure #{e} #{e.backtrace}"
-                p.unhandled_failure e
+                p.unhandled_failure "#{e}\n#{e.backtrace}"
               end
               p.post_results compiler, false
               #            p.clean_up compiler
