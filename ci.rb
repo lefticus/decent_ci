@@ -99,7 +99,7 @@ for conf in 2..ARGV.length-1
     b.results_repositories.each { |repo, results_repo, results_path|
       $logger.info "Checking daily task status for #{repo} #{results_repo} #{results_path}"
 
-      if test_mode || b.needs_daily_task(results_repo, results_path)
+      if (test_mode || b.needs_daily_task(results_repo, results_path)) && ENV["DECENT_CI_SKIP_DAILY_TASKS"].nil? 
         did_daily_task = true
         $logger.info "Executing clean_up task"
         begin
@@ -148,7 +148,7 @@ for conf in 2..ARGV.length-1
     # loop over each potential build
     b.potential_builds.each { |p|
 
-      if ENV["DECENT_CI_BRANCH_FILTER"].nil? || ENV["DECENT_CI_BRANCH_FILTER"] == '' || p.branch_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/
+      if ENV["DECENT_CI_BRANCH_FILTER"].nil? || ENV["DECENT_CI_BRANCH_FILTER"] == '' || p.branch_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.tag_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/
         $logger.info "Looping over compilers"
         p.compilers.each { |compiler|
 
@@ -170,7 +170,7 @@ for conf in 2..ARGV.length-1
                     regression_base.do_build compiler, nil
                     regression_base.do_test compiler, nil
                   else
-                    $logger.info "Skipping already completed regression basline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
+                    $logger.info "Skipping already completed regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
                   end
                 end
 

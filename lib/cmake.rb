@@ -5,7 +5,10 @@ module CMake
   def cmake_build(compiler, src_dir, build_dir, install_dir, build_type, regression_dir, regression_baseline)
     FileUtils.mkdir_p build_dir
 
-    cmake_flags = "#{compiler[:cmake_extra_flags]} -DCMAKE_INSTALL_PREFIX:PATH=\"#{install_dir}\""
+    cmake_flags = "#{compiler[:cmake_extra_flags]}"
+    if install_dir
+      cmake_flags += " -DCMAKE_INSTALL_PREFIX:PATH=\"#{install_dir}\""
+    end
 
     env = {}
     if !compiler[:cc_bin].nil?
@@ -19,7 +22,7 @@ module CMake
       env["REGRESSION_BASELINE"] = File.expand_path(regression_baseline.get_build_dir(compiler))
       env["REGRESSION_DIR"] = File.expand_path(regression_dir)
       env["REGRESSION_BASELINE_SHA"] = regression_baseline.commit_sha
-      env["COMMIT_SHA"] = @commit_sha
+      env["COMMIT_SHA"] = (@commit_sha && @commit_sha != "") ? @commit_sha : @tag_name
     end
 
     out, err, result = run_script(

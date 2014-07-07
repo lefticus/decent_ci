@@ -215,7 +215,12 @@ class PotentialBuild
   end
 
   def needs_release_package compiler
-    if @release_assets.nil?
+
+    if compiler[:analyze_only]
+      return false
+    end
+
+    if @release_assets.nil? || @test_run
       return true
     end
 
@@ -260,19 +265,19 @@ class PotentialBuild
   def do_package(compiler, regression_baseline)
     $logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
 
-    if is_release # && needs_release_package(compiler)
-      src_dir = "#{build_base_name compiler}-release"
+    if is_release && needs_release_package(compiler)
+      src_dir = "#{build_base_name compiler}"
       build_dir = "#{src_dir}/build"
 
       @created_dirs << src_dir
       @created_dirs << build_dir
 
-      checkout src_dir
+      checkout_succeeded = checkout src_dir
 
       start_time = Time.now
       case @config.engine
       when "cmake"
-        cmake_build compiler, src_dir, build_dir, compiler[:build_type], regression_baseline
+        cmake_build compiler, src_dir, build_dir, nil, compiler[:build_type], get_regression_dir(compiler), regression_baseline if checkout_succeeded
       else
         raise "Unknown Build Engine"
       end

@@ -90,7 +90,7 @@ class Build
           notification_users.merge(configed_notifications)
         end
 
-        aging_pull_requests_notification = pb.config.aging_pull_requests_notification
+        aging_pull_requests_notification = pb.configuration.aging_pull_requests_notification
 
         if p.head.repo.full_name == p.base.repo.full_name
           $logger.info("Skipping pullrequest originating from head repo")
