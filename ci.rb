@@ -127,7 +127,7 @@ for conf in 2..ARGV.length-1
 
         $logger.debug "Message: #{message_to_post}"
 
-        if days % 7 == 0 
+        if days % 7 == 0 && days > 1
           if d[:aging_pull_requests_notification]
             $logger.info "Posting Message: #{message_to_post} to issue #{d[:id]}"
             if !test_mode
