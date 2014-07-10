@@ -26,7 +26,7 @@ module CMake
     end
 
     out, err, result = run_script(
-      ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags} -DCPACK_PACKAGE_FILE_NAME:STRING=#{package_name compiler} -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
+      ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
 
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
@@ -59,7 +59,16 @@ module CMake
       raise "Error building package: #{pack_stderr}"
     end
 
-    return "#{build_dir}/#{package_full_name compiler}"
+    package_names = parse_package_names(pack_stdout)
+
+    $logger.debug("package names parsed: #{package_names}")
+    if package_names.empty?
+      return nil
+    elsif package_names.size() > 1
+      $logger.error("More than one package name was returned #{package_names}, returning the 1st one only")
+    end
+
+    return package_names[0]
   end
 
 

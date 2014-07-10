@@ -204,32 +204,14 @@ class PotentialBuild
     "#{@config.repository_name}-#{compiler[:architecture_description]}-#{@config.os}-#{@buildid}"
   end
 
-
-  def package_name compiler
-    "#{short_build_base_name(compiler)}"
-  end
-
-
-  def package_full_name compiler
-    "#{short_build_base_name compiler}.#{compiler[:package_extension]}"
-  end
-
   def needs_release_package compiler
 
     if compiler[:analyze_only]
       return false
-    end
-
-    if @release_assets.nil? || @test_run
+    else
       return true
     end
 
-    @release_assets.each { |f|
-      if f.name == package_full_name(compiler)
-        return false
-      end
-    }
-    return true
   end
 
 
@@ -615,6 +597,7 @@ os: #{@config.os}
 os_release: #{@config.os_release}
 is_release: #{is_release}
 release_packaged: #{!@package_location.nil?}
+package_name: #{@package_location.nil? ? nil : Pathname.new(@package_location).basename}
 tag_name: #{@tag_name}
 commit_sha: #{@commit_sha}
 branch_name: #{@branch_name}

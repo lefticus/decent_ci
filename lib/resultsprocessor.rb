@@ -257,6 +257,16 @@ module ResultsProcessor
   end
 
 
+  def parse_package_names(output)
+    results = []
+    output.split("\n").each { |l| 
+      /CPack: - package: (?<filename>.*) generated./ =~ l
+      results << filename if filename
+    }
+
+    return results
+  end
+
 
   def process_ctest_results compiler, src_dir, build_dir, stdout, stderr, result
     Find.find(build_dir) do |path|
