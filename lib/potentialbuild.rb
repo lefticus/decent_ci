@@ -319,7 +319,7 @@ class PotentialBuild
   end
 
   def get_src_dir(compiler)
-    "#{get_initials(@config.repository_name)}-#{@short_buildid}-#{compiler[:description]}#{ compiler[:build_type] =~ /release/i ? "" : "-#{compiler[:build_type]}" }"
+    "#{get_initials(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture_description]}-#{compiler[:description]}#{ compiler[:build_type] =~ /release/i ? "" : "-#{compiler[:build_type]}" }"
   end
 
   def get_build_dir(compiler)
