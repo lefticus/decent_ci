@@ -6,13 +6,13 @@
 module ResultsProcessor
   def relative_path(p, src_dir, build_dir, compiler)
     begin
-      return Pathname.new("#{src_dir}/#{p}").realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+      return Pathname.new("#{src_dir}/#{p}").realpath.relative_path_from(Pathname.new(get_src_dir compiler).realdirpath)
     rescue
       begin
-        return Pathname.new("#{build_dir}/#{p}").realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+        return Pathname.new("#{build_dir}/#{p}").realpath.relative_path_from(Pathname.new(get_src_dir compiler).realdirpath)
       rescue
         begin 
-          return Pathname.new(p).realpath.relative_path_from(Pathname.new(build_base_name compiler).realdirpath)
+          return Pathname.new(p).realpath.relative_path_from(Pathname.new(get_src_dir compiler).realdirpath)
         rescue
           return Pathname.new(p)
         end

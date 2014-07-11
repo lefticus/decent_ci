@@ -54,8 +54,11 @@ class PotentialBuild
     @pull_request_base_repository = pull_request_base_repository
     @pull_request_base_ref = pull_request_base_ref
 
+    @short_buildid = @tag_name ? @tag_name : @commit_sha[0..9]
 
     @buildid = "#{@buildid}-PR#{@pull_id}" if !@pull_id.nil?
+
+    @short_buildid = "#{@short_buildid}-PR#{@pull_id}" if !@pull_id.nil?
 
     @created_dirs = []
     @created_regression_dirs = []
@@ -248,7 +251,7 @@ class PotentialBuild
     $logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
 
     if is_release && needs_release_package(compiler)
-      src_dir = "#{build_base_name compiler}"
+      src_dir = get_src_dir compiler
       build_dir = "#{src_dir}/build"
 
       @created_dirs << src_dir
@@ -310,16 +313,21 @@ class PotentialBuild
     return true
   end
 
+  def get_initials(str)
+    # extracts just the initials from the string
+    str.sub(/_./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[a-z]/, '')
+  end
+
   def get_src_dir(compiler)
-    build_base_name compiler
+    "#{get_initials(@config.repository_name)}-#{@short_buildid}-#{compiler[:description]}#{ compiler[:build_type] =~ /release/i ? "" : "-#{compiler[:build_type]}" }"
   end
 
   def get_build_dir(compiler)
-    "#{build_base_name compiler}/build"
+    "#{get_src_dir compiler}/build"
   end
 
   def get_install_dir(compiler)
-    "#{Dir.getwd}/#{build_base_name compiler}-install"
+    "#{Dir.getwd}/#{get_src_dir compiler}-install"
   end
 
   def needs_install(compiler)
@@ -328,7 +336,7 @@ class PotentialBuild
   end
 
   def get_regression_dir(compiler)
-    "#{build_base_name compiler}/regressions"
+    "#{get_src_dir compiler}/regressions"
   end
 
 
