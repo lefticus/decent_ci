@@ -318,8 +318,16 @@ class PotentialBuild
     str.sub(/_./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[a-z]/, '')
   end
 
+  def get_short_form(str)
+    if ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/)
+      return get_initials(str)
+    else
+      return str
+    end
+  end
+
   def get_src_dir(compiler)
-    "#{get_initials(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture_description]}-#{compiler[:description]}#{ compiler[:build_type] =~ /release/i ? "" : "-#{compiler[:build_type]}" }"
+    "#{get_short_form(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture_description]}-#{get_short_form(compiler[:description])}#{ compiler[:build_type] =~ /release/i ? "" : "-#{compiler[:build_type]}" }"
   end
 
   def get_build_dir(compiler)
