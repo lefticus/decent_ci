@@ -126,6 +126,13 @@ module ResultsProcessor
           /^CMake Error: (?<message>.*)/ =~ err
           results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", message) if !message.nil?
 
+          /^ERROR: (?<message>.*)/ =~ err
+          results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", message) if !message.nil?
+
+          /^WARNING: (?<message>.*)/ =~ err
+          results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "warning", message) if !message.nil?
+
+
           /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(\S+\):$/ =~ err
 
           if !filename.nil? && !linenumber.nil?
