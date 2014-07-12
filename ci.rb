@@ -101,11 +101,18 @@ for conf in 2..ARGV.length-1
 
       if (test_mode || b.needs_daily_task(results_repo, results_path)) && ENV["DECENT_CI_SKIP_DAILY_TASKS"].nil? 
         did_daily_task = true
-        $logger.info "Executing clean_up task"
-        begin
-          clean_up(ARGV[1], repo, results_repo, results_path)
-        rescue => e
-          $logger.error "Error running clean_up #{e} #{e.backtrace}"
+
+        count = 0
+        succeeded = false
+        while count < 5 && !succeeded do
+          $logger.info "Executing clean_up task"
+          begin
+            clean_up(b.client, repo, results_repo, results_path)
+            succeeded = true
+          rescue => e
+            $logger.error "Error running clean_up #{e} #{e.backtrace}"
+          end
+          count += 1
         end
       end
     }
@@ -186,7 +193,7 @@ for conf in 2..ARGV.length-1
                 p.unhandled_failure "#{e}\n#{e.backtrace}"
               end
               p.post_results compiler, false
-              #            p.clean_up compiler
+              p.clean_up compiler
             else
               $logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
             end
