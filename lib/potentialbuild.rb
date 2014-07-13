@@ -444,7 +444,10 @@ class PotentialBuild
 
       if !@config.regression_commit_sha.nil? && @config.regression_commit_sha != "" && result == 0
         out, err, result = run_script( ["cd #{regression_dir} && git checkout #{@config.regression_commit_sha}"] )
+      elsif !@config.regression_branch.nil? && @config.regression_branch != "" && result == 0
+        out, err, result = run_script( ["cd #{regression_dir} && git checkout #{@config.regression_branch}"] )
       end
+
     end
   end
 
