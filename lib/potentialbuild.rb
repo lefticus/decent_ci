@@ -167,7 +167,8 @@ class PotentialBuild
         $logger.warn "Unable to set timeout for process execution on windows"
         stdout, stderr, result = Open3::capture3(env, cmd)
       else
-        stdout, stderr, result = run_with_timeout(env, cmd)
+        # allow up to 6 hours
+        stdout, stderr, result = run_with_timeout(env, cmd, 60*60*6)
       end
 
       stdout.split("\n").each { |l| 
@@ -185,7 +186,13 @@ class PotentialBuild
 
       allout += stdout
       allerr += stderr
-      allresult += result.exitstatus
+
+      if result && result.exitstatus
+        allresult += result.exitstatus
+      else
+        # any old failure result will do
+        allresult = 1 
+      end
     }
 
     return allout, allerr, allresult
