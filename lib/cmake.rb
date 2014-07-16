@@ -5,7 +5,7 @@ module CMake
   def cmake_build(compiler, src_dir, build_dir, install_dir, build_type, regression_dir, regression_baseline)
     FileUtils.mkdir_p build_dir
 
-    cmake_flags = "#{compiler[:cmake_extra_flags]}"
+    cmake_flags = "#{compiler[:cmake_extra_flags]} -DDEVICE_ID:STRING=\"#{device_id compiler}\""
     if install_dir
       cmake_flags += " -DCMAKE_INSTALL_PREFIX:PATH=\"#{install_dir}\""
     end
