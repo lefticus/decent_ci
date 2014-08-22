@@ -21,6 +21,9 @@ $logger.info "Logging to decent_ci.log"
 
 
 options = {}
+options[:delay_after_run] = 300
+options[:maximum_branch_age] = 30
+
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: #{__FILE__} [options] <testruntrueorfalse> <githubtoken> <repositoryname> (<repositoryname> ...)"
 
@@ -43,6 +46,18 @@ opts = OptionParser.new do |opts|
     options[:aws_secret_access_key] = k
     $logger.info "aws-secret-access-key: #{options[:aws_secret_access_key]}"
   end
+
+  opts.on("--delay-after-run=N", Integer, "Time to delay after execution has completed, in seconds. Defaults to 300") do |k|
+    options[:delay_after_run] = k
+  end
+
+  $logger.info "delay_after_run: #{options[:delay_after_run]}"
+
+  opts.on("--maximum-branch-age=N", Integer, "Time to delay after execution has completed, in seconds. Defaults to 300") do |k|
+    options[:maximum_branch_age] = k
+  end
+
+  $logger.info "maximum_branch_age : #{options[:maximum_branch_age]}"
 
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
@@ -86,7 +101,7 @@ for conf in 2..ARGV.length-1
   begin
     # Loads the list of potential builds and their config files for the given
     # repository name
-    b = Build.new(ARGV[1], ARGV[conf])
+    b = Build.new(ARGV[1], ARGV[conf], options[:maximum_branch_age])
     test_mode = !(ARGV[0] =~ /false/i)
 
     $logger.info "Querying for updated branches"
@@ -211,5 +226,8 @@ for conf in 2..ARGV.length-1
     $logger.fatal "Unable to initiate build system #{e} #{e.backtrace}"
   end
 end
+
+$logger.info "Execution completed, sleeping for #{options[:delay_after_run]}"
+sleep(options[:delay_after_run])
 
 

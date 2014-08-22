@@ -126,13 +126,25 @@ module Configuration
 
     yaml_os_release_name = "#{yaml_base_name}-#{os_version}-#{os_release}.yaml"
 
-    base_yaml = load_yaml(yaml_name, location, ref)
+    fileset = Set.new()
+
+    @client.content(location, {:path=>".", :ref=>ref} ).each { |path|
+      if path.name =~ /\.decent_ci.*/
+        fileset << path.name
+      end
+    }
+
+    $logger.info("For ref #{ref} .decent_ci files located: #{fileset.to_a}")
+
+    raise "No .decent_ci input files" if fileset.empty?
+
+    base_yaml = load_yaml(yaml_name, location, ref) if fileset.include?(yaml_name)
     $logger.debug("Base yaml loaded: #{base_yaml}") if !base_yaml.nil?
-    os_yaml = load_yaml(yaml_os_name, location, ref)
+    os_yaml = load_yaml(yaml_os_name, location, ref) if fileset.include?(yaml_os_name)
     $logger.debug("os yaml loaded: #{os_yaml}") if !os_yaml.nil?
-    os_distribution_yaml = load_yaml(yaml_os_distribution_name, location, ref)
+    os_distribution_yaml = load_yaml(yaml_os_distribution_name, location, ref) if fileset.include?(yaml_os_distribution_name)
     $logger.debug("os distribution yaml loaded: #{os_distribution_yaml}") if !os_distribution_yaml.nil?
-    os_distribution_release_yaml = load_yaml(yaml_os_release_name, location, ref)
+    os_distribution_release_yaml = load_yaml(yaml_os_release_name, location, ref) if fileset.include?(yaml_os_release_name)
     $logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") if !os_distribution_release_yaml.nil?
 
     cmake_paths = ["C:\\Program Files\\CMake 2.8\\bin",

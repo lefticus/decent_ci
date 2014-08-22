@@ -19,11 +19,11 @@ def clean_up(client, repository, results_repository, results_path)
 
   # be sure to get files first and branches second so we don't race
   # to delete the results for a branch that doesn't yet exist
-  files = client.contents(results_repository, :path=>results_path)
+  files = github_query(client) { client.contents(results_repository, :path=>results_path) }
 
   # todo properly handle paginated results from github
-  branches = client.branches(repository, :per_page => 100)
-  pull_requests = client.pull_requests(repository, :state=>"open")
+  branches = github_query(client) { client.branches(repository, :per_page => 100) }
+  pull_requests = github_query(client) { client.pull_requests(repository, :state=>"open") }
 
   files_for_deletion = []
   branches_deleted = Set.new
@@ -33,7 +33,7 @@ def clean_up(client, repository, results_repository, results_path)
   files.each { |file| 
     if file.type == "file"
       logger.debug("Examining file #{file.sha} #{file.path}")
-      file_content = Base64.decode64(client.blob(results_repository, file.sha).content)
+      file_content = Base64.decode64(github_query(client) { client.blob(results_repository, file.sha).content })
       file_data = YAML.load(file_content)
       branch_name = file_data["branch_name"]
 
@@ -98,7 +98,7 @@ def clean_up(client, repository, results_repository, results_path)
   files_for_deletion.each { |file|
     logger.info("Deleting results file: #{file.path}. Source branch #{file_branch[file.path]} removed.")
     begin
-      client.delete_contents(results_repository, file.path, "Source branch #{file_branch[file.path]} removed. Deleting results.", file.sha)
+      github_query(client) { client.delete_contents(results_repository, file.path, "Source branch #{file_branch[file.path]} removed. Deleting results.", file.sha) }
     rescue => e
       logger.error("Error deleting file: #{file.path} for branch #{file_branch[file.path]} message: #{e}")
     end

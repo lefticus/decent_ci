@@ -19,6 +19,7 @@ require_relative 'cmake.rb'
 require_relative 'configuration.rb'
 require_relative 'resultsprocessor.rb'
 require_relative 'cppcheck.rb'
+require_relative 'github.rb'
 
 
 ## Contains the logic flow for executing builds and parsing results
@@ -36,7 +37,7 @@ class PotentialBuild
                  pull_id, pull_request_base_repository, pull_request_base_ref)
     @client = client
     @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name))
-    @config.repository_name = @client.repo(repository).name
+    @config.repository_name = github_query(@client) { @client.repo(repository).name }
     @config.repository = repository
     @config.token = token
     @repository = repository
@@ -304,7 +305,7 @@ class PotentialBuild
 
     file_names = []
     begin 
-      files = @client.content @config.results_repository, :path=>@config.results_path
+      files = github_query(@client) { @client.content @config.results_repository, :path=>@config.results_path }
 
       files.each { |f|
         file_names << f.name
@@ -726,10 +727,11 @@ eos
       begin
         if pending
           $logger.info("Posting pending results file");
-          response = @client.create_contents(@config.results_repository,
+          response =  github_query(@client) { @client.create_contents(@config.results_repository,
                                              "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
-          "Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}",
-          json_document)
+                                             "Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}", 
+                                             json_document) }
+
           $logger.debug("Results document sha set: #{response.content.sha}")
 
           @results_document_sha = response.content.sha
@@ -740,11 +742,11 @@ eos
           end
 
           $logger.info("Updating contents with sha #{@results_document_sha}")
-          response = @client.update_contents(@config.results_repository,
+          response =  github_query(@client) { @client.update_contents(@config.results_repository,
                                              "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
-          "Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
-          @results_document_sha,
-            json_document)
+                                             "Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
+                                             @results_document_sha,
+                                             json_document) }
         end
       rescue => e
         $logger.error "Error creating / updating results contents file: #{e}"
@@ -753,18 +755,18 @@ eos
 
       if !pending && @config.post_results_comment
         if !@commit_sha.nil? && @repository == @config.repository
-          response = @client.create_commit_comment(@config.repository, @commit_sha, github_document)
+          response = github_query(@client) { @client.create_commit_comment(@config.repository, @commit_sha, github_document) }
         elsif !pull_request_issue_id.nil?
-          response = @client.add_comment(@config.repository, pull_request_issue_id, github_document);
+          response = github_query(@client) { @client.add_comment(@config.repository, pull_request_issue_id, github_document) }
         end
       end
 
       if !@commit_sha.nil? && @config.post_results_status
-        response = @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message, :accept => Octokit::Client::Statuses::COMBINED_STATUS_MEDIA_TYPE)
+        response = github_query(@client) { @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message, :accept => Octokit::Client::Statuses::COMBINED_STATUS_MEDIA_TYPE) }
       end
 
       if !@package_location.nil? && @config.post_release_package
-        @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s)
+        github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s) }
       end
     else 
       File.open("#{@dateprefix}-#{results_file_name compiler}", "w+") { |f| f.write(json_document) }

@@ -15,25 +15,34 @@ require 'base64'
 require_relative 'codemessage.rb'
 require_relative 'testresult.rb'
 require_relative 'potentialbuild.rb'
+require_relative 'github.rb'
 
 # Top level class that loads the list of potential builds from github
 #
 class Build
-  def initialize(token, repository)
+  def initialize(token, repository, max_age)
     @client = Octokit::Client.new(:access_token=>token)
     @token = token
     @repository = repository
-    @user = @client.user
-    @user.login
+    @user = github_query(@client) { @client.user }
+    github_query(@client) { @user.login }
     @potential_builds = []
+    @max_age = max_age
+
+    github_check_ratelimit(@client.last_response.headers);
    end
 
   def query_releases
-    releases = @client.releases(@repository)
+    releases = github_query(@client) { @client.releases(@repository) }
 
     releases.each { |r|
       begin 
-        @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
+        days = (DateTime.now() - DateTime.parse(r.published_at.to_s)).round()
+        if days <= @max_age
+          @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
+        else 
+          $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{r.tag_name}");
+        end
       rescue => e
         $logger.info("Skipping potential build: #{e} #{e.backtrace} #{r.tag_name}")
       end
@@ -42,13 +51,18 @@ class Build
 
   def query_branches
     # todo properly handle paginated results from github
-    branches = @client.branches(@repository, :per_page => 100)
+    branches = github_query(@client) { @client.branches(@repository, :per_page => 100) }
 
     branches.each { |b| 
       $logger.debug("Querying potential build: #{b.name}")
-      branch_details = @client.branch(@repository, b.name)
-      begin 
-        @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, branch_details.commit.author.login, nil, nil, nil, nil, nil)
+      branch_details = github_query(@client) { @client.branch(@repository, b.name) }
+      begin
+        days = (DateTime.now() - DateTime.parse(branch_details.commit.commit.author.date.to_s)).round()
+        if days <= @max_age
+          @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, branch_details.commit.author.login, nil, nil, nil, nil, nil)
+        else 
+          $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{b.name}");
+        end
       rescue => e
         $logger.info("Skipping potential build: #{e} #{e.backtrace} #{b.name}")
       end
@@ -58,14 +72,14 @@ class Build
   # note, only builds 'external' pull_requests. Internal ones would have already
   # been built as a branch
   def query_pull_requests
-    pull_requests = @client.pull_requests(@repository, :state=>"open")
+    pull_requests = github_query(@client) { @client.pull_requests(@repository, :state=>"open") }
 
     @pull_request_details = []
 
 
     pull_requests.each { |p| 
 
-      issue = @client.issue(@repository, p.number)
+      issue = github_query(@client) { @client.issue(@repository, p.number) }
 
       $logger.debug("Issue loaded: #{issue}")
 
@@ -82,7 +96,7 @@ class Build
 
       aging_pull_requests_notification = true
 
-      begin 
+      begin
         pb = PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p.head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
         configed_notifications = pb.configuration.notification_recipients
         if !configed_notifications.nil?
@@ -149,10 +163,10 @@ machine_ip: #{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? 
 
 eos
 
-      response = @client.create_contents(results_repo,
-                                         "#{results_path}/#{dateprefix}-DailyTaskRun",
-      "Commit daily task run file: #{dateprefix}-DailyTaskRun",
-      document)
+      response = github_query(@client) { @client.create_contents(results_repo,
+                                                          "#{results_path}/#{dateprefix}-DailyTaskRun",
+                                                          "Commit daily task run file: #{dateprefix}-DailyTaskRun",
+                                                          document) } 
       $logger.info("Daily task document sha: #{response.content.sha}")
       return true
     rescue => e
