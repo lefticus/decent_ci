@@ -59,8 +59,19 @@ class Build
       begin
         days = (DateTime.now() - DateTime.parse(branch_details.commit.commit.author.date.to_s)).round()
         if days <= @max_age
-          @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, branch_details.commit.author.login, nil, nil, nil, nil, nil)
-        else 
+          login = "Unknown"
+          if !branch_details.commit.author.nil?
+            login = branch_details.commit.author.login
+          else
+            $logger.debug("Commit author is nil, getting login details from committer information")
+            if !branch_details.commit.committer.nil?
+              login = branch_details.commit.committer.login
+            end
+            $logger.debug("Login set to #{login}")
+          end
+
+          @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, login, nil, nil, nil, nil, nil)
+        else
           $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{b.name}");
         end
       rescue => e
