@@ -10,12 +10,15 @@ module CMake
       cmake_flags += " -DCMAKE_INSTALL_PREFIX:PATH=\"#{install_dir}\""
     end
 
+    compiler_extra_flags = compiler[:compiler_extra_flags]
+    compiler_extra_flags = "" if compiler_extra_flags.nil?
+
     env = {}
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
-      env = {"CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
+      env = {"CXXFLAGS"=>"#{compiler_extra_flags}", "CFLAGS"=>"#{compiler_extra_flags}", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
     else
-      env = {"CXXFLAGS"=>"/FC", "CFLAGS"=>"/FC", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
+      env = {"CXXFLAGS"=>"/FC #{compiler_extra_flags}", "CFLAGS"=>"/FC #{compiler_extra_flags}", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
     end
 
     if !regression_baseline.nil?
