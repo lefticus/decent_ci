@@ -50,13 +50,37 @@ module CMake
   end
 
   def cmake_package(compiler, src_dir, build_dir, build_type)
+    new_path = ENV['PATH']
+
+
+    if @config.os == "Windows"
+      File.open("#{build_dir}/extract_linker_path.cmake", "w+") { |f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")') }
+
+      script_stdout, script_stderr, script_result = run_script(
+		    ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
+
+      /.*LINKER:(?<linker_path>.*)/ =~ script_stdout
+      $logger.debug("Parsed linker path from cmake: #{linker_path}")
+      
+      if linker_path && linker_path != ""
+        p = File.dirname(linker_path)
+        p = p.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File::ALT_SEPARATOR
+	new_path = "#{p};#{new_path}"
+	$logger.info("New path set for executing cpack, to help with get_requirements: #{new_path}")
+      end
+    end
+
     pack_stdout, pack_stderr, pack_result = run_script(
-      ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type}"])
+      ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], {"PATH"=>new_path})
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stdout, pack_stderr, pack_result, true)
 
     if !cmake_result
-      raise "Error building package: #{pack_stderr}"
+      if @package_results.empty?
+        raise "Error building package: #{pack_stderr}"
+      else 
+        return nil
+      end
     end
 
     package_names = parse_package_names(pack_stdout)

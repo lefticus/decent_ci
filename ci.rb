@@ -184,7 +184,7 @@ for conf in 2..ARGV.length-1
               p.post_results compiler, true
               begin
                 regression_base = b.get_regression_base p
-                if p.needs_regression_test compiler and regression_base
+                if p.needs_regression_test compiler && regression_base
                   p.clone_regression_repository compiler
 
                   if !File.directory?(regression_base.get_build_dir(compiler))
@@ -199,7 +199,7 @@ for conf in 2..ARGV.length-1
                 p.do_package compiler, regression_base
                 p.do_test compiler, regression_base
 
-                if regression_base
+                if p.needs_regression_test compiler && regression_base
                   p.do_regression_test compiler, regression_base
                   p.clean_up_regressions compiler
                 end

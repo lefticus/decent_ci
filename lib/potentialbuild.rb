@@ -55,7 +55,7 @@ class PotentialBuild
     @pull_request_base_repository = pull_request_base_repository
     @pull_request_base_ref = pull_request_base_ref
 
-    @short_buildid = @tag_name ? @tag_name : @commit_sha[0..9]
+    @short_buildid = get_short_form(@tag_name) ? get_short_form(@tag_name) : @commit_sha[0..9]
 
     @buildid = "#{@buildid}-PR#{@pull_id}" if !@pull_id.nil?
 
@@ -279,6 +279,7 @@ class PotentialBuild
         @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
       rescue => e
         $logger.error("Error creating package #{e}")
+	raise
       end
       end_time = Time.now
       @package_time = end_time - start_time
@@ -323,11 +324,11 @@ class PotentialBuild
 
   def get_initials(str)
     # extracts just the initials from the string
-    str.sub(/_./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[a-z]/, '')
+    str.gsub(/[_\-]./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[a-z]/, '')
   end
 
   def get_short_form(str)
-    if ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/)
+    if ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/)
       return get_initials(str)
     else
       return str
