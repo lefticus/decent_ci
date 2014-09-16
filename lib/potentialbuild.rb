@@ -577,18 +577,18 @@ class PotentialBuild
           elsif response.state == "new"
             # according to the github docs, this means the asset wasn't properly created
             $logger.error("Error uploading asset, deleting and trying again, asset.url #{response.url}");
+            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset, deleting and trying again #{response_str}")
             begin 
               response = github_query(@client) { @client.delete_release_asset(response.url) }
             rescue => e
               $logger.error("Error deleting failed asset, continuing to next try #{e}")
-              @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset #{e}")
+              @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to delete failed release asset upload. release asset #{e}")
             end
           else 
             $logger.info("Asset upload appears to have succeeded. url: #{response.url}, state: #{response.state}")
             succeeded = true
           end
 
-          @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset #{response_str}")
 
           num_tries = num_tries + 1
         end
