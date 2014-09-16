@@ -558,6 +558,49 @@ class PotentialBuild
       @dateprefix = DateTime.now.utc.strftime("%F")
     end
 
+    if !@test_run
+      if !@package_location.nil? && @config.post_release_package
+        $logger.info("Uploading package #{@package_location}")
+
+        num_tries = 3
+        try_num = 0
+        succeeded = false
+        response_str = ""
+        while try_num < num_tries && !succeeded
+          response = github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s) }
+          response_str = response.to_s
+
+          if response.nil? 
+            #didn't work, trying again
+            $logger.error("Unknown error uploading asset, deleting and trying again: #{response_str}");
+            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Unknown error while attempting to upload release asset #{response_str}")
+          elsif response.state == "new"
+            # according to the github docs, this means the asset wasn't properly created
+            $logger.error("Error uploading asset, deleting and trying again, asset.url #{response.url}");
+            begin 
+              response = github_query(@client) { @client.delete_release_asset(response.url) }
+            rescue => e
+              $logger.error("Error deleting failed asset, continuing to next try #{e}")
+              @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset #{e}")
+            end
+          else 
+            $logger.info("Asset upload appears to have succeeded. url: #{response.url}, state: #{response.state}")
+            succeeded = true
+          end
+
+          @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset #{response_str}")
+
+          num_tries = num_tries + 1
+        end
+
+        if !succeeded
+          $logger.error("After #{try_num} tries we still failed to upload the release asset.");
+          @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "error", "#{try_num} attempts where make to upload release assets and all failed")
+        end
+
+      end
+    end
+
     test_results_data = []
 
     test_results_passed = 0
@@ -766,9 +809,6 @@ eos
         response = github_query(@client) { @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message, :accept => Octokit::Client::Statuses::COMBINED_STATUS_MEDIA_TYPE) }
       end
 
-      if !@package_location.nil? && @config.post_release_package
-        github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s) }
-      end
     else 
       File.open("#{@dateprefix}-#{results_file_name compiler}", "w+") { |f| f.write(json_document) }
       File.open("#{@dateprefix}-COMMENT-#{results_file_name compiler}", "w+") { |f| f.write(github_document) }

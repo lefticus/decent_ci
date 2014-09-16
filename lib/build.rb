@@ -178,6 +178,7 @@ eos
                                                           "#{results_path}/#{dateprefix}-DailyTaskRun",
                                                           "Commit daily task run file: #{dateprefix}-DailyTaskRun",
                                                           document) } 
+
       $logger.info("Daily task document sha: #{response.content.sha}")
       return true
     rescue => e
