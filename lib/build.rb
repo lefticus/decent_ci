@@ -135,23 +135,31 @@ class Build
   end
 
   def get_regression_base t_potential_build
-    if t_potential_build.branch_name == "master"
-      return nil
-    elsif t_potential_build.branch_name == "develop"
-      @potential_builds.each { |p|
-        if p.branch_name == "master"
-          return p
-        end
-      }
-      return nil
-    else 
-      @potential_builds.each { |p|
-        if p.branch_name == "develop"
-          return p
-        end
-      }
+    config = t_potential_build.configuration
+    defined_baseline = config.send("regression_baseline_#{t_potential_build.branch_name}")
+    
+    default_baseline = config.regression_baseline_default
+    default_baseline = "develop" if default_baseline.nil? && t_potential_build.branch_name != "develop" && t_potential_build.branch_name != "master"
+
+    baseline = defined_baseline ? defined_baseline : default_baseline
+
+    $logger.info("Baseline defined as: '#{baseline}' for branch '#{t_potential_build.branch_name}'")
+
+    baseline = nil if baseline == t_potential_build.branch_name || baseline == ""
+
+    $logger.info("Baseline refined to: '#{baseline}' for branch '#{t_potential_build.branch_name}'")
+
+    if baseline.nil?
       return nil
     end
+
+    @potential_builds.each { |p|
+      if p.branch_name == baseline
+        return p
+      end
+    }
+
+    return nil
   end
 
   def potential_builds
