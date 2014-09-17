@@ -149,7 +149,7 @@ class Build
 
     $logger.info("Baseline refined to: '#{baseline}' for branch '#{t_potential_build.branch_name}'")
 
-    if baseline.nil?
+    if baseline.nil? || baseline == ""
       return nil
     end
 
