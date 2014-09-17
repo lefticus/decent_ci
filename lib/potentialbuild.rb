@@ -595,7 +595,7 @@ class PotentialBuild
             succeeded = true
           end
 
-          num_tries = num_tries + 1
+          try_num = try_num + 1
         end
 
         if !succeeded
