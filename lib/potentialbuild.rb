@@ -565,19 +565,25 @@ class PotentialBuild
         num_tries = 3
         try_num = 0
         succeeded = false
-        response_str = ""
+
         while try_num < num_tries && !succeeded
-          response = github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s) }
-          response_str = response.to_s
+          response = nil
+
+          begin 
+            response = github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s) }
+          rescue => e
+            $logger.error("Error uploading asset, trying again: #{e.to_s}");
+            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset: #{e.to_s}")
+          end
 
           if response.nil? 
             #didn't work, trying again
-            $logger.error("Unknown error uploading asset, deleting and trying again: #{response_str}");
-            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Unknown error while attempting to upload release asset #{response_str}")
+            $logger.error("Error uploading asset, trying again.");
+            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset.")
           elsif response.state == "new"
             # according to the github docs, this means the asset wasn't properly created
             $logger.error("Error uploading asset, deleting and trying again, asset.url #{response.url}");
-            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset, deleting and trying again #{response_str}")
+            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset, deleting and trying again #{response.to_s}")
             begin 
               response = github_query(@client) { @client.delete_release_asset(response.url) }
             rescue => e
@@ -588,7 +594,6 @@ class PotentialBuild
             $logger.info("Asset upload appears to have succeeded. url: #{response.url}, state: #{response.state}")
             succeeded = true
           end
-
 
           num_tries = num_tries + 1
         end
