@@ -591,7 +591,7 @@ class PotentialBuild
 
             if asset_url.nil?
               $logger.error("nil response, attempting to find release url");
-              assets = github_query(@client) { @client.release_assets(@asset_url) }
+              assets = github_query(@client) { @client.release_assets(@release_url) }
 
               assets.each { |a|
                 if a.name == asset_name
