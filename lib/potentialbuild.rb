@@ -566,33 +566,55 @@ class PotentialBuild
         try_num = 0
         succeeded = false
 
+        asset_name = Pathname.new(@package_location).basename.to_s
         while try_num < num_tries && !succeeded
           response = nil
 
           begin 
-            response = github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>Pathname.new(@package_location).basename.to_s) }
+            response = github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>asset_name) }
           rescue => e
             $logger.error("Error uploading asset, trying again: #{e.to_s}");
-            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset: #{e.to_s}")
+            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset.\nDuring attempt #{try_num}\n#{e.to_s}")
           end
 
-          if response.nil? 
-            #didn't work, trying again
-            $logger.error("Error uploading asset, trying again.");
-            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset.")
-          elsif response.state == "new"
-            # according to the github docs, this means the asset wasn't properly created
-            $logger.error("Error uploading asset, deleting and trying again, asset.url #{response.url}");
-            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset, deleting and trying again #{response.to_s}")
-            begin 
-              response = github_query(@client) { @client.delete_release_asset(response.url) }
-            rescue => e
-              $logger.error("Error deleting failed asset, continuing to next try #{e}")
-              @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to delete failed release asset upload. release asset #{e}")
-            end
-          else 
+          if response && response.state != "new"
             $logger.info("Asset upload appears to have succeeded. url: #{response.url}, state: #{response.state}")
             succeeded = true
+          else
+            $logger.error("Asset upload appears to have failed, going to try and delete the failed bits.")
+            asset_url = nil
+
+            if !response.nil? && response.state == "new"
+              $logger.error("Error uploading asset #{response.url}");
+              asset_url = response.url
+            end
+
+            if asset_url.nil?
+              $logger.error("nil response, attempting to find release url");
+              assets = github_query(@client) { @client.release_assets(@asset_url) }
+
+              assets.each { |a|
+                if a.name == asset_name
+                  asset_url = a.url
+                  break
+                end
+              }
+
+              if !asset_url.nil?
+                $logger.error("Found release url in list of assets: #{asset_url}");
+              end
+            end
+
+            if asset_url
+              $logger.error("Deleting existing asset_url and trying again #{asset_url}");
+              @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset, deleting and trying again. #{asset_url}\nDuring attempt #{try_num}")
+              begin 
+                response = github_query(@client) { @client.delete_release_asset(asset_url) }
+              rescue => e
+                $logger.error("Error deleting failed asset, continuing to next try #{e}")
+                @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to delete failed release asset upload.\nDuring attempt #{try_num}\nRelease asset #{e.to_s}")
+              end
+            end
           end
 
           try_num = try_num + 1
@@ -600,7 +622,7 @@ class PotentialBuild
 
         if !succeeded
           $logger.error("After #{try_num} tries we still failed to upload the release asset.");
-          @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "error", "#{try_num} attempts where make to upload release assets and all failed")
+          @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "error", "#{try_num} attempts where made to upload release assets and all failed")
         end
 
       end
