@@ -49,6 +49,7 @@ module CMake
 
     msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
     gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
+    process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
     return msvc_success && gcc_success
   end
 
@@ -102,6 +103,8 @@ module CMake
   def cmake_test(compiler, src_dir, build_dir, build_type)
     test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{@config.tests_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"]);
     @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
+    # may as well see if there are some cmake results to pick up here
+    process_cmake_results(compiler, src_dir, build_dir, test_stdout, test_stderr, test_result, false)
   end
 
   def cmake_install(compiler, src_dir, build_dir, install_dir, build_type)
