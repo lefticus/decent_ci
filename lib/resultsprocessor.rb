@@ -218,7 +218,7 @@ module ResultsProcessor
   end
 
   def parse_gcc_line(compiler, src_path, build_path, line)
-    /(?<filename>.*):(?<linenumber>[0-9]+):(?<colnumber>[0-9]+): (?<messagetype>\S+): (?<message>.*)/ =~ line
+    /(?<filename>.*):(?<linenumber>[0-9]+):(?<colnumber>[0-9]+): (?<messagetype>.+?): (?<message>.*)/ =~ line
 
     if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
       return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, colnumber, messagetype, message)
