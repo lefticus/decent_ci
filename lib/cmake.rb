@@ -26,6 +26,11 @@ module CMake
       env["REGRESSION_DIR"] = File.expand_path(regression_dir)
       env["REGRESSION_BASELINE_SHA"] = regression_baseline.commit_sha
       env["COMMIT_SHA"] = (@commit_sha && @commit_sha != "") ? @commit_sha : @tag_name
+	else
+      env["REGRESSION_BASELINE"] = " "
+      env["REGRESSION_DIR"] = " "
+      env["REGRESSION_BASELINE_SHA"] = " "
+      env["COMMIT_SHA"] = " "	
     end
 
     out, err, result = run_script(
