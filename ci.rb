@@ -173,6 +173,13 @@ for conf in 2..ARGV.length-1
       if ENV["DECENT_CI_BRANCH_FILTER"].nil? || ENV["DECENT_CI_BRANCH_FILTER"] == '' || p.branch_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.tag_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/
         $logger.info "Looping over compilers"
         p.compilers.each { |compiler|
+          if !(ENV["DECENT_CI_COMPILER_FILTER"].nil? || ENV["DECENT_CI_COMPILER_FILTER"] == '')
+            compiler_string = compiler[:description] + " " + compiler[:architecture_description]
+            if !(compiler_string =~ /#{ENV["DECENT_CI_COMPILER_FILTER"]}/)
+              $logger.info "#{compiler_string} does not match filter of #{ENV["DECENT_CI_COMPILER_FILTER"]}, skipping this compiler build"
+              next
+            end
+          end
 
           begin
             # reset potential build for the next build attempt
