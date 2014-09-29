@@ -434,8 +434,10 @@ class PotentialBuild
   end
 
   def needs_regression_test(compiler)
-    if (!@config.regression_script.nil? || !@config.regression_repository.nil?) && !compiler[:analyze_only]
-      return true;
+    if (!@config.regression_script.nil? || !@config.regression_repository.nil?) && !compiler[:analyze_only] && !ENV["DECENT_CI_SKIP_REGRESSIONS"]
+      return true
+    else
+      return false
     end
   end
 
