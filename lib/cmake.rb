@@ -13,6 +13,7 @@ module CMake
     compiler_extra_flags = compiler[:compiler_extra_flags]
     compiler_extra_flags = "" if compiler_extra_flags.nil?
 
+
     env = {}
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
@@ -20,6 +21,8 @@ module CMake
     else
       env = {"CXXFLAGS"=>"/FC #{compiler_extra_flags}", "CFLAGS"=>"/FC #{compiler_extra_flags}", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
     end
+
+    env["PATH"] = cmake_remove_git_from_path(ENV['PATH']);
 
     if !regression_baseline.nil?
       env["REGRESSION_BASELINE"] = File.expand_path(regression_baseline.get_build_dir(compiler))
@@ -50,13 +53,26 @@ module CMake
     end
 
     out, err, result = run_script(
-        ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --use-stderr -- #{build_switches}"])
+        ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --use-stderr -- #{build_switches}"], env)
 
     msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
     gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
     process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
     return msvc_success && gcc_success
   end
+
+  def cmake_remove_git_from_path(old_path)
+    # The point is to remove the git provided sh.exe from the path so that it does
+    # not conflict with other operations
+    if @config.os == "Windows"
+      paths = old_path.split(";")
+      paths.delete_if { |p| p =~ /Git/ }
+      return paths.join(";")
+    end
+
+    return old_path
+  end
+      
 
   def cmake_package(compiler, src_dir, build_dir, build_type)
     new_path = ENV['PATH']
@@ -75,8 +91,10 @@ module CMake
         p = File.dirname(linker_path)
         p = p.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File::ALT_SEPARATOR
 	new_path = "#{p};#{new_path}"
-	$logger.info("New path set for executing cpack, to help with get_requirements: #{new_path}")
       end
+
+      new_path = cmake_remove_git_from_path(new_path)
+      $logger.info("New path set for executing cpack, to help with get_requirements: #{new_path}")
     end
 
     pack_stdout, pack_stderr, pack_result = run_script(
@@ -106,7 +124,8 @@ module CMake
 
 
   def cmake_test(compiler, src_dir, build_dir, build_type)
-    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{@config.tests_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"]);
+    env = {"PATH"=>cmake_remove_git_from_path(ENV['PATH'])}
+    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{@config.tests_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"], env);
     @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
     # may as well see if there are some cmake results to pick up here
     process_cmake_results(compiler, src_dir, build_dir, test_stdout, test_stderr, test_result, false)
