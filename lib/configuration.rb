@@ -299,8 +299,10 @@ module Configuration
           compiler[:package_extension] = "exe"
         when /.*PackageMaker.*/
           compiler[:package_extension] = "dmg"
+        when /.*STGZ.*/
+          compiler[:package_extension] = "sh"
         when /T.*/
-          /T(?<tar_type>[0-9]+)/ =~ compiler[:build_package_generator]
+          /T(?<tar_type>[A-Z]+)/ =~ compiler[:build_package_generator]
           compiler[:package_extension] = "tar.#{tar_type.downcase}"
         else
           compiler[:package_extension] = compiler[:build_package_generator].downcase
