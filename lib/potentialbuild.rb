@@ -568,15 +568,25 @@ class PotentialBuild
         try_num = 0
         succeeded = false
 
+        fatal_failure = false
+
         asset_name = Pathname.new(@package_location).basename.to_s
-        while try_num < num_tries && !succeeded
+        while try_num < num_tries && !succeeded && !fatal_failure
           response = nil
 
           begin 
             response = github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>asset_name) }
           rescue => e
-            $logger.error("Error uploading asset, trying again: #{e.to_s}");
-            @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset.\nDuring attempt #{try_num}\n#{e.to_s}")
+            if try_num == 0 && e.to_s.include?("already_exists")
+              $logger.error("already_exists error on 0th attempt, fatal, we shall not overwrite existing upload");
+              @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "error", "Error, asset already_exists on 0th try, refusing to upload asset: #{e.to_s}")
+              fatal_failure = true
+              try_num = try_num + 1
+              next
+            else
+              $logger.error("Error uploading asset, trying again: #{e.to_s}");
+              @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset.\nDuring attempt #{try_num}\n#{e.to_s}")
+            end
           end
 
           if response && response.state != "new"
