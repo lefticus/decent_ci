@@ -17,7 +17,7 @@ module CMake
     env = {}
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
-      env = {"CXXFLAGS"=>"#{compiler_extra_flags}", "CFLAGS"=>"#{compiler_extra_flags}", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
+      env = {"CXXFLAGS"=>"#{compiler_extra_flags}", "CFLAGS"=>"#{compiler_extra_flags}", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime", "CC"=>compiler[:cc_bin], "CXX"=>compiler[:cxx_bin]}
     else
       env = {"CXXFLAGS"=>"/FC #{compiler_extra_flags}", "CFLAGS"=>"/FC #{compiler_extra_flags}", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
     end
