@@ -25,7 +25,7 @@ module Configuration
     return nil
   end
 
-  def load_configuration(location, ref)
+  def load_configuration(location, ref, is_release)
     def load_yaml(name, location, ref)
 
       if !location.nil? && !name.nil?
@@ -316,8 +316,12 @@ module Configuration
         compiler[:package_mimetype] = "application/octet-stream"
       end
 
-      if compiler[:cmake_extra_flags].nil?
-        compiler[:cmake_extra_flags] = ""
+      if is_release && !compiler[:cmake_extra_flags_release].nil?
+        compiler[:cmake_extra_flags] = compiler[:cmake_extra_flags_release]
+      else
+        if compiler[:cmake_extra_flags].nil?
+          compiler[:cmake_extra_flags] = ""
+        end
       end
 
       if compiler[:num_parallel_builds].nil?

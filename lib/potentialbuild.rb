@@ -36,7 +36,7 @@ class PotentialBuild
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, 
                  pull_id, pull_request_base_repository, pull_request_base_ref)
     @client = client
-    @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name))
+    @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name), !release_url.nil?)
     @config.repository_name = github_query(@client) { @client.repo(repository).name }
     @config.repository = repository
     @config.token = token
