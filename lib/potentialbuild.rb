@@ -258,32 +258,32 @@ class PotentialBuild
   def do_package(compiler, regression_baseline)
     $logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
 
+
     if is_release && needs_release_package(compiler)
       src_dir = get_src_dir compiler
-      build_dir = "#{src_dir}/build"
+      build_dir = get_build_dir compiler
 
       @created_dirs << src_dir
       @created_dirs << build_dir
 
-      checkout_succeeded = checkout src_dir
+      build_succeeded = do_build compiler, regression_baseline
 
       start_time = Time.now
       case @config.engine
       when "cmake"
-        cmake_build compiler, src_dir, build_dir, nil, compiler[:build_type], get_regression_dir(compiler), regression_baseline if checkout_succeeded
+        begin 
+          @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
+        rescue => e
+          $logger.error("Error creating package #{e}")
+          @package_time = Time.now - start_time
+          raise
+        end
       else
+        @package_time = Time.now - start_time
         raise "Unknown Build Engine"
       end
 
-      begin 
-        @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
-      rescue => e
-        $logger.error("Error creating package #{e}")
-	raise
-      end
-      end_time = Time.now
-      @package_time = end_time - start_time
-
+      @package_time = Time.now - start_time
     end
   end
 
@@ -371,13 +371,17 @@ class PotentialBuild
     if compiler[:name] == "cppcheck"
       start_time = Time.now
       cppcheck compiler, src_dir, build_dir
-      @build_time = Time.now - start_time
+      @build_time = 0 if @build_time.nil?
+      # handle the case where build is called more than once
+      @build_time = @build_time + (Time.now - start_time)
     else
       case @config.engine
       when "cmake"
         start_time = Time.now
         build_succeeded = cmake_build compiler, src_dir, build_dir, install_dir, compiler[:build_type], get_regression_dir(compiler), regression_baseline if checkout_succeeded
-        @build_time = Time.now - start_time
+        @build_time = 0 if @build_time.nil?
+        # handle the case where build is called more than once
+        @build_time = @build_time + (Time.now - start_time)
       else
         raise "Unknown Build Engine"
       end

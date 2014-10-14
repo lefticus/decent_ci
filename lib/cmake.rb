@@ -72,7 +72,7 @@ module CMake
 
     return old_path
   end
-      
+
 
   def cmake_package(compiler, src_dir, build_dir, build_type)
     new_path = ENV['PATH']
@@ -82,23 +82,32 @@ module CMake
       File.open("#{build_dir}/extract_linker_path.cmake", "w+") { |f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")') }
 
       script_stdout, script_stderr, script_result = run_script(
-		    ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
+                  ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
 
       /.*LINKER:(?<linker_path>.*)/ =~ script_stdout
       $logger.debug("Parsed linker path from cmake: #{linker_path}")
-      
+
       if linker_path && linker_path != ""
         p = File.dirname(linker_path)
         p = p.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File::ALT_SEPARATOR
-	new_path = "#{p};#{new_path}"
+        new_path = "#{p};#{new_path}"
       end
 
       new_path = cmake_remove_git_from_path(new_path)
       $logger.info("New path set for executing cpack, to help with get_requirements: #{new_path}")
     end
 
-    pack_stdout, pack_stderr, pack_result = run_script(
-      ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], {"PATH"=>new_path})
+    pack_stdout = nil
+    pack_stderr = nil
+    pack_result = nil
+
+    if !compiler[:package_command].nil?
+      pack_stdout, pack_stderr, pack_result = run_script(
+        ["cd #{build_dir} && #{compiler[:package_command]} "], {"PATH"=>new_path})
+    else
+      pack_stdout, pack_stderr, pack_result = run_script(
+        ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], {"PATH"=>new_path})
+    end
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stdout, pack_stderr, pack_result, true)
 
