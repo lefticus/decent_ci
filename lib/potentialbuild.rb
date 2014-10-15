@@ -343,15 +343,6 @@ class PotentialBuild
     "#{get_src_dir compiler}/build"
   end
 
-  def get_install_dir(compiler)
-    "#{Dir.getwd}/#{get_src_dir compiler}-install"
-  end
-
-  def needs_install(compiler)
-    return true
-    return !File.directory?(get_install_dir compiler);
-  end
-
   def get_regression_dir(compiler)
     "#{get_src_dir compiler}/regressions"
   end
@@ -360,7 +351,6 @@ class PotentialBuild
   def do_build(compiler, regression_baseline)
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
-    install_dir = get_install_dir compiler
 
     @created_dirs << src_dir
     @created_dirs << build_dir
@@ -378,7 +368,7 @@ class PotentialBuild
       case @config.engine
       when "cmake"
         start_time = Time.now
-        build_succeeded = cmake_build compiler, src_dir, build_dir, install_dir, compiler[:build_type], get_regression_dir(compiler), regression_baseline if checkout_succeeded
+        build_succeeded = cmake_build compiler, src_dir, build_dir, compiler[:build_type], get_regression_dir(compiler), regression_baseline if checkout_succeeded
         @build_time = 0 if @build_time.nil?
         # handle the case where build is called more than once
         @build_time = @build_time + (Time.now - start_time)
@@ -412,29 +402,6 @@ class PotentialBuild
         raise "Unknown Build Engine"
       end
     end
-  end
-
-  def do_install(compiler)
-    src_dir = get_src_dir compiler
-    build_dir = get_build_dir compiler
-    install_dir = get_install_dir compiler
-
-    @created_dirs << src_dir
-    @created_dirs << build_dir
-
-    if compiler[:name] == "cppcheck"
-    else
-      case @config.engine
-      when "cmake"
-        start_time = Time.now
-        install_succeeded = cmake_install compiler, src_dir, build_dir, install_dir, compiler[:build_type]
-        @install_time = Time.now - start_time
-      else
-        raise "Unknown Build Engine"
-      end
-    end
-
-    return install_succeeded
   end
 
   def needs_regression_test(compiler)

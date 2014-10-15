@@ -2,13 +2,10 @@
 
 # contains functions necessary for working with the 'cmake' engine
 module CMake
-  def cmake_build(compiler, src_dir, build_dir, install_dir, build_type, regression_dir, regression_baseline)
+  def cmake_build(compiler, src_dir, build_dir, build_type, regression_dir, regression_baseline)
     FileUtils.mkdir_p build_dir
 
     cmake_flags = "#{compiler[:cmake_extra_flags]} -DDEVICE_ID:STRING=\"#{device_id compiler}\""
-    if install_dir
-      cmake_flags += " -DCMAKE_INSTALL_PREFIX:PATH=\"#{install_dir}\""
-    end
 
     compiler_extra_flags = compiler[:compiler_extra_flags]
     compiler_extra_flags = "" if compiler_extra_flags.nil?
@@ -139,22 +136,5 @@ module CMake
     # may as well see if there are some cmake results to pick up here
     process_cmake_results(compiler, src_dir, build_dir, test_stdout, test_stderr, test_result, false)
   end
-
-  def cmake_install(compiler, src_dir, build_dir, install_dir, build_type)
-    if @config.os != "Windows"
-      build_switches = "-j#{compiler[:num_parallel_builds]}"
-    else
-      build_switches = ""
-    end
-
-    out, err, result = run_script(
-        ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --target install --use-stderr -- #{build_switches}"])
-
-    cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, true)
-    msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
-    gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
-    return msvc_success && gcc_success
-  end
-
 
 end
