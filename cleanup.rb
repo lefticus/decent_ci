@@ -21,6 +21,12 @@ def clean_up(client, repository, results_repository, results_path)
   # to delete the results for a branch that doesn't yet exist
   files = github_query(client) { client.contents(results_repository, :path=>results_path) }
 
+  branch_history_limit = 10
+  if files.size > 900
+    branch_history_limit = 8
+    logger.info("Hitting directory size limit #{files.size}, reducing history to #{branch_history_limit} data points")
+  end
+
   # todo properly handle paginated results from github
   branches = github_query(client) { client.branches(repository, :per_page => 100) }
   pull_requests = github_query(client) { client.pull_requests(repository, :state=>"open") }
@@ -85,9 +91,9 @@ def clean_up(client, repository, results_repository, results_path)
     logger.info("Examining branch data: #{key}")
     filedata.sort_by! { |i| i[:date] }
 
-    # allow at most 10 results for each device_id / branchname combination. The 10 newest, specifically
-    if filedata.size() > 10
-      filedata[0..filedata.size() - 11].each { |file|
+    # allow at most branch_history_limit results for each device_id / branchname combination. The newest, specifically
+    if filedata.size() > branch_history_limit
+      filedata[0..filedata.size() - (branch_history_limit + 1)].each { |file|
         logger.debug("Marking old branch results file for deletion #{file[:file].path}")
         files_for_deletion << file[:file]
       }
@@ -96,7 +102,7 @@ def clean_up(client, repository, results_repository, results_path)
 
 
   files_for_deletion.each { |file|
-    logger.info("Deleting results file: #{file.path}. Source branch #{file_branch[file.path]} removed.")
+    logger.info("Deleting results file: #{file.path}. Source branch #{file_branch[file.path]} removed, or file too old")
     begin
       github_query(client) { client.delete_contents(results_repository, file.path, "Source branch #{file_branch[file.path]} removed. Deleting results.", file.sha) }
     rescue => e
