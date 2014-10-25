@@ -29,7 +29,7 @@ def clean_up(client, repository, results_repository, results_path)
 
   # todo properly handle paginated results from github
   branches = github_query(client) { client.branches(repository, :per_page => 100) }
-  tags = github_query(client) { client.branches(repository, :per_page => 100) }
+  releases = github_query(client) { client.releases(repository, :per_page => 100) }
   pull_requests = github_query(client) { client.pull_requests(repository, :state=>"open") }
 
   files_for_deletion = []
@@ -44,7 +44,15 @@ def clean_up(client, repository, results_repository, results_path)
       file_data = YAML.load(file_content)
       branch_name = file_data["branch_name"]
 
-      if !file_data["pending"]
+      if file.path =~ /DailyTaskRun$/
+        logger.debug("DailyTaskRun created on: #{file_data["date"]}")
+        days_since_run = (DateTime.now - file_data["date"].to_datetime).to_f
+        if days_since_run > 5
+          logger.debug("Deleting old DailyTaskRun file #{file.path}")
+          files_for_deletion << file
+        end
+
+      elsif !file_data["pending"]
         if !branch_name.nil? && (file_data["pull_request_issue_id"].nil? || file_data["pull_request_issue_id"] == "")
           logger.debug("Examining branch #{branch_name} commit #{file_data["commit_sha"]}")
 
@@ -71,7 +79,32 @@ def clean_up(client, repository, results_repository, results_path)
             file_branch[file.path] = branch_name
             branches_deleted << branch_name
           end
+        elsif !file_data["tag_name"].nil?
+          tag_found = false
+          days_after = nil
+          releases.each{ |r|
+            if r.tag_name == file_data["tag_name"]
+              tag_found = true
+              days_after = (file_data["date"].to_datetime - DateTime.parse(r.published_at.to_s)).to_f
+              if (days_after < -1)
+                logger.debug(" release is newer than results? (#{DateTime.parse(r.published_at.to_s)} vs #{file_data["date"].to_datetime})")
+              end
+              break
+            end
+          }
+
+          if !tag_found
+            logger.debug("Release not found, queuing results for deletion: #{file_data["title"]}")
+            files_for_deletion << file
+          else
+            logger.debug("Release results created #{days_after} days  after tag was created");
+            if days_after < -1
+              logger.debug("Release created AFTER results, queuing results for deletion: #{file_data["title"]}")
+              files_for_deletion << file
+            end
+          end
         end
+
       else 
         # is pending
         logger.debug("Pending build was created on: #{file_data["date"]}")
