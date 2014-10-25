@@ -816,7 +816,11 @@ eos
       end
 
       if !@commit_sha.nil? && @config.post_results_status
-        response = github_query(@client) { @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message) }
+        if !@pull_request_base_repository.nil?
+          response = github_query(@client) { @client.create_status(@pull_request_base_repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message) }
+        else
+          response = github_query(@client) { @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message) }
+        end
       end
 
     else 
