@@ -29,6 +29,7 @@ def clean_up(client, repository, results_repository, results_path)
 
   # todo properly handle paginated results from github
   branches = github_query(client) { client.branches(repository, :per_page => 100) }
+  tags = github_query(client) { client.branches(repository, :per_page => 100) }
   pull_requests = github_query(client) { client.pull_requests(repository, :state=>"open") }
 
   files_for_deletion = []

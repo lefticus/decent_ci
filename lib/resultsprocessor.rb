@@ -142,7 +142,7 @@ module ResultsProcessor
           else
             /(?<filename>.*):(?<linenumber>[0-9]+):$/ =~ err
 
-            if !filename.nil? && !linenumber.nil? && !(filename =~ /file included/i)
+            if !filename.nil? && !linenumber.nil? && !(filename =~ /file included/i) && !(filename =~ /^\s*from\s+/i)
               file = filename
               line = linenumber
               type = "error"

@@ -170,7 +170,7 @@ for conf in 2..ARGV.length-1
     # loop over each potential build
     b.potential_builds.each { |p|
 
-      if ENV["DECENT_CI_BRANCH_FILTER"].nil? || ENV["DECENT_CI_BRANCH_FILTER"] == '' || p.branch_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.tag_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/
+      if ENV["DECENT_CI_BRANCH_FILTER"].nil? || ENV["DECENT_CI_BRANCH_FILTER"] == '' || p.branch_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.tag_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.descriptive_string =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/
         $logger.info "Looping over compilers"
         p.compilers.each { |compiler|
           if !(ENV["DECENT_CI_COMPILER_FILTER"].nil? || ENV["DECENT_CI_COMPILER_FILTER"] == '')
