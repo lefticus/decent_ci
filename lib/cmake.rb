@@ -10,6 +10,11 @@ module CMake
     compiler_extra_flags = compiler[:compiler_extra_flags]
     compiler_extra_flags = "" if compiler_extra_flags.nil?
 
+    if running_extra_tests()
+      if !@config.extra_tests_cmake_extra_flags.nil?
+        cmake_flags = cmake_flags + " " + @config.extra_tests_cmake_extra_flags
+      end
+    end
 
     env = {}
     if !compiler[:cc_bin].nil?
@@ -130,11 +135,22 @@ module CMake
 
 
   def cmake_test(compiler, src_dir, build_dir, build_type)
-    env = {"PATH"=>cmake_remove_git_from_path(ENV['PATH'])}
-    test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{@config.tests_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"], env);
-    @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
-    # may as well see if there are some cmake results to pick up here
-    process_cmake_results(compiler, src_dir, build_dir, test_stdout, test_stderr, test_result, false)
-  end
+    test_dirs = [@config.tests_dir]
 
+    if running_extra_tests()
+      if !@config.extra_tests_test_dir.nil?
+        test_dirs << @config.extra_tests_test_dir
+      end
+    end
+
+    test_dirs.each{ |test_dir|
+      $logger.info("Running tests in dir: #{test_dir}")
+      env = {"PATH"=>cmake_remove_git_from_path(ENV['PATH'])}
+      test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"], env);
+      @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
+      # may as well see if there are some cmake results to pick up here
+      process_cmake_results(compiler, src_dir, build_dir, test_stdout, test_stderr, test_result, false)
+    }
+  end
 end
+

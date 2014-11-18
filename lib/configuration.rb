@@ -167,6 +167,10 @@ module Configuration
     result_yaml.merge!(os_distribution_yaml) if !os_distribution_yaml.nil?
     result_yaml.merge!(os_distribution_release_yaml) if !os_distribution_release_yaml.nil?
 
+#    if result_yaml[:extra_tests_branches].nil?
+#      result_yaml[:extra_tests_branches] = []
+#    end
+
     result_yaml = symbolize(result_yaml)
 
     $logger.info("Final merged configuration: #{result_yaml}")

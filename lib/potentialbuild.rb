@@ -101,6 +101,16 @@ class PotentialBuild
     return @pull_id
   end
 
+  def running_extra_tests
+    $logger.warn("Checking if running_extra_tests on branch: #{@branch_name} extra tests branches #{@config.extra_tests_branches}")
+    if !@branch_name.nil? && !@config.extra_tests_branches.nil? && @config.extra_tests_branches.count(@branch_name) != 0
+      return true
+    else
+      return false
+    end
+
+  end
+
   # originally from https://gist.github.com/lpar/1032297
   # runs a specified shell command in a separate thread.
   # If it exceeds the given timeout in seconds, kills it.
