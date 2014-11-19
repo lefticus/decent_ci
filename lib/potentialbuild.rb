@@ -269,19 +269,29 @@ class PotentialBuild
     $logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
 
 
-    if is_release && needs_release_package(compiler)
+    if ENV["DECENT_CI_ALL_RELEASE"] || (is_release && needs_release_package(compiler))
       src_dir = get_src_dir compiler
       build_dir = get_build_dir compiler
 
       @created_dirs << src_dir
       @created_dirs << build_dir
 
-      build_succeeded = do_build compiler, regression_baseline
+      if compiler[:release_build_enable_pgo]
+        $logger.info("Release build PGO enabled, starting training build")
+        build_succeeded = do_build compiler, regression_baseline, {:training => true, :release=>false}
+        $logger.info("Release build PGO enabled, starting training tests")
+        do_test compiler, regression_baseline, {:training => true}
+        $logger.info("Release build PGO enabled, starting final build")
+        build_succeeded = do_build compiler, regression_baseline, {:training => false, :release => true}
+
+      else
+        build_succeeded = do_build compiler, regression_baseline, {:training => false, :release => true}
+      end
 
       start_time = Time.now
       case @config.engine
       when "cmake"
-        begin 
+        begin
           @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
         rescue => e
           $logger.error("Error creating package #{e}")
@@ -358,7 +368,7 @@ class PotentialBuild
   end
 
 
-  def do_build(compiler, regression_baseline)
+  def do_build(compiler, regression_baseline, flags={:training => false, :release => false} )
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
 
@@ -378,7 +388,7 @@ class PotentialBuild
       case @config.engine
       when "cmake"
         start_time = Time.now
-        build_succeeded = cmake_build compiler, src_dir, build_dir, compiler[:build_type], get_regression_dir(compiler), regression_baseline if checkout_succeeded
+        build_succeeded = cmake_build compiler, src_dir, build_dir, compiler[:build_type], get_regression_dir(compiler), regression_baseline, flags if checkout_succeeded
         @build_time = 0 if @build_time.nil?
         # handle the case where build is called more than once
         @build_time = @build_time + (Time.now - start_time)
@@ -388,7 +398,7 @@ class PotentialBuild
     end
   end
 
-  def do_test(compiler, regression_baseline)
+  def do_test(compiler, regression_baseline, flags={:training => false} )
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
 
@@ -403,7 +413,7 @@ class PotentialBuild
       when "cmake"
         start_time = Time.now
         if !ENV["DECENT_CI_SKIP_TEST"]
-          cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded 
+          cmake_test compiler, src_dir, build_dir, compiler[:build_type], flags if build_succeeded 
         else
           $logger.debug("Skipping test, DECENT_CI_SKIP_TEST is set in the environment")
         end

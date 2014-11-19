@@ -2,7 +2,7 @@
 
 # contains functions necessary for working with the 'cmake' engine
 module CMake
-  def cmake_build(compiler, src_dir, build_dir, build_type, regression_dir, regression_baseline)
+  def cmake_build(compiler, src_dir, build_dir, build_type, regression_dir, regression_baseline, flags)
     FileUtils.mkdir_p build_dir
 
     cmake_flags = "#{compiler[:cmake_extra_flags]} -DDEVICE_ID:STRING=\"#{device_id compiler}\""
@@ -13,6 +13,20 @@ module CMake
     if running_extra_tests()
       if !@config.extra_tests_cmake_extra_flags.nil?
         cmake_flags = cmake_flags + " " + @config.extra_tests_cmake_extra_flags
+      end
+    end
+
+    if flags[:training]
+      training_flags = compiler[:release_build_training_cmake_extra_flags]
+      if !training_flags.nil?
+        cmake_flags = cmake_flags + " " + training_flags
+      end
+    end
+
+    if flags[:release]
+      extra_flags = compiler[:release_build_cmake_extra_flags]
+      if !extra_flags.nil?
+        cmake_flags = cmake_flags + " " + extra_flags
       end
     end
 
@@ -134,7 +148,7 @@ module CMake
   end
 
 
-  def cmake_test(compiler, src_dir, build_dir, build_type)
+  def cmake_test(compiler, src_dir, build_dir, build_type, flags)
     test_dirs = [@config.tests_dir]
 
     if running_extra_tests()
@@ -143,10 +157,17 @@ module CMake
       end
     end
 
+    if flags[:training]
+      ctest_filter = compiler[:release_build_training_ctest_filter]
+      ctest_filter = "" if ctest_filter.nil?
+    else
+      ctest_filter = ""
+    end
+
     test_dirs.each{ |test_dir|
       $logger.info("Running tests in dir: #{test_dir}")
       env = {"PATH"=>cmake_remove_git_from_path(ENV['PATH'])}
-      test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type}"], env);
+      test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type} #{ctest_filter}"], env);
       @test_results = process_ctest_results compiler, src_dir, build_dir, test_stdout, test_stderr, test_result
       # may as well see if there are some cmake results to pick up here
       process_cmake_results(compiler, src_dir, build_dir, test_stdout, test_stderr, test_result, false)

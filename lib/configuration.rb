@@ -195,6 +195,10 @@ module Configuration
         compiler[:architecture_description] = compiler[:architecture]
       end
 
+      if compiler[:release_build_enable_pgo].nil?
+        compiler[:release_build_enable_pgo] = false
+      end
+
       if compiler[:version].nil?
         case compiler[:name]
         when "Visual Studio"
