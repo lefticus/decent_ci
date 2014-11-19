@@ -275,13 +275,13 @@ module ResultsProcessor
   end
 
 
-  def process_ctest_results compiler, src_dir, build_dir, stdout, stderr, result
-    if !File.directory?(build_dir)
-      $logger.error("Error: build_dir does not exist, cannot parse test results")
+  def process_ctest_results compiler, src_dir, build_dir, test_dir, stdout, stderr, result
+    if !File.directory?(test_dir)
+      $logger.error("Error: test_dir #{test_dir} does not exist, cannot parse test results")
       return
     end
 
-    Find.find(build_dir) do |path|
+    Find.find(test_dir) do |path|
       if path =~ /.*Test.xml/
         results = []
 
