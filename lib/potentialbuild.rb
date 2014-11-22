@@ -307,19 +307,6 @@ class PotentialBuild
     end
   end
 
-  def parse_error_messages compiler, src_dir, build_dir, output
-    results = []
-    output.split("\n").each{ |l|
-      msg = parse_gcc_line(compiler, src_dir, build_dir, l)
-      msg = parse_msvc_line(compiler, src_dir, build_dir, l) if msg.nil?
-      msg = parse_generic_line(compiler, src_dir, build_dir, l) if msg.nil?
-
-      results << msg if !msg.nil?
-    }
-
-    return results
-  end
-
 
   def needs_run compiler
     return true if @test_run

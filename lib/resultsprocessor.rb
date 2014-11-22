@@ -237,13 +237,32 @@ module ResultsProcessor
 
   def process_gcc_results(compiler, src_path, build_path, stdout, stderr, result)
     results = []
+    linkerrmsg = nil
 
     stderr.split("\n").each { |line|
+      if !linkerrmsg.nil?
+        if line =~ /^\s.*/
+          linkerrmsg += "\n" + line
+        else
+          results << CodeMessage.new("CMakeLists.txt", 0, 0, "error", linkerrmsg)
+          linkerrmsg = nil
+        end
+      end
+
       msg = parse_gcc_line(compiler, src_path, build_path, line)
       if !msg.nil?
         results << msg
+      else 
+        # try to catch some goofy clang linker errors that don't give us very much info
+        if /^Undefined symbols for architecture.*/ =~ line
+          linkerrmsg = line
+        end
       end
     }
+
+    if !linkerrmsg.nil?
+      results << CodeMessage.new("CMakeLists.txt", 0, 0, "error", linkerrmsg)
+    end
 
     @build_results.merge(results)
 
