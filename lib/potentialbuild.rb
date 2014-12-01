@@ -404,7 +404,9 @@ class PotentialBuild
         else
           $logger.debug("Skipping test, DECENT_CI_SKIP_TEST is set in the environment")
         end
-        @test_time = Time.now- start_time
+        @test_time = 0 if @test_time.nil?
+        # handle the case where test is called more than once
+        @test_time = @test_time + (Time.now - start_time)
       else
         raise "Unknown Build Engine"
       end
