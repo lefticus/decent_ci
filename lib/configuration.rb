@@ -260,6 +260,13 @@ module Configuration
       end
 
 
+      if compiler[:skip_packaging].nil?
+        compiler[:skip_packaging] = false
+      else
+        if ((compiler[:skip_packaging] =~ /true/i) || compiler[:skip_packaging] == true)
+          compiler[:skip_packaging] = true
+        end
+      end
 
       description = compiler[:name].gsub(/\s+/, "")
 

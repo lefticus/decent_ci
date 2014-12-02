@@ -209,8 +209,21 @@ class PotentialBuild
     return allout, allerr, allresult
   end
 
+  def device_tag compiler
+    build_type_tag = ""
+    if !compiler[:build_tag].nil?
+      build_type_tag = "-#{compiler[:build_tag]}"
+    end
+
+    if compiler[:build_type] !~ /release/i
+      build_type_tag = "#{build_type_tag}-#{compiler[:build_type]}"
+    end
+   
+    return build_type_tag
+  end
+
   def device_id compiler
-    "#{compiler[:architecture_description]}-#{@config.os}-#{@config.os_release}-#{compiler[:description]}#{ compiler[:build_type] =~ /release/i ? "" : "-#{compiler[:build_type]}" }"
+    "#{compiler[:architecture_description]}-#{@config.os}-#{@config.os_release}-#{compiler[:description]}#{ device_tag(compiler) }"
   end
 
   def build_base_name compiler
@@ -269,7 +282,7 @@ class PotentialBuild
     $logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
 
 
-    if ENV["DECENT_CI_ALL_RELEASE"] || (is_release && needs_release_package(compiler))
+    if (ENV["DECENT_CI_ALL_RELEASE"] || (is_release && needs_release_package(compiler))) && !compiler[:skip_packaging]
       src_dir = get_src_dir compiler
       build_dir = get_build_dir compiler
 
@@ -283,7 +296,6 @@ class PotentialBuild
         do_test compiler, regression_baseline, {:training => true}
         $logger.info("Release build PGO enabled, starting final build")
         build_succeeded = do_build compiler, regression_baseline, {:training => false, :release => true}
-
       else
         build_succeeded = do_build compiler, regression_baseline, {:training => false, :release => true}
       end
@@ -343,7 +355,7 @@ class PotentialBuild
   end
 
   def get_src_dir(compiler)
-    "#{get_short_form(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture_description]}-#{get_short_form(compiler[:description])}#{ compiler[:build_type] =~ /release/i ? "" : "-#{compiler[:build_type]}" }"
+    "#{get_short_form(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture_description]}-#{get_short_form(compiler[:description])}#{ get_short_form(device_tag(compiler)) }"
   end
 
   def get_build_dir(compiler)
@@ -687,6 +699,7 @@ os: #{@config.os}
 os_release: #{@config.os_release}
 is_release: #{is_release}
 release_packaged: #{!@package_location.nil?}
+packaging_skipped: #{compiler[:skip_packaging]}
 package_name: #{@package_location.nil? ? nil : Pathname.new(@package_location).basename}
 tag_name: #{@tag_name}
 commit_sha: #{@commit_sha}
