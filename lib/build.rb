@@ -204,7 +204,9 @@ eos
   def results_repositories
     s = Set.new()
     @potential_builds.each { |p|
-      s << [p.configuration.repository, p.configuration.results_repository, p.configuration.results_path]
+      if !p.is_pull_request
+        s << [p.configuration.repository, p.configuration.results_repository, p.configuration.results_path]
+      end
     }
     return s
   end

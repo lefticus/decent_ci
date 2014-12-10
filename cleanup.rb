@@ -23,13 +23,13 @@ def clean_up(client, repository, results_repository, results_path)
 
   branch_history_limit = 10
   if files.size > 900
-    branch_history_limit = 8
+    branch_history_limit = 5
     logger.info("Hitting directory size limit #{files.size}, reducing history to #{branch_history_limit} data points")
   end
 
   # todo properly handle paginated results from github
-  branches = github_query(client) { client.branches(repository, :per_page => 100) }
-  releases = github_query(client) { client.releases(repository, :per_page => 100) }
+  branches = github_query(client) { client.branches(repository, :per_page => 200) }
+  releases = github_query(client) { client.releases(repository, :per_page => 200) }
   pull_requests = github_query(client) { client.pull_requests(repository, :state=>"open") }
 
   files_for_deletion = []
@@ -37,10 +37,15 @@ def clean_up(client, repository, results_repository, results_path)
   file_branch = Hash.new
   branch_files = Hash.new
 
+  releases.each { |release|
+    logger.debug("Loaded release: '#{release.tag_name}'")
+  }
+
   files.each { |file| 
     if file.type == "file"
       logger.debug("Examining file #{file.sha} #{file.path}")
       file_content = Base64.decode64(github_query(client) { client.blob(results_repository, file.sha).content })
+#      file_content = Base64.decode64(github_query(client) { client.contents(results_repository, :path=>file.path) })
       file_data = YAML.load(file_content)
       branch_name = file_data["branch_name"]
 
@@ -94,7 +99,7 @@ def clean_up(client, repository, results_repository, results_path)
           }
 
           if !tag_found
-            logger.debug("Release not found, queuing results for deletion: #{file_data["title"]}")
+            logger.debug("Release not found, queuing results for deletion: #{file_data["title"]}, tag: '#{file_data["tag_name"]}'")
             files_for_deletion << file
           else
             logger.debug("Release results created #{days_after} days  after tag was created");
