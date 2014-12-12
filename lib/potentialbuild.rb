@@ -715,6 +715,7 @@ build_time: #{@build_time}
 test_time: #{@test_time}
 package_time: #{@package_time}
 install_time: #{@install_time}
+results_repository: #{@config.results_repository}
 machine_name: #{Socket.gethostname}
 machine_ip: #{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}
 ---
