@@ -336,7 +336,11 @@ module ResultsProcessor
                 if !nm.nil?
                   nm.each { |measurement|
                     if measurement["name"] == "Execution Time"
-                      results << TestResult.new(n["Name"], n["Status"], measurement["Value"], value, errors);
+                      status_string = n["Status"]
+                      if value =~ "[decent_ci:test_result:warn]"
+                        status_string = "warning"      # what to put here?
+                      end
+                      results << TestResult.new(n["Name"], status_string, measurement["Value"], value, errors);
                     end
                   }
                 end
