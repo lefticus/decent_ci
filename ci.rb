@@ -53,7 +53,7 @@ opts = OptionParser.new do |opts|
 
   $logger.info "delay_after_run: #{options[:delay_after_run]}"
 
-  opts.on("--maximum-branch-age=N", Integer, "Time to delay after execution has completed, in seconds. Defaults to 300") do |k|
+  opts.on("--maximum-branch-age=N", Integer, "Maximum age of a commit, in days, that will be built. Defaults to 30.") do |k|
     options[:maximum_branch_age] = k
   end
 
@@ -166,6 +166,7 @@ for conf in 2..ARGV.length-1
       }
     end
 
+    regression_baselines = []
 
     # loop over each potential build
     b.potential_builds.each { |p|
@@ -191,8 +192,11 @@ for conf in 2..ARGV.length-1
               p.post_results compiler, true
               begin
                 regression_base = b.get_regression_base p
+                regression_base.set_test_run test_mode
+
                 if p.needs_regression_test(compiler) && regression_base
                   p.clone_regression_repository compiler
+                  regression_baselines << [compiler, regression_base];
 
                   if !File.directory?(regression_base.get_build_dir(compiler))
                     $logger.info "Beginning regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
@@ -222,10 +226,20 @@ for conf in 2..ARGV.length-1
           rescue => e
             $logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e} #{e.backtrace}"
           end
+
         }
 
       else
         $logger.info("Skipping build #{p.descriptive_string}, doesn't match environment filter #{ENV["DECENT_CI_BRANCH_FILTER"]}")
+      end
+    }
+
+    regression_baselines.each{ |compiler, baseline| 
+      begin
+        $logger.info "Cleaning up regression_basline: #{baseline.descriptive_string} #{compiler}"
+        baseline.clean_up compiler
+      rescue => e
+        $logger.error "Error cleaning up regression_baseline: #{baseline.descriptive_string} #{compiler} #{e} #{e.backtrace}"
       end
     }
 
