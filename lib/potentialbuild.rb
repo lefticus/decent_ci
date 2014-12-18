@@ -80,6 +80,9 @@ class PotentialBuild
     return @config.compilers
   end
 
+  def repository
+    return @repository
+  end
 
   def set_test_run new_test_run
     @test_run = new_test_run
@@ -102,7 +105,7 @@ class PotentialBuild
   end
 
   def running_extra_tests
-    $logger.warn("Checking if running_extra_tests on branch: #{@branch_name} extra tests branches #{@config.extra_tests_branches}")
+    $logger.info("Checking if running_extra_tests on branch: #{@branch_name} extra tests branches #{@config.extra_tests_branches}")
     if !@branch_name.nil? && !@config.extra_tests_branches.nil? && @config.extra_tests_branches.count(@branch_name) != 0
       return true
     else

@@ -13,7 +13,11 @@ require 'yaml'
 require 'base64'
 
 def clean_up(client, repository, results_repository, results_path)
-  logger = Logger.new(STDOUT)
+  if $logger.nil?
+    logger = Logger.new(STDOUT)
+  else
+    logger = $logger
+  end
 
   # client = Octokit::Client.new(:access_token=>token)
 

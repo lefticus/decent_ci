@@ -8,16 +8,57 @@ require_relative 'cleanup.rb'
 require 'optparse'
 
 $logger = Logger.new "decent_ci.log", 10
+$current_log_repository = nil
+$current_log_deviceid = nil
+$current_log_devicename = "#{Socket.gethostname}-#{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}"
+
+remote_logger = nil
+
 
 original_formatter = Logger::Formatter.new
 $logger.formatter = proc { |severity, datetime, progname, msg|
+  sev = nil
+  case severity
+  when "DEBUG"
+    sev = Logger::DEBUG
+  when "INFO"
+    sev = Logger::INFO
+  when "ERROR"
+    sev = Logger::ERROR
+  when "FATAL"
+    sev = Logger::FATAL
+  when "WARN"
+    sev = Logger::WARN
+  else
+    sev = Logger::Unknown
+  end
+
+  msg = msg.gsub(/\/\/\S+@github/, "//<redacted>@github")
+
+  if !$current_log_devicename.nil?
+    msg = "[#{$current_log_devicename}] #{msg}"
+  end
+
+  if !$current_log_deviceid.nil?
+    msg = "[#{$current_log_deviceid}] #{msg}"
+  end
+
+  if !$current_log_repository.nil?
+    msg = "[#{$current_log_repository}] #{msg}"
+  end
+
+  if $remote_logger
+    $remote_logger.add(sev, msg, progname)
+  end
+
   res = original_formatter.call(severity, datetime, progname, msg.dump)
   puts res
   res
 }
 
-$logger.info "#{__FILE__} starting, ARGV: #{ARGV}"
-$logger.info "Logging to decent_ci.log"
+$logger.info "#{__FILE__} starting"
+$logger.debug "#{__FILE__} starting, ARGV: #{ARGV}"
+$logger.debug "Logging to decent_ci.log"
 
 
 options = {}
@@ -38,13 +79,13 @@ opts = OptionParser.new do |opts|
   opts.on("--aws-access-key-id=[key]") do |k|
     ENV["AWS_ACCESS_KEY_ID"] = k
     options[:aws_access_key_id] = k
-    $logger.info "aws-access-key-id: #{options[:aws_access_key_id]}"
+    $logger.debug "aws-access-key-id: #{options[:aws_access_key_id]}"
   end
 
   opts.on("--aws-secret-access-key=[secret]") do |k|
     ENV["AWS_SECRET_ACCESS_KEY"] = k
     options[:aws_secret_access_key] = k
-    $logger.info "aws-secret-access-key: #{options[:aws_secret_access_key]}"
+    $logger.debug "aws-secret-access-key: #{options[:aws_secret_access_key]}"
   end
 
   opts.on("--delay-after-run=N", Integer, "Time to delay after execution has completed, in seconds. Defaults to 300") do |k|
@@ -58,6 +99,15 @@ opts = OptionParser.new do |opts|
   end
 
   $logger.info "maximum_branch_age : #{options[:maximum_branch_age]}"
+
+  opts.on("--logentries-key=[secret]") do |k|
+    if k != ""
+      require 'le'
+      $remote_logger = Le.new(k, :log_level => Logger::INFO)
+      $logger.info "Initialized logentries.com remote logging"
+    end
+  end
+
 
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
@@ -97,6 +147,7 @@ $logger.info "Environment: #{envdump}"
 
 for conf in 2..ARGV.length-1
   $logger.info "Loading configuration #{ARGV[conf]}"
+  $current_log_repository = ARGV[conf]
 
   begin
     # Loads the list of potential builds and their config files for the given
@@ -174,6 +225,8 @@ for conf in 2..ARGV.length-1
       if ENV["DECENT_CI_BRANCH_FILTER"].nil? || ENV["DECENT_CI_BRANCH_FILTER"] == '' || p.branch_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.tag_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.descriptive_string =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/
         $logger.info "Looping over compilers"
         p.compilers.each { |compiler|
+          $current_log_deviceid = p.device_id compiler
+
           if !(ENV["DECENT_CI_COMPILER_FILTER"].nil? || ENV["DECENT_CI_COMPILER_FILTER"] == '')
             compiler_string = compiler[:description] + " " + compiler[:architecture_description]
             if !(compiler_string =~ /#{ENV["DECENT_CI_COMPILER_FILTER"]}/)
@@ -246,6 +299,8 @@ for conf in 2..ARGV.length-1
   rescue => e
     $logger.fatal "Unable to initiate build system #{e} #{e.backtrace}"
   end
+
+  $current_log_repository = nil
 end
 
 $logger.info "Execution completed, sleeping for #{options[:delay_after_run]}"
