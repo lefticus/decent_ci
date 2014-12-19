@@ -1,3 +1,10 @@
+[![Code Climate](https://codeclimate.com/github/lefticus/decent_ci/badges/gpa.svg)](https://codeclimate.com/github/lefticus/decent_ci)
+[![Test Coverage](https://codeclimate.com/github/lefticus/decent_ci/badges/coverage.svg)](https://codeclimate.com/github/lefticus/decent_ci)
+[![status](https://sourcegraph.com/api/repos/github.com/lefticus/decent_ci/.badges/status.png)](https://sourcegraph.com/github.com/lefticus/decent_ci)
+[![docs examples](https://sourcegraph.com/api/repos/github.com/lefticus/decent_ci/.badges/docs-examples.png)](https://sourcegraph.com/github.com/lefticus/decent_ci)
+[![Build Status](https://travis-ci.org/lefticus/decent_ci.svg)](https://travis-ci.org/lefticus/decent_ci)
+
+
 decent_ci
 =========
 
