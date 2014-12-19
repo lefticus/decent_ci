@@ -245,9 +245,9 @@ for conf in 2..ARGV.length-1
               p.post_results compiler, true
               begin
                 regression_base = b.get_regression_base p
-                regression_base.set_test_run test_mode
 
                 if p.needs_regression_test(compiler) && regression_base
+                  regression_base.set_test_run test_mode
                   p.clone_regression_repository compiler
                   regression_baselines << [compiler, regression_base];
 
