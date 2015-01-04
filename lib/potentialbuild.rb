@@ -20,6 +20,8 @@ require_relative 'configuration.rb'
 require_relative 'resultsprocessor.rb'
 require_relative 'cppcheck.rb'
 require_relative 'github.rb'
+require_relative 'lcov.rb'
+
 
 
 ## Contains the logic flow for executing builds and parsing results
@@ -28,6 +30,7 @@ class PotentialBuild
   include Configuration
   include ResultsProcessor
   include Cppcheck
+  include Lcov
 
   attr_reader :tag_name
   attr_reader :commit_sha
@@ -74,6 +77,11 @@ class PotentialBuild
     @test_time = nil
     @install_time = nil
     @package_time = nil
+    @coverage_lines = 0
+    @coverage_total_lines = 0
+    @coverage_functions = 0
+    @coverage_total_functions = 0
+    @coverage_url = nil
   end
 
   def compilers
@@ -280,6 +288,26 @@ class PotentialBuild
     return @config
   end
 
+  def needs_coverage(compiler)
+    return compiler[:coverage_enabled]
+  end
+
+  def do_coverage(compiler, regression_baseline)
+    $logger.info("Beginning coverage calculation phase #{is_release} #{needs_release_package(compiler)}")
+
+    if (needs_coverage(compiler))
+      build_dir = get_build_dir(compiler)
+      @coverage_total_lines, @coverage_lines, @coverage_total_functions, @coverage_functions = lcov compiler, get_src_dir(compiler), build_dir
+      if !compiler[:coverage_s3_bucket].nil?
+        s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
+
+        out, err, result = run_script(
+          ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{@buildid} #{build_dir}/lcov-html "])
+
+        @coverage_url = out
+      end
+    end
+  end
 
   def do_package(compiler, regression_baseline)
     $logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
@@ -721,6 +749,14 @@ install_time: #{@install_time}
 results_repository: #{@config.results_repository}
 machine_name: #{Socket.gethostname}
 machine_ip: #{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}
+coverage_enabled: #{compiler[:coverage_enabled]}
+coverage_pass_limit: #{compiler[:coverage_pass_limit]}
+coverage_warn_limit: #{compiler[:coverage_warn_limit]}
+coverage_lines: #{@coverage_lines}
+coverage_total_lines: #{@coverage_total_lines}
+coverage_functions: #{@coverage_functions}
+coverage_total_functions: #{@coverage_total_functions}
+coverage_url: #{@coverage_url}
 ---
 
 #{JSON.pretty_generate(json_data)}

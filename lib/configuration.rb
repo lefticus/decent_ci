@@ -331,6 +331,22 @@ module Configuration
         compiler[:package_mimetype] = "application/octet-stream"
       end
 
+      if compiler[:coverage_base_dir].nil?
+        compiler[:coverage_base_dir] = ""
+      end
+
+      if compiler[:coverage_enabled].nil?
+        compiler[:coverage_enabled] = false
+      end
+
+      if compiler[:coverage_pass_limit].nil?
+        compiler[:coverage_pass_limit] = 90
+      end
+
+      if compiler[:coverage_warn_limit].nil?
+        compiler[:coverage_warn_limit] = 75
+      end
+
       if is_release && !compiler[:cmake_extra_flags_release].nil?
         compiler[:cmake_extra_flags] = compiler[:cmake_extra_flags_release]
       else

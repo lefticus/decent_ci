@@ -262,6 +262,7 @@ for conf in 2..ARGV.length-1
 
                 p.do_package compiler, regression_base
                 p.do_test compiler, regression_base
+                p.do_coverage compiler, regression_base
 
                 if p.needs_regression_test(compiler) && regression_base
                   p.do_regression_test compiler, regression_base

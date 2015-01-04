@@ -8,6 +8,5 @@ module Cppcheck
       ["cd #{src_dir} && #{compiler[:bin]} #{compiler_flags}"])
     return process_cppcheck_results(compiler, src_dir, build_dir, out, err, result)
   end
-
-
 end
+

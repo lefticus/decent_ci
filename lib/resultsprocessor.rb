@@ -293,6 +293,28 @@ module ResultsProcessor
     return results
   end
 
+  def process_lcov_results(compiler, src_dir, build_dir, out, err, result)
+    #Overall coverage rate:
+    #  lines......: 67.9% (173188 of 255018 lines)
+    #  functions..: 83.8% (6228 of 7433 functions)
+
+    total_lines = 0
+    covered_lines = 0
+    total_functions = 0
+    covered_functions = 0
+
+    out.split("\n").each{ |l|
+      /.*\((?<covered_lines_str>[0-9]+) of (?<total_lines_str>[0-9]+) lines.*/ =~ l
+      covered_lines = covered_lines_str.to_i if !covered_lines_str.nil?
+      total_lines = total_lines_str.to_i if !total_lines_str.nil?
+
+      /.*\((?<covered_functions_str>[0-9]+) of (?<total_functions_str>[0-9]+) functions.*/ =~ l
+      covered_functions = covered_functions_str.to_i if !covered_functions_str.nil?
+      total_functions = total_functions_str.to_i if !total_functions_str.nil?
+    }
+
+    return [total_lines, covered_lines, total_functions, covered_functions]
+  end
 
   def process_ctest_results compiler, src_dir, build_dir, test_dir, stdout, stderr, result
     if !File.directory?(test_dir)
