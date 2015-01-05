@@ -26,8 +26,10 @@ def clean_up(client, repository, results_repository, results_path)
   files = github_query(client) { client.contents(results_repository, :path=>results_path) }
 
   branch_history_limit = 10
-  if files.size > 900
+  file_age_limit = 9000
+  if files.size > 800
     branch_history_limit = 5
+    file_age_limit = 60
     logger.info("Hitting directory size limit #{files.size}, reducing history to #{branch_history_limit} data points")
   end
 
@@ -52,6 +54,12 @@ def clean_up(client, repository, results_repository, results_path)
 #      file_content = Base64.decode64(github_query(client) { client.contents(results_repository, :path=>file.path) })
       file_data = YAML.load(file_content)
       branch_name = file_data["branch_name"]
+
+      days_old = (DateTime.now - file_data["date"].to_datetime).to_f
+      if (days_old > file_age_limit) 
+        logger.debug("Results file has been around for #{days_old} days. Deleting.")
+        files_for_deletion << file
+      end
 
       if file.path =~ /DailyTaskRun$/
         logger.debug("DailyTaskRun created on: #{file_data["date"]}")
