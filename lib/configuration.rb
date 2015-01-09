@@ -331,6 +331,14 @@ module Configuration
         compiler[:package_mimetype] = "application/octet-stream"
       end
 
+      if compiler[:skip_regression].nil?
+        compiler[:skip_regression] = false
+      end
+
+      if compiler[:ctest_filter].nil?
+        compiler[:ctest_filter] = ""
+      end
+
       if compiler[:coverage_base_dir].nil?
         compiler[:coverage_base_dir] = ""
       end

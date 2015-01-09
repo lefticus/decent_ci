@@ -161,7 +161,8 @@ module CMake
       ctest_filter = compiler[:release_build_training_ctest_filter]
       ctest_filter = "" if ctest_filter.nil?
     else
-      ctest_filter = ""
+      ctest_filter = compiler[:ctest_filter]
+      ctest_filter = "" if ctest_filter.nil?
     end
 
     test_dirs.each{ |test_dir|
