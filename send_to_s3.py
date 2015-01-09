@@ -12,10 +12,10 @@ conn = boto.connect_s3();
 bucketname = sys.argv[1]
 bucket = conn.get_bucket(bucketname)
 
-shaname = sys.argv[2]
+buildname = sys.argv[2]
 sourcedir = sys.argv[3]
 
-filedir = "coverage/{0}-{1}".format(datetime.datetime.now().date().isoformat(), shaname);
+filedir = "coverage/{0}-{1}".format(datetime.datetime.now().date().isoformat(), buildname);
 
 
 for root, subFolders, files in os.walk(sourcedir):

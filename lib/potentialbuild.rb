@@ -302,7 +302,7 @@ class PotentialBuild
         s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
 
         out, err, result = run_script(
-          ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{@buildid} #{build_dir}/lcov-html "])
+          ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html "])
 
         @coverage_url = out
       end
@@ -385,8 +385,12 @@ class PotentialBuild
     end
   end
 
-  def get_src_dir(compiler)
+  def get_full_build_name(compiler)
     "#{get_short_form(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture_description]}-#{get_short_form(compiler[:description])}#{ get_short_form(device_tag(compiler)) }"
+  end
+
+  def get_src_dir(compiler)
+    get_full_build_name(compiler)
   end
 
   def get_build_dir(compiler)
