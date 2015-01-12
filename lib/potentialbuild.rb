@@ -814,6 +814,31 @@ eos
 
     build_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Build Badge](http://img.shields.io/badge/build%20status-#{build_string}-#{build_color}.svg)</a>"
 
+    coverage_failed = false
+    coverage_badge = ""
+
+    if compiler[:coverage_enabled]
+      if @coverage_total_lines == 0
+        coverage_percent = 0
+      else
+        coverage_percent = (@coverage_lines.to_f / @coverage_total_lines.to_f) * 100.0
+      end
+
+      if coverage_percent >= coverage_pass_limit
+        coverage_color = "green"
+        coverage_string = "passing"
+      elsif coverage_percent >= coverage_warn_limit
+        coverage_color = "yellow"
+        coverage_string = "warning"
+      else 
+        coverage_color = "red"
+        coverage_string = "failing"
+        coverage_failed = true
+      end
+
+      coverage_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Coverage Badge](http://img.shields.io/badge/coverage%20status-#{coverage_string}-#{coverage_color}.svg)</a>"
+    end
+
     failed = build_failed || test_failed || !@failure.nil?
     github_status = pending ? "pending" : (failed ? "failure" : "success")
 
@@ -839,7 +864,7 @@ eos
 <<-eos
 #{@refspec} (#{@author}) - #{device_id compiler}: #{github_status_message}
 
-#{build_badge} #{test_badge}
+#{build_badge} #{test_badge} #{coverage_badge}
 eos
     end
 
