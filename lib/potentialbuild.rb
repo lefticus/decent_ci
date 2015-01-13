@@ -787,7 +787,7 @@ eos
         test_color = "red"
         test_failed = true
       end
-      test_string = "#{test_percent}%25"
+      test_string = "#{test_percent.round(2)}%25"
     end
 
     test_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Test Badge](http://img.shields.io/badge/tests%20passed-#{test_string}-#{test_color}.svg)</a>"
@@ -826,15 +826,13 @@ eos
 
       if coverage_percent >= compiler[:coverage_pass_limit]
         coverage_color = "green"
-        coverage_string = "passing"
       elsif coverage_percent >= compiler[:coverage_warn_limit]
         coverage_color = "yellow"
-        coverage_string = "warning"
       else 
         coverage_color = "red"
-        coverage_string = "failing"
         coverage_failed = true
       end
+      coverage_string = "#{coverage_percent.round(2)}%25"
 
       coverage_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Coverage Badge](http://img.shields.io/badge/coverage%20status-#{coverage_string}-#{coverage_color}.svg)</a>"
     end
