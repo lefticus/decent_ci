@@ -824,10 +824,10 @@ eos
         coverage_percent = (@coverage_lines.to_f / @coverage_total_lines.to_f) * 100.0
       end
 
-      if coverage_percent >= coverage_pass_limit
+      if coverage_percent >= compiler[:coverage_pass_limit]
         coverage_color = "green"
         coverage_string = "passing"
-      elsif coverage_percent >= coverage_warn_limit
+      elsif coverage_percent >= compiler[:coverage_warn_limit]
         coverage_color = "yellow"
         coverage_string = "warning"
       else 
