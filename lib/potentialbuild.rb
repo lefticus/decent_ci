@@ -837,7 +837,7 @@ eos
       coverage_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Coverage Badge](http://img.shields.io/badge/coverage%20status-#{coverage_string}-#{coverage_color}.svg)</a>"
     end
 
-    failed = build_failed || test_failed || !@failure.nil?
+    failed = build_failed || test_failed || coverage_failed || !@failure.nil?
     github_status = pending ? "pending" : (failed ? "failure" : "success")
 
     if pending 
@@ -847,6 +847,8 @@ eos
         github_status_message = "Build Failed"
       elsif test_failed
         github_status_message = "Tests Failed"
+      elsif coverage_failed
+        github_status_message = "Coverage Too Low"
       else
         github_status_message = "OK (#{test_results_passed} of #{test_results_total} tests passed)"
       end
