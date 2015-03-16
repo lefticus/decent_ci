@@ -144,6 +144,8 @@ ENV.sort.each { |k,v|
 
 $logger.info "Environment: #{envdump}"
 
+# keep this after the above environment dump so the key isn't included there
+ENV["GITHUB_TOKEN"] = ARGV[1]
 
 for conf in 2..ARGV.length-1
   $logger.info "Loading configuration #{ARGV[conf]}"
