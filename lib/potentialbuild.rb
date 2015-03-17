@@ -267,7 +267,7 @@ class PotentialBuild
     if @config.pull_id.nil?
       out, err, result = run_script(
         ["cd #{src_dir} && git init",
-         "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} #{@refspec}" ])
+         "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} \"#{@refspec}\"" ])
 
       if !@commit_sha.nil? && @commit_sha != "" && result == 0
         out, err, result = run_script( ["cd #{src_dir} && git checkout #{@commit_sha}"] );
