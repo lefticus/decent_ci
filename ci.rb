@@ -237,6 +237,11 @@ for conf in 2..ARGV.length-1
             end
           end
 
+          if compiler[:release_only] && !p.is_release
+            $logger.info "#{p.device_id compiler} is a release_only configuration and #{p.descriptive_string} is not a release build, skipping"
+            next
+          end
+
           begin
             # reset potential build for the next build attempt
             p.next_build
@@ -265,6 +270,7 @@ for conf in 2..ARGV.length-1
                 p.do_package compiler, regression_base
                 p.do_test compiler, regression_base
                 p.do_coverage compiler, regression_base
+                p.do_upload compiler, regression_base
 
                 if p.needs_regression_test(compiler) && regression_base
                   p.do_regression_test compiler, regression_base

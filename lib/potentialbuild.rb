@@ -82,6 +82,7 @@ class PotentialBuild
     @coverage_functions = 0
     @coverage_total_functions = 0
     @coverage_url = nil
+    @asset_url = nil
   end
 
   def compilers
@@ -292,6 +293,10 @@ class PotentialBuild
     return compiler[:coverage_enabled]
   end
 
+  def needs_upload(compiler)
+    return !compiler[:s3_upload].nil?
+  end
+
   def do_coverage(compiler, regression_baseline)
     $logger.info("Beginning coverage calculation phase #{is_release} #{needs_release_package(compiler)}")
 
@@ -302,12 +307,28 @@ class PotentialBuild
         s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
 
         out, err, result = run_script(
-          ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html "])
+          ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html coverage"])
 
         @coverage_url = out
       end
     end
   end
+
+  def do_upload(compiler, regression_baseline)
+    $logger.info("Beginning upload phase #{is_release} #{needs_upload(compiler)}")
+
+    if (needs_upload(compiler))
+      build_dir = get_build_dir(compiler)
+
+      s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
+
+      out, err, result = run_script(
+        ["#{s3_script} #{compiler[:s3_upload_bucket]} #{get_full_build_name(compiler)} #{build_dir}/#{compiler[:s3_upload]} assets"])
+
+      @asset_url = out
+    end
+  end
+
 
   def do_package(compiler, regression_baseline)
     $logger.info("Beginning packaging phase #{is_release} #{needs_release_package(compiler)}")
@@ -761,6 +782,7 @@ coverage_total_lines: #{@coverage_total_lines}
 coverage_functions: #{@coverage_functions}
 coverage_total_functions: #{@coverage_total_functions}
 coverage_url: #{@coverage_url}
+asset_url: #{@asset_url}
 ---
 
 #{JSON.pretty_generate(json_data)}

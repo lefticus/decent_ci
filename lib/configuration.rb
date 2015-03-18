@@ -246,6 +246,11 @@ module Configuration
         compiler[:analyze_only] = false
       end
 
+      if compiler[:release_only].nil?
+        compiler[:release_only] = false
+      end
+
+
       if compiler[:name] == "cppcheck" && compiler[:bin].nil?
         potential_name = which("cppcheck-#{compiler[:version]}")
         compiler[:analyze_only] = true
