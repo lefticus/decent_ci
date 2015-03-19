@@ -51,6 +51,8 @@ module CMake
       env["REGRESSION_BASELINE_SHA"] = " "
       env["COMMIT_SHA"] = " "	
     end
+    
+    env["GITHUB_TOKEN"] = ENV["GITHUB_TOKEN"]
 
     out, err, result = run_script(
       ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
