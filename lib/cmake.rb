@@ -74,6 +74,7 @@ module CMake
     msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
     gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
     process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
+    process_python_results(compiler, src_dir, build_dir, out, err, result)
     return msvc_success && gcc_success
   end
 

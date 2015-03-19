@@ -282,6 +282,44 @@ module ResultsProcessor
     return results
   end
 
+  def parse_python_line(compiler, src_dir, build_dir, line)
+    /File "(?<filename>.+)", line (?<linenumber>[0-9]+),.*/ =~ line
+    /^.*Error: (?<message>.+)/ =~ line
+
+    $logger.debug("Parsing line for python errors: #{line}: #{filename} #{linenumber} #{message}")
+
+    if !filename.nil? && !linenumber.nil?
+      return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir, compiler), linenumber, 0, "error", "Error")
+    elsif !message.nil?
+      return CodeMessage.new(relative_path("python", src_dir, build_dir, compiler), 0, 0, "error", message)
+    end
+
+  end
+
+  def process_python_results(compiler, src_dir, build_dir, stdout, stderr, result)
+    results = []
+    stdout.split("\n").each{ |err|
+      msg = parse_python_line(compiler, src_dir, build_dir, err)
+      if !msg.nil?
+        results << msg
+      end
+    }
+    $logger.debug("stdout results: #{results}")
+    @build_results.merge(results)
+    results = []
+    stderr.split("\n").each{ |err|
+      msg = parse_python_line(compiler, src_dir, build_dir, err)
+      if !msg.nil?
+        results << msg
+      end
+    }
+
+
+    $logger.debug("stderr results: #{results}")
+    @build_results.merge(results)
+
+    return result == 0 
+  end
 
   def parse_package_names(output)
     results = []
