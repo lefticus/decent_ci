@@ -4,6 +4,7 @@
 [![docs examples](https://sourcegraph.com/api/repos/github.com/lefticus/decent_ci/.badges/docs-examples.png)](https://sourcegraph.com/github.com/lefticus/decent_ci)
 [![Build Status](https://travis-ci.org/lefticus/decent_ci.svg)](https://travis-ci.org/lefticus/decent_ci)
 
+(Note: for NREL specific notes, see here: https://github.com/lefticus/decent_ci/wiki/Decent-CI-Cheat-Sheet)
 
 decent_ci
 =========
