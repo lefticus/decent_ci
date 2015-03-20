@@ -28,6 +28,8 @@ for root, subFolders, files in os.walk(sourcedir):
         file_to_send = open(filename, 'r')
         if (filepath.endswith(".html")):
             content_type = {"Content-Type": "text/html"}
+        elif (filepath.endswith(".svg")):
+            content_type = {"Content-Type": "image/svg+xml"}
         else:
             content_type = {"Content-Type": "application/octect-stream"}
 
