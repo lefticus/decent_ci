@@ -497,17 +497,21 @@ class PotentialBuild
 
 
     if !@config.regression_repository.nil?
-      out, err, result = run_script(
-        ["cd #{regression_dir} && git init",
-         "cd #{regression_dir} && git pull https://#{@config.token}@github.com/#{@config.regression_repository}" ])
-
-      if !@config.regression_commit_sha.nil? && @config.regression_commit_sha != "" && result == 0
-        out, err, result = run_script( ["cd #{regression_dir} && git checkout #{@config.regression_commit_sha}"] )
-      elsif !@config.regression_branch.nil? && @config.regression_branch != "" && result == 0
-        out, err, result = run_script( ["cd #{regression_dir} && git checkout #{@config.regression_branch}"] )
+      if !@config.regression_commit_sha.nil? && @config.regression_commit_sha != ""
+        refspec = @config.regression_commit_sha
+      elsif !@config.regression_branch.nil? && @config.regression_branch != ""
+        refspec = @config.regression_branch
+      else
+        $logger.debug("No regression respository checkout info!?!")
       end
 
+      out, err, result = run_script(
+        ["cd #{regression_dir} && git init",
+         "cd #{regression_dir} && git fetch https://#{@config.token}@github.com/#{@config.regression_repository} #{refspec}",
+         "cd #{regression_dir} && git checkout FETCH_HEAD"]
+      )
     end
+
   end
 
   def do_regression_test(compiler, base)
