@@ -202,7 +202,11 @@ for conf in 2..ARGV.length-1
 
         $logger.debug "Message: #{message_to_post}"
 
-        if days >= 7
+        alert_days = 7
+        unless d[:aging_pull_requests_numdays].nil?
+          alert_days = d[:aging_pull_requests_numdays]
+        end
+        if days >= alert_days
           if d[:aging_pull_requests_notification]
             $logger.info "Posting Message: #{message_to_post} to issue #{d[:id]}"
             if !test_mode
@@ -214,7 +218,7 @@ for conf in 2..ARGV.length-1
             $logger.info "Not posting pull request age message, posting is disabled for this branch"
           end
         else
-          $logger.info "Not posting pull request age message, only post every 7 days"
+          $logger.info "Not posting pull request age message, only post every #{alert_days} days"
         end
       }
     end
