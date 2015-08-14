@@ -118,7 +118,7 @@ class Build
 
         aging_pull_requests_notification = pb.configuration.aging_pull_requests_notification
         aging_pull_requests_numdays = pb.configuration.aging_pull_requests_numdays
-        
+
         if p.head.repo.full_name == p.base.repo.full_name
           $logger.info("Skipping pullrequest originating from head repo")
         else
