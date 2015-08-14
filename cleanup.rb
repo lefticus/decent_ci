@@ -50,15 +50,28 @@ def clean_up(client, repository, results_repository, results_path)
   files.each { |file| 
     if file.type == "file"
       logger.debug("Examining file #{file.sha} #{file.path}")
-      file_content = Base64.decode64(github_query(client) { client.blob(results_repository, file.sha).content })
-#      file_content = Base64.decode64(github_query(client) { client.contents(results_repository, :path=>file.path) })
-      file_data = YAML.load(file_content)
+
+      file_content = nil
+      file_data = nil
+
+      begin
+        file_content = Base64.decode64(github_query(client) { client.blob(results_repository, file.sha).content })
+        #      file_content = Base64.decode64(github_query(client) { client.contents(results_repository, :path=>file.path) })
+        file_data = YAML.load(file_content)
+      rescue Psych::SyntaxError => e
+        logger.info("Results file has bad data, deleting. #{file.path}")
+        files_for_deletion << file
+        next
+      end
+
       branch_name = file_data["branch_name"]
+
 
       days_old = (DateTime.now - file_data["date"].to_datetime).to_f
       if (days_old > file_age_limit) 
         logger.debug("Results file has been around for #{days_old} days. Deleting.")
         files_for_deletion << file
+        next
       end
 
       if file.path =~ /DailyTaskRun$/
