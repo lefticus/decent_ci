@@ -106,6 +106,7 @@ class Build
       end
 
       aging_pull_requests_notification = true
+      aging_pull_requests_numdays = 7
 
       begin
         pb = PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p.head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
@@ -116,6 +117,7 @@ class Build
         end
 
         aging_pull_requests_notification = pb.configuration.aging_pull_requests_notification
+        aging_pull_requests_numdays = pb.configuration.aging_pull_requests_numdays
 
         if p.head.repo.full_name == p.base.repo.full_name
           $logger.info("Skipping pullrequest originating from head repo")
@@ -126,7 +128,7 @@ class Build
         $logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
       end
 
-      @pull_request_details << { :id => p.number, :creator => p.user.login, :owner => (issue.assignee ? issue.assignee.login : nil), :last_updated => issue.updated_at, :repo => @repository, :notification_users => notification_users, :aging_pull_requests_notification => aging_pull_requests_notification }
+      @pull_request_details << { :id => p.number, :creator => p.user.login, :owner => (issue.assignee ? issue.assignee.login : nil), :last_updated => issue.updated_at, :repo => @repository, :notification_users => notification_users, :aging_pull_requests_notification => aging_pull_requests_notification, :aging_pull_requests_numdays => aging_pull_requests_numdays }
     }
   end
 
