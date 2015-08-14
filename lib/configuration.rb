@@ -386,6 +386,10 @@ module Configuration
     if configuration.aging_pull_requests_notification.nil?
       configuration.aging_pull_requests_notification = true
     end
+    
+    if configuration.aging_pull_requests_numdays.nil?
+      configuration.aging_pull_requests_numdays = 7
+    end
 
     return configuration
   end
