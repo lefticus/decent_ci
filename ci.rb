@@ -279,14 +279,21 @@ for conf in 2..ARGV.length-1
               rescue => e
                 $logger.error "Logging unhandled failure #{e} #{e.backtrace}"
                 p.unhandled_failure "#{e}\n#{e.backtrace}"
+
+                p.clean_up compiler
+                p.clean_up_regressions compiler
               end
               p.post_results compiler, false
+
               p.clean_up compiler
+              p.clean_up_regressions compiler
             else
               $logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
             end
           rescue => e
             $logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e} #{e.backtrace}"
+            p.clean_up compiler
+            p.clean_up_regressions compiler
           end
 
         }

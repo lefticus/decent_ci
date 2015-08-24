@@ -568,14 +568,28 @@ class PotentialBuild
     return hash
   end
 
+  def try_hard_to_remove_dir d
+
+    5.times {
+      begin
+        FileUtils.rm_rf(d)
+        $logger.debug("Succeeded in cleaning up #{d}")
+        return
+      rescue => e
+        $logger.error("Error cleaning up directory #{e}, sleeping and probably trying again")
+        sleep(1)
+      end
+    }
+
+    $logger.error("Failed in cleaning up directory #{e}")
+
+  end
+
+
   def clean_up compiler
     if !@test_run
       @created_dirs.each { |d|
-        begin 
-          FileUtils.rm_rf(d)
-        rescue => e
-          $logger.error("Error cleaning up directory #{e}")
-        end
+        try_hard_to_remove_dir d
       }
     end
   end
@@ -583,11 +597,7 @@ class PotentialBuild
   def clean_up_regressions compiler
     if !@test_run
       @created_regression_dirs.each { |d|
-        begin 
-          FileUtils.rm_rf(d)
-        rescue => e
-          $logger.error("Error cleaning up directory #{e}")
-        end
+        try_hard_to_remove_dir d
       }
     end
   end
