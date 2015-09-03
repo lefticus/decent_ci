@@ -12,7 +12,7 @@ require 'ostruct'
 require 'yaml'
 require 'base64'
 
-def clean_up(client, repository, results_repository, results_path)
+def clean_up(client, repository, results_repository, results_path, age_limit)
   if $logger.nil?
     logger = Logger.new(STDOUT)
   else
@@ -28,10 +28,16 @@ def clean_up(client, repository, results_repository, results_path)
   branch_history_limit = 10
   file_age_limit = 9000
   if files.size > 800
-    branch_history_limit = 5
-    file_age_limit = 60
+    if files.size > 999
+      branch_history_limit = 1
+      file_age_limit = age_limit + 1
+    else
+      branch_history_limit = 5
+      file_age_limit = 60
+    end
     logger.info("Hitting directory size limit #{files.size}, reducing history to #{branch_history_limit} data points")
   end
+
 
   # todo properly handle paginated results from github
   branches = github_query(client) { client.branches(repository, :per_page => 200) }

@@ -175,7 +175,7 @@ for conf in 2..ARGV.length-1
         while count < 5 && !succeeded do
           $logger.info "Executing clean_up task"
           begin
-            clean_up(b.client, repo, results_repo, results_path)
+            clean_up(b.client, repo, results_repo, results_path, options[:maximum_branch_age])
             succeeded = true
           rescue => e
             $logger.error "Error running clean_up #{e} #{e.backtrace}"
