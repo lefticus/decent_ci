@@ -397,8 +397,8 @@ module ResultsProcessor
                   nm.each { |measurement|
                     if measurement["name"] == "Execution Time"
                       status_string = n["Status"]
-                      if !value.nil? && value =~ /\[decent_ci:test_result:warn\]/
-                        status_string = "warning"      # what to put here?
+                      if !value.nil? && value =~ /\[decent_ci:test_result:warn\]/ && status_string == "passed"
+                        status_string = "warning" 
                       end
                       results << TestResult.new(n["Name"], status_string, measurement["Value"], value, errors);
                     end
