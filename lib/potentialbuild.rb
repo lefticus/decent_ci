@@ -570,6 +570,12 @@ class PotentialBuild
 
   def try_hard_to_remove_dir d
 
+    begin
+      `rm -rf #{d}`
+    rescue => e
+      $logger.error("Error cleaning up directory #{d}")
+    end
+
     5.times {
       begin
         FileUtils.rm_rf(d)
