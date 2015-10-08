@@ -139,7 +139,7 @@ class Build
   def get_regression_base t_potential_build
     config = t_potential_build.configuration
     defined_baseline = config.send("regression_baseline_#{t_potential_build.branch_name}")
-    
+
     default_baseline = config.regression_baseline_default
     default_baseline = "develop" if default_baseline.nil? && t_potential_build.branch_name != "develop" && t_potential_build.branch_name != "master"
 

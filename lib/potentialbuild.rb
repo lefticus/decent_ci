@@ -377,7 +377,7 @@ class PotentialBuild
 
     file_names = []
     begin 
-      files = github_query(@client) { @client.content @config.results_repository, :path=>@config.results_path }
+      files = github_query(@client) { @client.content @config.results_repository, :path=>"#{@config.results_path}/#{get_branch_folder()}" }
 
       files.each { |f|
         file_names << f.name
@@ -393,18 +393,35 @@ class PotentialBuild
     return true
   end
 
+
   def get_initials(str)
     # extracts just the initials from the string
-    str.gsub(/[_\-]./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[a-z]/, '')
+    str.gsub(/[_\-]./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[^A-Z0-9\.]/, '')
+  end
+
+  def add_dashes(str)
+    str.gsub(/([0-9]{3,})([A-Z])/, '\1-\2').gsub(/([A-Z])([0-9]{3,})/, '\1-\2')
   end
 
   def get_short_form(str)
-    if ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/)
-      return get_initials(str)
+    if str.length < 10 && str =~ /[a-zA-Z]/
+      return str
+    elsif ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/)
+      return add_dashes(get_initials(str))
     else
       return str
     end
   end
+
+
+  def get_branch_folder()
+    if !@tag_name.nil? && @tag_name != ""
+      return add_dashes(get_short_form(@tag_name))
+    else
+      return add_dashes(get_short_form(@branch_name))
+    end
+  end
+
 
   def get_full_build_name(compiler)
     "#{get_short_form(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture_description]}-#{get_short_form(compiler[:description])}#{ get_short_form(device_tag(compiler)) }"
@@ -742,66 +759,72 @@ class PotentialBuild
       }
     end
 
+    yaml_data = {
+      "title"=>build_base_name(compiler),
+      "permalink"=>"#{build_base_name(compiler)}.html",
+      "tags"=>"data",
+      "layout"=>"ci_results",
+      "date" => DateTime.now.utc.strftime("%F %T"),
+      "unhandled_failure"=>!@failure.nil?,
+      "build_error_count"=>build_errors,
+      "build_warning_count"=>build_warnings,
+      "package_error_count"=>package_errors,
+      "package_warning_count"=>package_warnings,
+      "test_count"=>test_results_total,
+      "test_passed_count"=>test_results_passed,
+      "repository"=>@repository,
+      "compiler"=>compiler[:name],
+      "compiler_version"=>compiler[:version],
+      "architecture"=>compiler[:architecture],
+      "os"=>@config.os,
+      "os_release"=>@config.os_release},
+      "is_release"=>is_release,
+      "release_packaged"=>!@package_location.nil?,
+      "packaging_skipped"=>compiler[:skip_packaging],
+      "package_name"=>@package_location.nil? ? nil : Pathname.new(@package_location).basename,
+      "tag_name"=>@tag_name,
+      "commit_sha"=>@commit_sha,
+      "branch_name"=>@branch_name,
+      "test_run"=>!@test_results.nil?,
+      "pull_request_issue_id"=>"#{pull_request_issue_id}",
+      "pull_request_base_repository"=>"#{@pull_request_base_repository}",
+      "pull_request_base_ref"=>"#{@pull_request_base_ref}",
+      "device_id"=>"#{device_id compiler}",
+      "pending"=>pending,
+      "analyze_only"=>compiler[:analyze_only],
+      "build_time"=>@build_time,
+      "test_time"=>@test_time,
+      "package_time"=>@package_time,
+      "install_time"=>@install_time,
+      "results_repository"=>"#{@config.results_repository}",
+      "machine_name"=>"#{Socket.gethostname}",
+      "machine_ip"=>"#{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}",
+      "coverage_enabled"=>"#{compiler[:coverage_enabled]}",
+      "coverage_pass_limit"=>compiler[:coverage_pass_limit],
+      "coverage_warn_limit"=>compiler[:coverage_warn_limit],
+      "coverage_lines"=>@coverage_lines,
+      "coverage_total_lines"=>@coverage_total_lines,
+      "coverage_functions"=>@coverage_functions,
+      "coverage_total_functions"=>@coverage_total_functions,
+      "coverage_url"=>@coverage_url,
+      "asset_url"=>@asset_url
+    }
 
-
-    json_data = {"build_results"=>build_results_data, "test_results"=>test_results_data, "failure" => @failure, "package_results"=>package_results_data}
+    json_data = {
+      "build_results"=>build_results_data, 
+      "test_results"=>test_results_data, 
+      "failure" => @failure, 
+      "package_results"=>package_results_data,
+      "configuration"=>yaml_data
+    }
 
     json_document = 
 <<-eos
+#{yaml_data.to_yaml}
 ---
-title: #{build_base_name compiler}
-permalink: #{build_base_name compiler}.html
-tags: data
-layout: ci_results
-date: #{DateTime.now.utc.strftime("%F %T")}
-unhandled_failure: #{!@failure.nil?}
-build_error_count: #{build_errors}
-build_warning_count: #{build_warnings}
-package_error_count: #{package_errors}
-package_warning_count: #{package_warnings}
-test_count: #{test_results_total}
-test_passed_count: #{test_results_passed}
-repository: #{@repository}
-compiler: #{compiler[:name]}
-compiler_version: #{compiler[:version]}
-architecture: #{compiler[:architecture]}
-os: #{@config.os}
-os_release: #{@config.os_release}
-is_release: #{is_release}
-release_packaged: #{!@package_location.nil?}
-packaging_skipped: #{compiler[:skip_packaging]}
-package_name: #{@package_location.nil? ? nil : Pathname.new(@package_location).basename}
-tag_name: #{@tag_name}
-commit_sha: #{@commit_sha}
-branch_name: #{@branch_name}
-test_run: #{!@test_results.nil?}
-pull_request_issue_id: "#{pull_request_issue_id}"
-pull_request_base_repository: #{@pull_request_base_repository}
-pull_request_base_ref: #{@pull_request_base_ref}
-device_id: #{device_id compiler}
-pending: #{pending}
-analyze_only: #{compiler[:analyze_only]}
-build_time: #{@build_time}
-test_time: #{@test_time}
-package_time: #{@package_time}
-install_time: #{@install_time}
-results_repository: #{@config.results_repository}
-machine_name: #{Socket.gethostname}
-machine_ip: #{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}
-coverage_enabled: #{compiler[:coverage_enabled]}
-coverage_pass_limit: #{compiler[:coverage_pass_limit]}
-coverage_warn_limit: #{compiler[:coverage_warn_limit]}
-coverage_lines: #{@coverage_lines}
-coverage_total_lines: #{@coverage_total_lines}
-coverage_functions: #{@coverage_functions}
-coverage_total_functions: #{@coverage_total_functions}
-coverage_url: #{@coverage_url}
-asset_url: #{@asset_url}
----
-
 #{JSON.pretty_generate(json_data)}
-
 eos
+
 
     test_failed = false
     if @test_results.nil?
@@ -909,7 +932,7 @@ eos
         if pending
           $logger.info("Posting pending results file");
           response =  github_query(@client) { @client.create_contents(@config.results_repository,
-                                             "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
+                                             "#{@config.results_path}/#{get_branch_folder()}/#{@dateprefix}-#{results_file_name compiler}",
                                              "Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}", 
                                              json_document) }
 
@@ -924,7 +947,7 @@ eos
 
           $logger.info("Updating contents with sha #{@results_document_sha}")
           response =  github_query(@client) { @client.update_contents(@config.results_repository,
-                                             "#{@config.results_path}/#{@dateprefix}-#{results_file_name compiler}",
+                                             "#{@config.results_path}/#{get_branch_folder()}/#{@dateprefix}-#{results_file_name compiler}",
                                              "Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
                                              @results_document_sha,
                                              json_document) }

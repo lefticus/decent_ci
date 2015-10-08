@@ -25,13 +25,33 @@ def clean_up(client, repository, results_repository, results_path)
   # to delete the results for a branch that doesn't yet exist
   files = github_query(client) { client.contents(results_repository, :path=>results_path) }
 
-  branch_history_limit = 10
+
+  folder_contains_files = false
+
+  files.each{ |file|
+    if file.type == "dir"
+      # Scan subfolder
+      clean_up(client, repository, results_repository, file.path)
+    elsif file.type == "file"
+      folder_contains_files = true
+    end
+  }
+
+  if !folder_contains_files
+    # No reason to continue from here if no files are found
+    return
+  end
+
+
+  branch_history_limit = 20
   file_age_limit = 9000
+
   if files.size > 800
     branch_history_limit = 5
     file_age_limit = 60
     logger.info("Hitting directory size limit #{files.size}, reducing history to #{branch_history_limit} data points")
   end
+
 
   # todo properly handle paginated results from github
   branches = github_query(client) { client.branches(repository, :per_page => 200) }
