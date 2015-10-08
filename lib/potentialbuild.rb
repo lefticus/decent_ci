@@ -799,6 +799,8 @@ class PotentialBuild
       "results_repository"=>"#{@config.results_repository}",
       "machine_name"=>"#{Socket.gethostname}",
       "machine_ip"=>"#{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}",
+      "test_pass_limit"=>@config.test_pass_limit,
+      "test_warn_limit"=>@config.test_warn_limit,
       "coverage_enabled"=>"#{compiler[:coverage_enabled]}",
       "coverage_pass_limit"=>compiler[:coverage_pass_limit],
       "coverage_warn_limit"=>compiler[:coverage_warn_limit],
@@ -838,9 +840,9 @@ eos
         test_percent = (test_results_passed.to_f / test_results_total.to_f) * 100.0
       end
 
-      if test_percent > 99.99
+      if test_percent > @config.test_pass_limit
         test_color = "green"
-      elsif test_percent > 90.0
+      elsif test_percent > @config.test_warn_limit
         test_color = "yellow"
       else
         test_color = "red"
@@ -916,7 +918,7 @@ eos
     if !@failure.nil?    
       github_document = 
 <<-eos
-<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>Unhandled Fundamental Failure</a>
+<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>Unhandled Failure</a>
 eos
     else
       github_document = 
