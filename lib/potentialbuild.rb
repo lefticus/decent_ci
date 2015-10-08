@@ -21,7 +21,7 @@ require_relative 'resultsprocessor.rb'
 require_relative 'cppcheck.rb'
 require_relative 'github.rb'
 require_relative 'lcov.rb'
-
+require_relative 'utility.rb'
 
 
 ## Contains the logic flow for executing builds and parsing results
@@ -83,6 +83,16 @@ class PotentialBuild
     @coverage_total_functions = 0
     @coverage_url = nil
     @asset_url = nil
+  end
+
+  def add_created_dir d
+    @created_dirs << d
+    add_global_created_dir d
+  end
+
+  def add_created_regression_dir d
+    @created_regression_dir << d
+    add_global_created_dir d
   end
 
   def compilers
@@ -264,6 +274,7 @@ class PotentialBuild
   def checkout(src_dir)
     # TODO update this to be a merge, not just a checkout of the pull request branch
     FileUtils.mkdir_p src_dir
+    add_created_dir src_dir
 
     if @config.pull_id.nil?
       out, err, result = run_script(
@@ -338,8 +349,8 @@ class PotentialBuild
       src_dir = get_src_dir compiler
       build_dir = get_build_dir compiler
 
-      @created_dirs << src_dir
-      @created_dirs << build_dir
+      add_created_dir src_dir
+      add_created_dir build_dir
 
       if compiler[:release_build_enable_pgo]
         $logger.info("Release build PGO enabled, starting training build")
@@ -444,9 +455,8 @@ class PotentialBuild
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
 
-    @created_dirs << src_dir
-    @created_dirs << build_dir
-
+    add_created_dir src_dir
+    add_created_dir build_dir
 
     checkout_succeeded  = checkout src_dir
 
@@ -474,8 +484,8 @@ class PotentialBuild
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
 
-    @created_dirs << src_dir
-    @created_dirs << build_dir
+    add_created_dir src_dir
+    add_created_dir build_dir
 
     build_succeeded = do_build compiler, regression_baseline
 
@@ -508,7 +518,8 @@ class PotentialBuild
 
   def clone_regression_repository compiler
     regression_dir = get_regression_dir compiler
-    @created_regression_dirs << regression_dir
+
+    add_created_regression_dir regression_dir
     FileUtils.mkdir_p regression_dir
 
 
@@ -583,23 +594,6 @@ class PotentialBuild
     hash = {}
     instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var) }
     return hash
-  end
-
-  def try_hard_to_remove_dir d
-
-    5.times {
-      begin
-        FileUtils.rm_rf(d)
-        $logger.debug("Succeeded in cleaning up #{d}")
-        return
-      rescue => e
-        $logger.error("Error cleaning up directory #{e}, sleeping and probably trying again")
-        sleep(1)
-      end
-    }
-
-    $logger.error("Failed in cleaning up directory #{e}")
-
   end
 
 

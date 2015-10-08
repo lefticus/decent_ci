@@ -4,6 +4,7 @@
 require 'logger'
 require_relative 'lib/build'
 require_relative 'cleanup.rb'
+require_relative 'lib/utility.rb'
 
 require 'optparse'
 
@@ -318,6 +319,12 @@ for conf in 2..ARGV.length-1
 
   $current_log_repository = nil
 end
+
+$logger.info "Execution completed, attempting to any left over files from the process"
+
+$created_dirs.each{ |dir|
+  try_hard_to_remove_dir dir
+}
 
 $logger.info "Execution completed, sleeping for #{options[:delay_after_run]}"
 sleep(options[:delay_after_run])
