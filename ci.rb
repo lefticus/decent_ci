@@ -9,6 +9,7 @@ require_relative 'lib/utility.rb'
 require 'optparse'
 
 $logger = Logger.new "decent_ci.log", 10
+$created_dirs = []
 $current_log_repository = nil
 $current_log_deviceid = nil
 $current_log_devicename = "#{Socket.gethostname}-#{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}"

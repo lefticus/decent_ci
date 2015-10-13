@@ -415,6 +415,10 @@ class PotentialBuild
   end
 
   def get_short_form(str)
+    if str.nil? 
+      return nil
+    end
+
     if str.length < 10 && str =~ /[a-zA-Z]/
       return str
     elsif ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/)
@@ -771,9 +775,9 @@ class PotentialBuild
       "compiler_version"=>compiler[:version],
       "architecture"=>compiler[:architecture],
       "os"=>@config.os,
-      "os_release"=>@config.os_release},
+      "os_release"=>@config.os_release,
       "is_release"=>is_release,
-      "release_packaged"=>!@package_location.nil?,
+      "release_packaged"=>(!@package_location.nil?),
       "packaging_skipped"=>compiler[:skip_packaging],
       "package_name"=>@package_location.nil? ? nil : Pathname.new(@package_location).basename,
       "tag_name"=>@tag_name,
@@ -795,7 +799,7 @@ class PotentialBuild
       "machine_ip"=>"#{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}",
       "test_pass_limit"=>@config.test_pass_limit,
       "test_warn_limit"=>@config.test_warn_limit,
-      "coverage_enabled"=>"#{compiler[:coverage_enabled]}",
+      "coverage_enabled"=>compiler[:coverage_enabled],
       "coverage_pass_limit"=>compiler[:coverage_pass_limit],
       "coverage_warn_limit"=>compiler[:coverage_warn_limit],
       "coverage_lines"=>@coverage_lines,

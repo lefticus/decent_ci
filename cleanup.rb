@@ -60,6 +60,7 @@ def clean_up(client, repository, results_repository, results_path)
 
   files_for_deletion = []
   branches_deleted = Set.new
+  prs_deleted = Set.new
   file_branch = Hash.new
   branch_files = Hash.new
 
@@ -103,7 +104,26 @@ def clean_up(client, repository, results_repository, results_path)
         end
 
       elsif !file_data["pending"]
-        if !branch_name.nil? && (file_data["pull_request_issue_id"].nil? || file_data["pull_request_issue_id"] == "")
+        if !file_data["pull_request_issue_id"].nil? && file_data["pull_request_issue_id"] != ""
+          pr_found = false
+          pull_requests.each{ |pr|
+            if pr.id == file_data["pull_request_issue_id"]
+              # matching open pr found
+              pr_found = true
+              break
+            end
+          }
+          if !pr_found
+            logger.debug("PR not found, queuing results file for deletion: #{file_data["title"]}")
+            files_for_deletion << file
+            prs_deleted << file_data["pull_request_issue_id"]
+          end
+
+        elsif branch_name.nil? && file_data["pull_request_issue_id"].nil? && file_data["tag_name"].nil?
+          logger.error("Found file with no valid tracking data... deletingi #{file_data["title"]}")
+          files_for_deletion << file
+
+        elsif !branch_name.nil? && (file_data["pull_request_issue_id"].nil? || file_data["pull_request_issue_id"] == "")
           logger.debug("Examining branch #{branch_name} commit #{file_data["commit_sha"]}")
 
           file_key = {:device_id => file_data["device_id"], :branch_name => branch_name}
@@ -169,7 +189,7 @@ def clean_up(client, repository, results_repository, results_path)
     end
   }
 
-  logger.info("#{files.size} files found. #{branches.size} active branches found. #{branches_deleted.size} deleted branches found (#{branches_deleted}). #{files_for_deletion.size} files queued for deletion")
+  logger.info("#{files.size} files found. #{branches.size} active branches found. #{branches_deleted.size} deleted branches found (#{branches_deleted}). #{prs_deleted.size} deleted pull requests found (#{prs_deleted}). #{files_for_deletion.size} files queued for deletion")
 
   branch_files.each { |key, filedata|
     logger.info("Examining branch data: #{key}")
