@@ -119,9 +119,9 @@ def clean_up(client, repository, results_repository, results_path)
             prs_deleted << file_data["pull_request_issue_id"]
           end
 
-        elsif branch_name.nil? && file_data["pull_request_issue_id"].nil? && file_data["tag_name"].nil?
-          logger.error("Found file with no valid tracking data... deletingi #{file_data["title"]}")
-          files_for_deletion << file
+#        elsif branch_name.nil? && file_data["pull_request_issue_id"].nil? && file_data["tag_name"].nil?
+#          logger.error("Found file with no valid tracking data... deleting #{file_data["title"]}")
+#          files_for_deletion << file
 
         elsif !branch_name.nil? && (file_data["pull_request_issue_id"].nil? || file_data["pull_request_issue_id"] == "")
           logger.debug("Examining branch #{branch_name} commit #{file_data["commit_sha"]}")
