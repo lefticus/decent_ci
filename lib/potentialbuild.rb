@@ -407,7 +407,7 @@ class PotentialBuild
 
   def get_initials(str)
     # extracts just the initials from the string
-    str.gsub(/[_\-]./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[^A-Z0-9\.]/, '')
+    str.gsub(/[_\-+]./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[^A-Z0-9\.]/, '')
   end
 
   def add_dashes(str)
@@ -421,7 +421,7 @@ class PotentialBuild
 
     if str.length < 10 && str =~ /[a-zA-Z]/
       return str
-    elsif ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/)
+    elsif ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/ || str =~ /.*+.*/ )
       return add_dashes(get_initials(str))
     else
       return str
