@@ -421,7 +421,7 @@ class PotentialBuild
 
     if str.length < 10 && str =~ /[a-zA-Z]/
       return str
-    elsif ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/ || str =~ /.*+.*/ )
+    elsif ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/ || str =~ /.*\+.*/ )
       return add_dashes(get_initials(str))
     else
       return str
