@@ -25,8 +25,27 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
   # to delete the results for a branch that doesn't yet exist
   files = github_query(client) { client.contents(results_repository, :path=>results_path) }
 
-  branch_history_limit = 10
+
+  folder_contains_files = false
+
+  files.each{ |file|
+    if file.type == "dir"
+      # Scan subfolder
+      clean_up(client, repository, results_repository, file.path)
+    elsif file.type == "file"
+      folder_contains_files = true
+    end
+  }
+
+  if !folder_contains_files
+    # No reason to continue from here if no files are found
+    return
+  end
+
+
+  branch_history_limit = 20
   file_age_limit = 9000
+
   if files.size > 800
     if files.size > 999
       branch_history_limit = 1
@@ -46,6 +65,7 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
 
   files_for_deletion = []
   branches_deleted = Set.new
+  prs_deleted = Set.new
   file_branch = Hash.new
   branch_files = Hash.new
 
@@ -89,7 +109,26 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
         end
 
       elsif !file_data["pending"]
-        if !branch_name.nil? && (file_data["pull_request_issue_id"].nil? || file_data["pull_request_issue_id"] == "")
+        if !file_data["pull_request_issue_id"].nil? && file_data["pull_request_issue_id"] != ""
+          pr_found = false
+          pull_requests.each{ |pr|
+            if pr.id == file_data["pull_request_issue_id"]
+              # matching open pr found
+              pr_found = true
+              break
+            end
+          }
+          if !pr_found
+            logger.debug("PR not found, queuing results file for deletion: #{file_data["title"]}")
+            files_for_deletion << file
+            prs_deleted << file_data["pull_request_issue_id"]
+          end
+
+#        elsif branch_name.nil? && file_data["pull_request_issue_id"].nil? && file_data["tag_name"].nil?
+#          logger.error("Found file with no valid tracking data... deleting #{file_data["title"]}")
+#          files_for_deletion << file
+
+        elsif !branch_name.nil? && (file_data["pull_request_issue_id"].nil? || file_data["pull_request_issue_id"] == "")
           logger.debug("Examining branch #{branch_name} commit #{file_data["commit_sha"]}")
 
           file_key = {:device_id => file_data["device_id"], :branch_name => branch_name}
@@ -155,7 +194,7 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
     end
   }
 
-  logger.info("#{files.size} files found. #{branches.size} active branches found. #{branches_deleted.size} deleted branches found (#{branches_deleted}). #{files_for_deletion.size} files queued for deletion")
+  logger.info("#{files.size} files found. #{branches.size} active branches found. #{branches_deleted.size} deleted branches found (#{branches_deleted}). #{prs_deleted.size} deleted pull requests found (#{prs_deleted}). #{files_for_deletion.size} files queued for deletion")
 
   branch_files.each { |key, filedata|
     logger.info("Examining branch data: #{key}")

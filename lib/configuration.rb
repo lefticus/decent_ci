@@ -107,6 +107,11 @@ module Configuration
         when 3
           os_release = "8.1"
         end
+      when 10
+        case ver_minor.to_i
+        when 0
+          os_release = "10"
+        end
       end
 
 
@@ -147,7 +152,11 @@ module Configuration
     os_distribution_release_yaml = load_yaml(yaml_os_release_name, location, ref) if fileset.include?(yaml_os_release_name)
     $logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") if !os_distribution_release_yaml.nil?
 
-    cmake_paths = ["C:\\Program Files\\CMake 2.8\\bin",
+    cmake_paths = ["C:\\Program Files\\CMake\\bin",
+                   "C:\\Program Files (x86)\\CMake\\bin",
+                   "C:\\Program Files\\CMake 3.0\\bin",
+                   "C:\\Program Files (x86)\\CMake 3.0\\bin",
+                   "C:\\Program Files\\CMake 2.8\\bin",
                    "C:\\Program Files (x86)\\CMake 2.8\\bin"]
 
     result_yaml = {
@@ -390,6 +399,15 @@ module Configuration
     if configuration.aging_pull_requests_numdays.nil?
       configuration.aging_pull_requests_numdays = 7
     end
+
+    if configuration.test_pass_limit.nil?
+      configuration.test_pass_limit = 99.9999
+    end
+
+    if configuration.test_warn_limit.nil?
+      configuration.test_warn_limit = 90.00
+    end
+
 
     return configuration
   end
