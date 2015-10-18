@@ -91,7 +91,7 @@ class PotentialBuild
   end
 
   def add_created_regression_dir d
-    @created_regression_dir << d
+    @created_regression_dirs << d
     add_global_created_dir d
   end
 
