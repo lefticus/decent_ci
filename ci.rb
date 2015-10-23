@@ -286,7 +286,10 @@ for conf in 2..ARGV.length-1
                 p.clean_up_regressions compiler
               end
 
-              p.process_performance_results compiler
+              if compiler[:collect_performance_results]
+                p.collect_performance_results compiler
+              end
+
               p.post_results compiler, false
 
               p.clean_up compiler

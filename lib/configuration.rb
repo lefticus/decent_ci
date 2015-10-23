@@ -349,6 +349,10 @@ module Configuration
         compiler[:skip_regression] = false
       end
 
+      if compiler[:collect_performance_results].nil?
+        compiler[:collect_performance_results] = false
+      end
+
       if compiler[:ctest_filter].nil?
         compiler[:ctest_filter] = ""
       end

@@ -665,7 +665,11 @@ class PotentialBuild
 
     IO.foreach(file) { |line|
       if /^(?<field>[a-z]+): (?<data>.*)/ =~ line then
-        props[field] = data
+        if field == "totals" then
+          props[field] = data.to_i
+        else
+          props[field] = data
+        end
       elsif /^ob=(?<objectfileid>\([0-9]+\))?\s*(?<objectfilename>.*)?/ =~ line then
         object_file = get_name(object_files, objectfileid, objectfilename)
       elsif /^fl=(?<sourcefileid>\([0-9]+\))?\s*(?<sourcefilename>.*)?/ =~ line then
@@ -730,10 +734,10 @@ class PotentialBuild
 
 
 
-  def process_performance_results
+  def collect_performance_results
     build_dir = get_build_dir(compiler)
 
-    results = {"object_files" => nil}
+    results = {"object_files" => []}
 
     Dir[build_dir + '/**/callgrind.*'].each{ |file|
       performance_test_name = file.sub(/.*callgrind\./, '');
@@ -878,6 +882,7 @@ class PotentialBuild
       performance_total_time = 0
 
       @performance_results.each{ |k,v|
+        performance_total_time += v["totals"]
       }
     end
 
@@ -932,7 +937,7 @@ class PotentialBuild
       "coverage_total_functions"=>@coverage_total_functions,
       "coverage_url"=>@coverage_url,
       "asset_url"=>@asset_url
-      "performance_total_time"=>perf_total_time
+      "performance_total_time"=>performance_total_time
     }
 
     json_data = {
