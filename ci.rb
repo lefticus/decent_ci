@@ -321,7 +321,7 @@ for conf in 2..ARGV.length-1
   $current_log_repository = nil
 end
 
-$logger.info "Execution completed, attempting to any left over files from the process"
+$logger.info "Execution completed, attempting to any remove any left over files from the process"
 
 $created_dirs.each{ |dir|
   try_hard_to_remove_dir dir
