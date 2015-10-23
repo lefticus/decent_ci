@@ -285,6 +285,8 @@ for conf in 2..ARGV.length-1
                 p.clean_up compiler
                 p.clean_up_regressions compiler
               end
+
+              p.process_performance_results compiler
               p.post_results compiler, false
 
               p.clean_up compiler

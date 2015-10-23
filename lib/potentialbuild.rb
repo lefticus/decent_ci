@@ -83,6 +83,8 @@ class PotentialBuild
     @coverage_total_functions = 0
     @coverage_url = nil
     @asset_url = nil
+
+    @performance_results = nil
   end
 
   def add_created_dir d
@@ -633,6 +635,118 @@ class PotentialBuild
     @install_time = nil
   end
 
+
+  def parse_callgrind(build_dir, file)
+    object_files = Hash.new()
+    source_files = Hash.new()
+    functions = Hash.new()
+    props = Hash.new()
+
+    def get_name(files, id, name)
+      if name.nil? || name == ""
+        return files[id]
+      elsif id.nil?
+        return name
+      else
+        files[id] = name
+        return name
+      end
+    end
+
+    object_file = nil
+    source_file = nil
+    function_name = nil
+    inlined_file = nil
+    call_count = nil
+    called_object_file = nil
+    called_source_file = nil
+    called_function_name = nil
+    called_functions = Hash.new()
+
+    IO.foreach(file) { |line|
+      if /^(?<field>[a-z]+): (?<data>.*)/ =~ line then
+        props[field] = data
+      elsif /^ob=(?<objectfileid>\([0-9]+\))?\s*(?<objectfilename>.*)?/ =~ line then
+        object_file = get_name(object_files, objectfileid, objectfilename)
+      elsif /^fl=(?<sourcefileid>\([0-9]+\))?\s*(?<sourcefilename>.*)?/ =~ line then
+        source_file = get_name(source_files, sourcefileid, sourcefilename)
+      elsif /^(fe|fi)=(?<sourcefileid>\([0-9]+\))?\s*(?<sourcefilename>.*)?/ =~ line then
+        inlined_file = get_name(source_files, sourcefileid, sourcefilename)
+      elsif /^fn=(?<functionid>\([0-9]+\))?\s*(?<functionname>.*)?/ =~ line then
+        function_name = get_name(functions, functionid, functionname)
+      elsif /^cob=(?<calledobjectfileid>\([0-9]+\))?\s*(?<calledobjectfilename>.*)?/ =~ line then
+        called_object_file = get_name(object_files, calledobjectfileid, calledobjectfilename)
+      elsif /^(cfi|cfl)=(?<calledsourcefileid>\([0-9]+\))?\s*(?<calledsourcefilename>.*)?/ =~ line then
+        called_source_file = get_name(source_files, calledsourcefileid, calledsourcefilename)
+      elsif /^cfn=(?<calledfunctionid>\([0-9]+\))?\s*(?<calledfunctionname>.*)?/ =~ line then
+        called_function_name = get_name(functions, calledfunctionid, calledfunctionname)
+      elsif /^calls=(?<count>[0-9]+)?\s+(?<target_position>[0-9]+)/ =~ line then
+        call_count = count
+      elsif /^(?<subposition>(((\+|-)?[0-9]+)|\*)) (?<cost>[0-9]+)/ =~ line then
+        if !call_count.nil? then
+          ofile = called_object_file.nil? ? object_file : called_object_file
+          sfile = called_source_file.nil? ? source_file : called_source_file
+
+          if called_functions[[ofile, sfile, called_function_name]].nil? then
+            called_functions[[ofile, sfile, called_function_name]] = { "count" => 0, "cost" => 0 }
+          end
+
+          called_functions[[ofile, sfile, called_function_name]]["count"] += call_count.to_i
+          called_functions[[ofile, sfile, called_function_name]]["cost"] += cost.to_i
+
+          call_count = nil
+          called_object_file = nil
+          called_source_file = nil
+          called_function_name = nil
+        end
+
+      elsif line == "\n" then
+      end
+    }
+
+
+    props["object_files"] = Array.new()
+
+    object_files.values.each { |file|
+      abs_path = File.absolute_path(file, build_dir)
+      if abs_path.start_with?(File.absolute_path(build_dir)) && File.exists?(abs_path) then
+        # is in subdir?
+        props["object_files"] = {"name"=>Pathname.new(abs_path).relative_path_from(Pathname.new(build_dir)).to_s, "size" => File.size(abs_path) };
+      end
+    }
+
+
+    most_expensive = called_functions.sort_by { |k,v| v["cost"] }.reverse.slice(0,50);
+    most_called = called_functions.sort_by { |k,v| v["count"] }.reverse.slice(0,50);
+
+
+    important_functions = Hash[most_expensive].merge(Hash[most_called]).collect { |k, v| {"object_file"=>k[0], "source_file"=>k[1], "function_name"=>k[2]}.merge(v) }
+
+    return props.merge({"data" => important_functions})
+
+  end
+
+
+
+
+
+  def process_performance_results
+    build_dir = get_build_dir(compiler)
+
+    results = {"object_files" => nil}
+
+    Dir[build_dir + '/**/callgrind.*'].each{ |file|
+      performance_test_name = file.sub(/.*callgrind\./, '');
+      callgrind_output = parse_callgrind(build_dir, file)
+      results["object_files"] = results["object_files"].concat(callgrind_output.delete("object_files"))
+      results[performance_test_name] = callgrind_output
+    }
+
+    results["object_files"].uniq!
+
+    @performance_results = results
+  end
+
   def post_results compiler, pending
     if @dateprefix.nil?
       @dateprefix = DateTime.now.utc.strftime("%F")
@@ -758,6 +872,15 @@ class PotentialBuild
       }
     end
 
+    performance_total_time = nil
+
+    if !@performance_results.nil?
+      performance_total_time = 0
+
+      @performance_results.each{ |k,v|
+      }
+    end
+
     yaml_data = {
       "title"=>build_base_name(compiler),
       "permalink"=>"#{build_base_name(compiler)}.html",
@@ -809,6 +932,7 @@ class PotentialBuild
       "coverage_total_functions"=>@coverage_total_functions,
       "coverage_url"=>@coverage_url,
       "asset_url"=>@asset_url
+      "performance_total_time"=>perf_total_time
     }
 
     json_data = {
@@ -816,7 +940,8 @@ class PotentialBuild
       "test_results"=>test_results_data, 
       "failure" => @failure, 
       "package_results"=>package_results_data,
-      "configuration"=>yaml_data
+      "configuration"=>yaml_data,
+      "performance_results"=>@performance_results
     }
 
     json_document = 
