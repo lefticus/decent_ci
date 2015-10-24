@@ -128,7 +128,32 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
 #          logger.error("Found file with no valid tracking data... deleting #{file_data["title"]}")
 #          files_for_deletion << file
 
-        elsif !branch_name.nil? && (file_data["pull_request_issue_id"].nil? || file_data["pull_request_issue_id"] == "")
+        elsif !file_data["tag_name"].nil? && file_data["tag_name"] != ""
+          tag_found = false
+          days_after = nil
+          releases.each{ |r|
+            if r.tag_name == file_data["tag_name"]
+              tag_found = true
+              days_after = (file_data["date"].to_datetime - DateTime.parse(r.published_at.to_s)).to_f
+              if (days_after < -1)
+                logger.debug(" release is newer than results? (#{DateTime.parse(r.published_at.to_s)} vs #{file_data["date"].to_datetime})")
+              end
+              break
+            end
+          }
+
+          if !tag_found
+            logger.debug("Release not found, queuing results for deletion: #{file_data["title"]}, tag: '#{file_data["tag_name"]}'")
+            files_for_deletion << file
+          else
+            logger.debug("Release results created #{days_after} days  after tag was created");
+            if days_after < -1
+              logger.debug("Release created AFTER results, queuing results for deletion: #{file_data["title"]}")
+              files_for_deletion << file
+            end
+          end
+
+        elsif !branch_name.nil? && branch_name != "" && (file_data["pull_request_issue_id"].nil? || file_data["pull_request_issue_id"] == "")
           logger.debug("Examining branch #{branch_name} commit #{file_data["commit_sha"]}")
 
           file_key = {:device_id => file_data["device_id"], :branch_name => branch_name}
@@ -153,30 +178,6 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
             files_for_deletion << file
             file_branch[file.path] = branch_name
             branches_deleted << branch_name
-          end
-        elsif !file_data["tag_name"].nil?
-          tag_found = false
-          days_after = nil
-          releases.each{ |r|
-            if r.tag_name == file_data["tag_name"]
-              tag_found = true
-              days_after = (file_data["date"].to_datetime - DateTime.parse(r.published_at.to_s)).to_f
-              if (days_after < -1)
-                logger.debug(" release is newer than results? (#{DateTime.parse(r.published_at.to_s)} vs #{file_data["date"].to_datetime})")
-              end
-              break
-            end
-          }
-
-          if !tag_found
-            logger.debug("Release not found, queuing results for deletion: #{file_data["title"]}, tag: '#{file_data["tag_name"]}'")
-            files_for_deletion << file
-          else
-            logger.debug("Release results created #{days_after} days  after tag was created");
-            if days_after < -1
-              logger.debug("Release created AFTER results, queuing results for deletion: #{file_data["title"]}")
-              files_for_deletion << file
-            end
           end
         end
 
