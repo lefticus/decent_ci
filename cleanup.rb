@@ -31,7 +31,7 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
   files.each{ |file|
     if file.type == "dir"
       # Scan subfolder
-      clean_up(client, repository, results_repository, file.path)
+      clean_up(client, repository, results_repository, file.path, age_limit)
     elsif file.type == "file"
       folder_contains_files = true
     end

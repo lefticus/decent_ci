@@ -715,7 +715,8 @@ class PotentialBuild
       abs_path = File.absolute_path(file, build_dir)
       if abs_path.start_with?(File.absolute_path(build_dir)) && File.exists?(abs_path) then
         # is in subdir?
-        props["object_files"] = {"name"=>Pathname.new(abs_path).relative_path_from(Pathname.new(build_dir)).to_s, "size" => File.size(abs_path) };
+        $logger.info("Path: #{abs_path}  build_dir #{build_dir}")
+        props["object_files"] << {"name"=>Pathname.new(abs_path).relative_path_from(Pathname.new(build_dir)).to_s, "size" => File.size(abs_path) };
       end
     }
 
@@ -734,16 +735,20 @@ class PotentialBuild
 
 
 
-  def collect_performance_results
-    build_dir = get_build_dir(compiler)
+  def collect_performance_results compiler
+    build_dir = File.absolute_path(get_build_dir(compiler))
 
-    results = {"object_files" => []}
+    results = {"object_files" => [], "test_files"=>[]}
 
     Dir[build_dir + '/**/callgrind.*'].each{ |file|
       performance_test_name = file.sub(/.*callgrind\./, '');
       callgrind_output = parse_callgrind(build_dir, file)
-      results["object_files"] = results["object_files"].concat(callgrind_output.delete("object_files"))
-      results[performance_test_name] = callgrind_output
+      object_files = callgrind_output.delete("object_files")
+      $logger.info("Object files: #{object_files}")
+
+      results["object_files"].concat(object_files)
+      callgrind_output["test_name"] = performance_test_name
+      results["test_files"] << callgrind_output
     }
 
     results["object_files"].uniq!
@@ -881,7 +886,7 @@ class PotentialBuild
     if !@performance_results.nil?
       performance_total_time = 0
 
-      @performance_results.each{ |k,v|
+      @performance_results["test_files"].each{ |v|
         performance_total_time += v["totals"]
       }
     end
@@ -936,7 +941,7 @@ class PotentialBuild
       "coverage_functions"=>@coverage_functions,
       "coverage_total_functions"=>@coverage_total_functions,
       "coverage_url"=>@coverage_url,
-      "asset_url"=>@asset_url
+      "asset_url"=>@asset_url,
       "performance_total_time"=>performance_total_time
     }
 
