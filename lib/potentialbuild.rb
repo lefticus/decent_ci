@@ -631,8 +631,16 @@ class PotentialBuild
     @failure = nil
     @build_time = nil
     @test_time = nil
+    @test_run = false
     @package_time = nil
     @install_time = nil
+    @performance_results = nil
+    @coverage_lines = 0
+    @coverage_total_lines = 0
+    @coverage_functions = 0
+    @coverage_total_functions = 0
+    @coverage_url = nil
+    @asset_url = nil
   end
 
 
@@ -882,11 +890,13 @@ class PotentialBuild
     end
 
     performance_total_time = nil
+    performance_test_count = 0
 
     if !@performance_results.nil?
       performance_total_time = 0
 
       @performance_results["test_files"].each{ |v|
+        performance_test_count += 1
         performance_total_time += v["totals"]
       }
     end
@@ -942,7 +952,8 @@ class PotentialBuild
       "coverage_total_functions"=>@coverage_total_functions,
       "coverage_url"=>@coverage_url,
       "asset_url"=>@asset_url,
-      "performance_total_time"=>performance_total_time
+      "performance_total_time"=>performance_total_time,
+      "performance_test_count"=>performance_test_count
     }
 
     json_data = {
