@@ -112,7 +112,8 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
         if !file_data["pull_request_issue_id"].nil? && file_data["pull_request_issue_id"] != ""
           pr_found = false
           pull_requests.each{ |pr|
-            if pr.id == file_data["pull_request_issue_id"]
+#            logger.debug("Comparing '#{pr.number}' to '#{file_data["pull_request_issue_id"]}'");
+            if pr.number.to_s == file_data["pull_request_issue_id"].to_s
               # matching open pr found
               pr_found = true
               break
