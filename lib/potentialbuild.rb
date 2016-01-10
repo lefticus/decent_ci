@@ -855,11 +855,13 @@ class PotentialBuild
 
     test_results_passed = 0
     test_results_total = 0
+    test_results_warning = 0
 
     if !@test_results.nil?
       @test_results.each { |t| 
         test_results_total += 1
         test_results_passed += 1 if t.passed
+        test_results_warning += 1 if t.warning
 
         test_results_data << t.inspect;
       }
@@ -1054,11 +1056,11 @@ eos
       if build_failed
         github_status_message = "Build Failed"
       elsif test_failed
-        github_status_message = "Tests Failed"
+        github_status_message = "Tests Failed (#{test_results_passed} of #{test_results_total} tests passed, #{test_results_warning} test warnings)"
       elsif coverage_failed
         github_status_message = "Coverage Too Low"
       else
-        github_status_message = "OK (#{test_results_passed} of #{test_results_total} tests passed)"
+        github_status_message = "OK (#{test_results_passed} of #{test_results_total} tests passed, #{test_results_warning} test warnings)"
       end
     end
 
@@ -1067,14 +1069,18 @@ eos
       message_counts[x.message] += 1
     }
 
-    message = ""
+    $logger.debug("Message counts loaded: #{message_counts}")
+
+    message_counts_str = ""
     message_counts.each{ |message, count|
       if count > 1 
-        message += " * #{count} tests had: #{message}\n"
+        message_counts_str += " * #{count} tests had: #{message}\n"
       else
-        message += " * #{message}\n"
+        message_counts_str += " * 1 test had: #{message}\n"
       end
     }
+
+    $logger.debug("Message counts string: #{message_counts_str}")
 
     if !@failure.nil?    
       github_document = 
@@ -1086,7 +1092,7 @@ eos
 <<-eos
 #{@refspec} (#{@author}) - #{device_id compiler}: #{github_status_message}
 
-#{message}
+#{message_counts_str}
 
 #{build_badge} #{test_badge} #{coverage_badge}
 eos

@@ -23,7 +23,11 @@ class TestResult
   end
 
   def passed
-    return @status == "passed"
+    return @status == "passed" || @status == "warning"
+  end
+
+  def warning
+    return @status == "warning"
   end
 
   def inspect
@@ -46,6 +50,9 @@ class TestResult
 end
 
 class TestMessage
+  attr_reader :name
+  attr_reader :message
+
   def initialize(name, message)
     @name = name
     @message = message
