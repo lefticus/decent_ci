@@ -392,7 +392,7 @@ module ResultsProcessor
                     errors = parse_error_messages(compiler, src_dir, build_dir, value)
 
                     value.split("\n").each { |line|
-                      if /\[decent_ci:test_results:message\] (?<message>.+)/ =~ line
+                      if /\[decent_ci:test_result:message\] (?<message>.+)/ =~ line
                         messages << TestMessage.new(n["Name"], message);
                       end
 
