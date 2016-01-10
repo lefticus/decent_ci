@@ -43,7 +43,20 @@ class TestResult
       }
     return hash
   end
+end
 
+class TestMessage
+  def initialize(name, message)
+    @name = name
+    @message = message
+  end
+
+  def inspect
+    hash = {:name => @name,
+      :message => @message
+      }
+    return hash
+  end
 end
 
 

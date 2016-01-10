@@ -68,6 +68,7 @@ class PotentialBuild
     @created_regression_dirs = []
     @package_location = nil
     @test_results = nil
+    @test_messages = []
     @build_results = SortedSet.new()
     @package_results = SortedSet.new()
     @dateprefix = nil
@@ -625,6 +626,7 @@ class PotentialBuild
     @created_regression_dirs = []
     @package_location = nil
     @test_results = nil
+    @test_messages = []
     @build_results = SortedSet.new()
     @package_results = SortedSet.new()
     @dateprefix = nil
@@ -1060,6 +1062,20 @@ eos
       end
     end
 
+    message_counts = Hash.new(0)
+    @test_messages.each { |x| 
+      message_counts[x.message] += 1
+    }
+
+    message = ""
+    message_counts.each{ |message, count|
+      if count > 1 
+        message += " * #{count} tests had: #{message}\n"
+      else
+        message += " * #{message}\n"
+      end
+    }
+
     if !@failure.nil?    
       github_document = 
 <<-eos
@@ -1069,6 +1085,8 @@ eos
       github_document = 
 <<-eos
 #{@refspec} (#{@author}) - #{device_id compiler}: #{github_status_message}
+
+#{message}
 
 #{build_badge} #{test_badge} #{coverage_badge}
 eos

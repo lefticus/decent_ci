@@ -360,6 +360,8 @@ module ResultsProcessor
       return
     end
 
+    messages = []
+
     Find.find(test_dir) do |path|
       if path =~ /.*Test.xml/
         results = []
@@ -388,8 +390,16 @@ module ResultsProcessor
                   value = m["Value"]
                   if !value.nil?
                     errors = parse_error_messages(compiler, src_dir, build_dir, value)
+
+                    value.split("\n").each { |line|
+                      if /\[decent_ci:test_results:message\] (?<message>.+)/ =~ line
+                        messages << TestMessage.new(n["Name"], message);
+                      end
+
+                    }
                   end
                 end
+
 
                 nm = r["NamedMeasurement"]
 
@@ -411,9 +421,9 @@ module ResultsProcessor
         end
 
         if results.empty?
-          return nil
+          return nil, messages
         else
-          return results
+          return results, messages
         end
       end
 
