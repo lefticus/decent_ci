@@ -357,7 +357,7 @@ module ResultsProcessor
   def process_ctest_results compiler, src_dir, build_dir, test_dir, stdout, stderr, result
     if !File.directory?(test_dir)
       $logger.error("Error: test_dir #{test_dir} does not exist, cannot parse test results")
-      return
+      return nil, []
     end
 
     messages = []
