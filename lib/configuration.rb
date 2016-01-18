@@ -223,7 +223,7 @@ module Configuration
         end
       end
 
-      if compiler[:name] != "cppcheck" && compiler[:name] != "Visual Studio" && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
+      if compiler[:name] != "custom_check" && compiler[:name] != "cppcheck" && compiler[:name] != "Visual Studio" && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
         case compiler[:name]
         when "clang"
           potential_name = which("clang-#{compiler[:version]}")
@@ -273,6 +273,9 @@ module Configuration
         end
       end
 
+      if compiler[:name] == "custom_check"
+        compiler[:analyze_only] = true
+      end
 
       if compiler[:skip_packaging].nil?
         compiler[:skip_packaging] = false

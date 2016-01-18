@@ -45,6 +45,28 @@ module ResultsProcessor
 
   end
 
+  def parse_custom_check_line(compiler, src_path, build_path, line)
+    # JSON formatted output is expected here
+    json = JSON.parse(line)
+
+    # expected fields to be read: "tool", "file", "line", "column" (optional), "messagetype", "message", "id" (optional)
+    if !json["filename"].nil?
+      message = json["message"]
+      if !json["id"].nil?
+        message = "(#{json["id"]}) #{message}"
+      end
+
+      if !json["tool"].nil?
+        message = "[#{json["tool"]}] #{message}"
+      end
+
+      return CodeMessage.new(relative_path(json["filename"], src_path, build_path, compiler), json["line"], (json["column"].nil? ? 0 : json["column"]), json["messagetype"], message)
+    else
+      return nil
+    end
+  end
+
+
   def parse_cppcheck_line(compiler, src_path, build_path, line)
     /\[(?<filename>.*)\]:(?<linenumber>[0-9]+):(?<messagetype>\S+):(?<message>.*)/ =~ line
 
@@ -77,6 +99,22 @@ module ResultsProcessor
     }
 
     return results
+  end
+
+  def process_custom_check_results(compiler, src_dir, build_dir, stdout, stderr, result)
+    results = []
+
+    stdout.split("\n").each { |line|
+      $logger.debug("Parsing custom_check line: #{line}")
+      msg = parse_custom_check_line(compiler, src_dir, build_dir, line)
+      if !msg.nil?
+        results << msg
+      end
+    }
+
+    @build_results.merge(results)
+
+    return result == 0
   end
 
 

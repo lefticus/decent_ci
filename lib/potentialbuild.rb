@@ -19,6 +19,7 @@ require_relative 'cmake.rb'
 require_relative 'configuration.rb'
 require_relative 'resultsprocessor.rb'
 require_relative 'cppcheck.rb'
+require_relative 'custom_check.rb'
 require_relative 'github.rb'
 require_relative 'lcov.rb'
 require_relative 'utility.rb'
@@ -31,6 +32,7 @@ class PotentialBuild
   include ResultsProcessor
   include Cppcheck
   include Lcov
+  include CustomCheck
 
   attr_reader :tag_name
   attr_reader :commit_sha
@@ -467,7 +469,13 @@ class PotentialBuild
 
     checkout_succeeded  = checkout src_dir
 
-    if compiler[:name] == "cppcheck"
+    if compiler[:name] == "custom_check"
+      start_time = Time.now
+      custom_check compiler, src_dir, build_dir
+      @build_time = 0 if @build_time.nil?
+      # handle the case where build is called more than once
+      @build_time = @build_time + (Time.now - start_time)
+    elsif compiler[:name] == "cppcheck"
       start_time = Time.now
       cppcheck compiler, src_dir, build_dir
       @build_time = 0 if @build_time.nil?
