@@ -909,7 +909,9 @@ class PotentialBuild
 
       @performance_results["test_files"].each{ |v|
         performance_test_count += 1
-        performance_total_time += v["totals"]
+        if !v["totals"].nil?
+          performance_total_time += v["totals"]
+        end
       }
     end
 
