@@ -9,7 +9,8 @@ module CustomCheck
     compiler[:commands].each{ |command|
       compiler_flags = "#{build_dir}"
       out, err, result = run_script(
-        ["cd #{src_dir} && #{command} #{compiler_flags}"])
+        ["cd #{src_dir} && #{command} #{compiler_flags}"],
+        {:needs_github_secrets=>false, :needs_aws_secrets=>false})
 
 
       # expected fields to be read: "tool", "file", "line", "column" (optional), "message_type", "message", "id" (optional)

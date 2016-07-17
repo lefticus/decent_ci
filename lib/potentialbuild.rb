@@ -195,10 +195,26 @@ class PotentialBuild
     return out.force_encoding("UTF-8"), err.force_encoding("UTF-8"), thread.value
   end
 
-  def run_script(commands, env={})
+  def run_script(commands, env_filters, env={})
     allout = ""
     allerr = "" 
     allresult = 0
+
+    if env=={} then
+      env = ENV.to_hash
+    end
+
+    if !env_filters[:needs_github_secrets] then
+      env.except!("GITHUB_TOKEN")
+    end
+
+    if !env_filters[:needs_aws_secrets] then
+      env.except!("AWS_ACCESS_KEY_ID")
+      env.except!("AWS_SECRET_ACCESS_KEY")
+    end
+
+
+    do the filter thing here
 
     commands.each { |cmd|
       if @config.os == "Windows"
@@ -284,7 +300,8 @@ class PotentialBuild
     if @config.pull_id.nil?
       out, err, result = run_script(
         ["cd #{src_dir} && git init",
-         "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} \"#{@refspec}\"" ])
+         "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} \"#{@refspec}\"" ],
+        {:needs_github_secrets=>false, :needs_aws_secrets=>false})
 
       if !@commit_sha.nil? && @commit_sha != "" && result == 0
         out, err, result = run_script( ["cd #{src_dir} && git checkout #{@commit_sha}"] );
@@ -293,7 +310,8 @@ class PotentialBuild
       out, err, result = run_script(
         ["cd #{src_dir} && git init",
          "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} refs/pull/#{@config.pull_id}/head",
-         "cd #{src_dir} && git checkout FETCH_HEAD" ])
+         "cd #{src_dir} && git checkout FETCH_HEAD" ],
+        {:needs_github_secrets=>false, :needs_aws_secrets=>false})
     end
 
     return result == 0
@@ -323,7 +341,8 @@ class PotentialBuild
         s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
 
         out, err, result = run_script(
-          ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html coverage"])
+          ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html coverage"],
+          {:needs_github_secrets=>false, :needs_aws_secrets=>true})
 
         @coverage_url = out
       end
@@ -339,7 +358,8 @@ class PotentialBuild
       s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
 
       out, err, result = run_script(
-        ["#{s3_script} #{compiler[:s3_upload_bucket]} #{get_full_build_name(compiler)} #{build_dir}/#{compiler[:s3_upload]} assets"])
+        ["#{s3_script} #{compiler[:s3_upload_bucket]} #{get_full_build_name(compiler)} #{build_dir}/#{compiler[:s3_upload]} assets"],
+        {:needs_github_secrets=>false, :needs_aws_secrets=>true})
 
       @asset_url = out
     end
@@ -551,7 +571,8 @@ class PotentialBuild
       out, err, result = run_script(
         ["cd #{regression_dir} && git init",
          "cd #{regression_dir} && git fetch https://#{@config.token}@github.com/#{@config.regression_repository} #{refspec}",
-         "cd #{regression_dir} && git checkout FETCH_HEAD"]
+         "cd #{regression_dir} && git checkout FETCH_HEAD"],
+        {:needs_github_secrets=>false, :needs_aws_secrets=>false}
       )
     end
 
@@ -579,7 +600,9 @@ class PotentialBuild
     if !script.empty?
       start_time = Time.now
 
-      out,err,result = run_script(script, {"REGRESSION_NUM_PROCESSES"=>compiler[:num_parallel_builds].to_s, "REGRESSION_BASE"=>build_dir_1, "REGRESSION_MOD"=>build_dir_2, "REGRESSION_BASE_SRC"=>src_dir_1, "REGRESSION_MOD_SRC"=>src_dir_2})
+      out,err,result = run_script(script, 
+                                  {:needs_github_secrets=>false, :needs_aws_secrets=>true},
+                                  {"REGRESSION_NUM_PROCESSES"=>compiler[:num_parallel_builds].to_s, "REGRESSION_BASE"=>build_dir_1, "REGRESSION_MOD"=>build_dir_2, "REGRESSION_BASE_SRC"=>src_dir_1, "REGRESSION_MOD_SRC"=>src_dir_2})
 
       results = process_regression_results out,err,result
       if @test_results.nil?

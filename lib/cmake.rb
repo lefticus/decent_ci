@@ -55,7 +55,9 @@ module CMake
     env["GITHUB_TOKEN"] = ENV["GITHUB_TOKEN"]
 
     out, err, result = run_script(
-      ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
+      ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""],
+      {:needs_github_secrets=>false, :needs_aws_secrets=>false},
+      env)
 
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
@@ -71,7 +73,9 @@ module CMake
     end
 
     out, err, result = run_script(
-        ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --use-stderr -- #{build_switches}"], env)
+        ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --use-stderr -- #{build_switches}"],
+        {:needs_github_secrets=>false, :needs_aws_secrets=>false},
+          env)
 
     msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
     gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
@@ -101,7 +105,9 @@ module CMake
       File.open("#{build_dir}/extract_linker_path.cmake", "w+") { |f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")') }
 
       script_stdout, script_stderr, script_result = run_script(
-                  ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
+                  ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."],
+                  {:needs_github_secrets=>false, :needs_aws_secrets=>false}
+      )
 
       /.*LINKER:(?<linker_path>.*)/ =~ script_stdout
       $logger.debug("Parsed linker path from cmake: #{linker_path}")
@@ -122,10 +128,14 @@ module CMake
 
     if !compiler[:package_command].nil?
       pack_stdout, pack_stderr, pack_result = run_script(
-        ["cd #{build_dir} && #{compiler[:package_command]} "], {"PATH"=>new_path})
+        ["cd #{build_dir} && #{compiler[:package_command]} "], 
+        {:needs_github_secrets=>true, :needs_aws_secrets=>false},
+          {"PATH"=>new_path})
     else
       pack_stdout, pack_stderr, pack_result = run_script(
-        ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], {"PATH"=>new_path})
+        ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], 
+        {:needs_github_secrets=>true, :needs_aws_secrets=>false},
+        {"PATH"=>new_path})
     end
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stdout, pack_stderr, pack_result, true)
@@ -171,7 +181,8 @@ module CMake
     test_dirs.each{ |test_dir|
       $logger.info("Running tests in dir: '#{test_dir}'")
       env = {"PATH"=>cmake_remove_git_from_path(ENV['PATH'])}
-      test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type} #{ctest_filter}"], env);
+      test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type} #{ctest_filter}"], {:needs_github_secrets=>false, :needs_aws_secrets=>false},
+env);
       test_results, test_messages = process_ctest_results compiler, src_dir, build_dir, "#{build_dir}/#{test_dir}", test_stdout, test_stderr, test_result
 
       if @test_results.nil?
