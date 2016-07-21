@@ -81,9 +81,34 @@ class Build
   end
 
   # note, only builds 'external' pull_requests. Internal ones would have already
-  # been built as a branch
-  def query_pull_requests
+  # been built as a branch. Skipping of internal PR happens inside this function
+  def query_pull_requests t_options
     pull_requests = github_query(@client) { @client.pull_requests(@repository, :state=>"open") }
+
+    external_users = t_options[:external_users]
+    trusted_branch = t_options[:trusted_branch]
+
+    begin
+      if trusted_branch.nil? || trusted_branch == ""
+        file_content = Base64.decode64(github_query(client) { client.contents(@repository, :path=>".decent_ci-external_users.yaml") })
+      else
+        file_content = Base64.decode64(github_query(client) { 
+          client.contents(@repository, { :path=>".decent_ci-external_users.yaml", :ref=>trusted_branch } ) 
+        })
+      end
+
+      file_data = YAML.load(file_content)
+      logger.debug("Successfully loaded .decent_ci-external_users.yaml from '#{trusted_branch}'")
+      file_data["external_users"].each { |x| external_users << Regexp.new(x) }
+    rescue SyntaxError => e
+      logger.info("#{e.message} error while reading external_users file")
+    rescue Psych::SyntaxError => e
+      logger.info("#{e.message} error while reading external_users file")
+    rescue => e
+      logger.info("#{e.message} error while reading external_users file")
+    end
+
+    external_users.each{ |x| logger.debug("Known external user: #{x}") }
 
     @pull_request_details = []
 
@@ -122,7 +147,11 @@ class Build
         if p.head.repo.full_name == p.base.repo.full_name
           $logger.info("Skipping pullrequest originating from head repo")
         else
-          @potential_builds << pb
+          if external_users.any? { |x| x =~ p.head.user.login }
+            @potential_builds << pb
+          else
+            $logger.info("Skipping pullrequest originating from unknown user #{p.head.user.login}")
+          end
         end
       rescue => e
         $logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")

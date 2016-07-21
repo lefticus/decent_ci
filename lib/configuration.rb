@@ -30,7 +30,7 @@ module Configuration
 
       if !location.nil? && !name.nil?
         begin
-          content = @client.content(location, {:path=>name, :ref=>ref} )
+          content = github_query(@client) { @client.content(location, {:path=>name, :ref=>ref} ) }
           contents = content.content
           return YAML.load(Base64.decode64(contents.to_s))
         rescue SyntaxError => e
@@ -133,7 +133,7 @@ module Configuration
 
     fileset = Set.new()
 
-    @client.content(location, {:path=>".", :ref=>ref} ).each { |path|
+    github_query(@client) { @client.content(location, {:path=>".", :ref=>ref} ) }.each { |path|
       if path.name =~ /\.decent_ci.*/
         fileset << path.name
       end

@@ -66,6 +66,7 @@ $logger.debug "Logging to decent_ci.log"
 options = {}
 options[:delay_after_run] = 300
 options[:maximum_branch_age] = 30
+options[:external_users] = [/.*/]
 
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: #{__FILE__} [options] <testruntrueorfalse> <githubtoken> <repositoryname> (<repositoryname> ...)"
@@ -110,6 +111,15 @@ opts = OptionParser.new do |opts|
     end
   end
 
+  opts.on("--external_users=[list of usernames]", String, "A `;` deliminated list of regexes for names allowed to build external PRs. Default is .*") do |k|
+    options[:external_users] = k.split(";").collect{ |x| Regexp.new(x) }
+  end
+
+  opts.on("--trusted_branch=[branch_name]", String, "Branch name to load trusted files from. Defaults to github default branch.") do |k|
+    if k != ""
+      options[:trusted_branch] = k
+    end
+  end
 
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
@@ -149,6 +159,10 @@ $logger.info "Environment: #{envdump}"
 # keep this after the above environment dump so the key isn't included there
 ENV["GITHUB_TOKEN"] = ARGV[1]
 
+
+options[:external_users].each { |x| puts("Configured external user: #{x.to_s}") }
+puts("Configured trusted branch: #{options[:trusted_branch].to_s}")
+
 for conf in 2..ARGV.length-1
   $logger.info "Loading configuration #{ARGV[conf]}"
   $current_log_repository = ARGV[conf]
@@ -162,7 +176,7 @@ for conf in 2..ARGV.length-1
     $logger.info "Querying for updated branches"
     b.query_releases
     b.query_branches
-    b.query_pull_requests
+    b.query_pull_requests options
 
     did_daily_task = false
 
