@@ -213,9 +213,6 @@ class PotentialBuild
       env.except!("AWS_SECRET_ACCESS_KEY")
     end
 
-
-    do the filter thing here
-
     commands.each { |cmd|
       if @config.os == "Windows"
         $logger.warn "Unable to set timeout for process execution on windows"
