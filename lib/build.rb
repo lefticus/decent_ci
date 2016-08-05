@@ -98,17 +98,17 @@ class Build
       end
 
       file_data = YAML.load(file_content)
-      logger.debug("Successfully loaded .decent_ci-external_users.yaml from '#{trusted_branch}'")
+      $logger.debug("Successfully loaded .decent_ci-external_users.yaml from '#{trusted_branch}'")
       file_data["external_users"].each { |x| external_users << Regexp.new(x) }
     rescue SyntaxError => e
-      logger.info("#{e.message} error while reading external_users file")
+      $logger.info("#{e.message} error while reading external_users file")
     rescue Psych::SyntaxError => e
-      logger.info("#{e.message} error while reading external_users file")
+      $logger.info("#{e.message} error while reading external_users file")
     rescue => e
-      logger.info("#{e.message} error while reading external_users file")
+      $logger.info("#{e.message} error while reading external_users file")
     end
 
-    external_users.each{ |x| logger.debug("Known external user: #{x}") }
+    external_users.each{ |x| $logger.debug("Known external user: #{x}") }
 
     @pull_request_details = []
 
