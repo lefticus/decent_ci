@@ -1114,7 +1114,7 @@ eos
           $logger.info("Posting pending results file");
           response =  github_query(@client) { @client.create_contents(@config.results_repository,
                                              "#{@config.results_path}/#{get_branch_folder()}/#{@dateprefix}-#{results_file_name compiler}",
-                                             "Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}", 
+                                             "Commit initial build results file: #{@dateprefix}-#{Socket.gethostname}-#{results_file_name compiler}", 
                                              json_document) }
 
           $logger.debug("Results document sha set: #{response.content.sha}")
@@ -1129,7 +1129,7 @@ eos
           $logger.info("Updating contents with sha #{@results_document_sha}")
           response =  github_query(@client) { @client.update_contents(@config.results_repository,
                                              "#{@config.results_path}/#{get_branch_folder()}/#{@dateprefix}-#{results_file_name compiler}",
-                                             "Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
+                                             "Commit final build results file: #{@dateprefix}-#{Socket.gethostname}-#{results_file_name compiler}",
                                              @results_document_sha,
                                              json_document) }
         end
