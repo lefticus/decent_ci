@@ -301,7 +301,8 @@ class PotentialBuild
         {:needs_github_secrets=>false, :needs_aws_secrets=>false})
 
       if !@commit_sha.nil? && @commit_sha != "" && result == 0
-        out, err, result = run_script( ["cd #{src_dir} && git checkout #{@commit_sha}"] );
+        out, err, result = run_script( ["cd #{src_dir} && git checkout #{@commit_sha}"],
+                                       {:needs_github_secrets=>false, :needs_aws_secrets=>false})
       end
     else 
       out, err, result = run_script(
