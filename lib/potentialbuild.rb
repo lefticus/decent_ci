@@ -1010,7 +1010,7 @@ eos
       test_string = "#{test_percent.round(2)}%25"
     end
 
-    test_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Test Badge](http://img.shields.io/badge/tests%20passed-#{test_string}-#{test_color}.svg)</a>"
+    test_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Test Badge](http://img.shields.io/badge/tests%20passed-#{test_string}-#{test_color}.png)</a>"
 
     if compiler[:analyze_only] 
       test_failed = false
@@ -1032,7 +1032,7 @@ eos
       build_string = "passing"
     end
 
-    build_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Build Badge](http://img.shields.io/badge/build%20status-#{build_string}-#{build_color}.svg)</a>"
+    build_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Build Badge](http://img.shields.io/badge/build%20status-#{build_string}-#{build_color}.png)</a>"
 
     coverage_failed = false
     coverage_badge = ""
@@ -1054,7 +1054,7 @@ eos
       end
       coverage_string = "#{coverage_percent.round(2)}%25"
 
-      coverage_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Coverage Badge](http://img.shields.io/badge/coverage%20status-#{coverage_string}-#{coverage_color}.svg)</a>"
+      coverage_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Coverage Badge](http://img.shields.io/badge/coverage%20status-#{coverage_string}-#{coverage_color}.png)</a>"
     end
 
     failed = build_failed || test_failed || coverage_failed || !@failure.nil?
