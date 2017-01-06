@@ -31,7 +31,7 @@ for root, subFolders, files in os.walk(sourcedir):
         elif (filepath.endswith(".svg")):
             content_type = {"Content-Type": "image/svg+xml"}
         else:
-            content_type = {"Content-Type": "application/octect-stream"}
+            content_type = {"Content-Type": "application/octet-stream"}
 
         key.set_contents_from_string(file_to_send.read(), headers=content_type)
         key.make_public()
