@@ -171,6 +171,10 @@ for conf in 2..ARGV.length-1
     # Loads the list of potential builds and their config files for the given
     # repository name
     b = Build.new(ARGV[1], ARGV[conf], options[:maximum_branch_age])
+    if options[:disable_ssl_verification]
+      b.client.connection_options[:ssl] = { :verify => false }
+    end
+    
     test_mode = !(ARGV[0] =~ /false/i)
 
     $logger.info "Querying for updated branches"
