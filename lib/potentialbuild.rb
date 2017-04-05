@@ -866,14 +866,28 @@ class PotentialBuild
     test_results_warning = 0
 
     test_results_failure_counts= {}
-    test_results_failure_counts.default=0
 
     if !@test_results.nil?
       @test_results.each { |t| 
         test_results_total += 1
         test_results_passed += 1 if t.passed
         test_results_warning += 1 if t.warning
-        test_results_failure_counts[t.failure_type] += 1 if !t.passed
+
+        categoryidx = t.name.index('.')
+        categoryname = "Uncategorized"
+        if !categoryidx.nil?
+          categoryname = t.name.slice(0, categoryidx)
+        end
+
+        failure_type = t.passed ? "Passed" : t.failure_type
+
+        if test_results_failure_counts[categoryname].nil?
+          category = {}
+          category.default = 0
+          test_results_failure_counts[categoryname] = category
+        end
+
+        test_results_failure_counts[categoryname][failure_type] += 1
 
         test_results_data << t.inspect;
       }
@@ -1097,8 +1111,12 @@ eos
     $logger.debug("Message counts string: #{message_counts_str}")
 
     test_results_failure_counts_str = ""
-    test_results_failure_counts.each{ |failure, count|
-      test_results_failure_counts_str += " * #{count} #{failure == "Failed" ? "General" : failure}\n"
+    test_results_failure_counts.sort{ |a, b| a[0].casecmp(b[0]) }.each{ |category, value|
+      test_results_failure_counts_str += "\n#{category} Test Summary\n"
+
+      value.sort{ |a, b| (a[0] == "Passed"? -1 : (b[0] == "Passed" ? 1 : a[0].casecmp(b[0]))) }.each { |failure, count| 
+        test_results_failure_counts_str += " * #{failure}: #{count}\n" 
+      }
     }
 
 

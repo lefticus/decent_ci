@@ -35,6 +35,10 @@ class TestResult
     return @failure_type
   end
 
+  def name
+    return @name
+  end
+
   def inspect
     parsed_errors_array = []
 
