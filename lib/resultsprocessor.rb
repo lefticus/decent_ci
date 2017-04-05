@@ -442,13 +442,23 @@ module ResultsProcessor
                 nm = r["NamedMeasurement"]
 
                 if !nm.nil?
+                  failure_type = ""
+                  nm.each { |measurement|
+                    if measurement["name"] == "Exit Code"
+                      ft = measurement["Value"]
+                      if !ft.nil?
+                        failure_type = ft
+                      end
+                    end
+                  }
+
                   nm.each { |measurement|
                     if measurement["name"] == "Execution Time"
                       status_string = n["Status"]
                       if !value.nil? && value =~ /\[decent_ci:test_result:warn\]/ && status_string == "passed"
                         status_string = "warning" 
                       end
-                      results << TestResult.new(n["Name"], status_string, measurement["Value"], value, errors);
+                      results << TestResult.new(n["Name"], status_string, measurement["Value"], value, errors, failure_type);
                     end
                   }
                 end

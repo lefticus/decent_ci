@@ -14,12 +14,13 @@ require 'base64'
 
 # Parsed test results for reporting back
 class TestResult
-  def initialize(name, status, time, output, parsed_errors)
+  def initialize(name, status, time, output, parsed_errors, failure_type)
     @name = name
     @status = status
     @time = time
     @output = output
     @parsed_errors = parsed_errors
+    @failure_type = failure_type
   end
 
   def passed
@@ -28,6 +29,10 @@ class TestResult
 
   def warning
     return @status == "warning"
+  end
+
+  def failure_type
+    return @failure_type
   end
 
   def inspect
@@ -43,7 +48,8 @@ class TestResult
       :status => @status,
       :time => @time,
       :output => @output,
-      :parsed_errors => parsed_errors_array
+      :parsed_errors => parsed_errors_array,
+      :failure_type => @failure_type
       }
     return hash
   end
