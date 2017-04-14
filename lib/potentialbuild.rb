@@ -1112,11 +1112,14 @@ eos
 
     test_results_failure_counts_str = ""
     test_results_failure_counts.sort{ |a, b| a[0].casecmp(b[0]) }.each{ |category, value|
-      test_results_failure_counts_str += "\n#{category} Test Summary\n"
 
-      value.sort{ |a, b| (a[0] == "Passed"? -1 : (b[0] == "Passed" ? 1 : a[0].casecmp(b[0]))) }.each { |failure, count| 
-        test_results_failure_counts_str += " * #{failure}: #{count}\n" 
-      }
+      if value.size > 1
+        test_results_failure_counts_str += "\n#{category} Test Summary\n"
+
+        value.sort{ |a, b| (a[0] == "Passed"? -1 : (b[0] == "Passed" ? 1 : a[0].casecmp(b[0]))) }.each { |failure, count| 
+          test_results_failure_counts_str += " * #{failure}: #{count}\n" 
+        }
+      end
     }
 
 
