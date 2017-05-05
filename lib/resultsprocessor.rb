@@ -81,7 +81,7 @@ module ResultsProcessor
     /(?<name>\S+);(?<status>\S+);(?<time>\S+);(?<message>.*)/ =~ line
 
     if !name.nil? && !status.nil?
-      return TestResult.new("regression.#{name}", status, time, message, nil)
+      return TestResult.new("regression.#{name}", status, time, message, nil, status)
     else
       return nil
     end
@@ -417,7 +417,7 @@ module ResultsProcessor
             $logger.debug("Results: #{n["Results"]}")
             r = n["Results"]
             if n["Status"] == "notrun"
-              results << TestResult.new(n["Name"], n["Status"], 0, "", nil)
+              results << TestResult.new(n["Name"], n["Status"], 0, "", nil, "notrun")
             else
               if r
                 m = r["Measurement"]
