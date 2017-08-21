@@ -168,14 +168,17 @@ def get_limits(t_options, t_client, t_repo)
 
     begin
       if trusted_branch.nil? || trusted_branch == ""
-        file_content = Base64.decode64(github_query(t_client) { t_client.contents(t_repo, :path=>".decent_ci-limits.yaml") })
+        content = github_query(t_client) { t_client.contents(t_repo, :path=>".decent_ci-limits.yaml") }
       else
-        file_content = Base64.decode64(github_query(t_client) { 
+        content = github_query(t_client) { 
           t_client.contents(t_repo, { :path=>".decent_ci-limits.yaml", :ref=>trusted_branch } ) 
-        })
+        }
       end
 
+      return YAML.load(Base64.decode64(content.content.to_s))
 
+
+      $logger.debug("Successfully read .decent_ci-limits.yaml from '#{trusted_branch}', now attempting load")
       file_data = YAML.load(file_content)
       $logger.debug("Successfully loaded .decent_ci-limits.yaml from '#{trusted_branch}'")
       return file_data;
@@ -184,7 +187,7 @@ def get_limits(t_options, t_client, t_repo)
     rescue Psych::SyntaxError => e
       $logger.info("'#{e.message}' error while reading limits file")
     rescue => e
-      $logger.info("'#{e.message}' error while reading limits file")
+      $logger.info("'#{e.message}' '#{e.backtrace}' error while reading limits file")
     end
 
     return {};
@@ -195,7 +198,7 @@ def get_limits(t_options, t_client, t_repo)
     limits["history_total_file_limit"] = 5000
   end
 
-  if limits["history_long_running_branch_names"].nil? || !limits["history_long_running_branch_names"].is_a?
+  if limits["history_long_running_branch_names"].nil?
     limits["history_long_running_branch_names"] = ["develop", "master"]
   end
 

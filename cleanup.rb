@@ -91,7 +91,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
   file_age_limit = 9000
 
   if limit_reached
-    if results_path.end_with?(long_running_branches)
+    if results_path.end_with?(*long_running_branches)
       branch_history_limit = long_running_branch_limit
       logger.info("Long running branch limit reached: #{branch_history_limit}")
     else
