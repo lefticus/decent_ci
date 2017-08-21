@@ -89,14 +89,16 @@ class Build
     trusted_branch = t_options[:trusted_branch]
 
     begin
+      
       if trusted_branch.nil? || trusted_branch == ""
-        file_content = Base64.decode64(github_query(client) { client.contents(@repository, :path=>".decent_ci-external_users.yaml") })
+        content = github_query(@client) { @client.contents(t_repo, :path=>".decent_ci-limits.yaml") }
       else
-        file_content = Base64.decode64(github_query(client) { 
-          client.contents(@repository, { :path=>".decent_ci-external_users.yaml", :ref=>trusted_branch } ) 
-        })
+        content = github_query(@client) { 
+          @client.contents(t_repo, { :path=>".decent_ci-limits.yaml", :ref=>trusted_branch } ) 
+        }
       end
 
+      file_content = Base64.decode64(content.content.to_s)
       file_data = YAML.load(file_content)
       $logger.debug("Successfully loaded .decent_ci-external_users.yaml from '#{trusted_branch}'")
       file_data["external_users"].each { |x| external_users << Regexp.new(x) }
