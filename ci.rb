@@ -171,7 +171,7 @@ def get_limits(t_options, t_client, t_repo)
         file_content = Base64.decode64(github_query(t_client) { t_client.contents(t_repo, :path=>".decent_ci-limits.yaml") })
       else
         file_content = Base64.decode64(github_query(t_client) { 
-          t_client.contents(@repository, { :path=>".decent_ci-limits.yaml", :ref=>trusted_branch } ) 
+          t_client.contents(t_repo, { :path=>".decent_ci-limits.yaml", :ref=>trusted_branch } ) 
         })
       end
 
@@ -180,11 +180,11 @@ def get_limits(t_options, t_client, t_repo)
       $logger.debug("Successfully loaded .decent_ci-limits.yaml from '#{trusted_branch}'")
       return file_data;
     rescue SyntaxError => e
-      $logger.info("#{e.message} error while reading limits file")
+      $logger.info("'#{e.message}' error while reading limits file")
     rescue Psych::SyntaxError => e
-      $logger.info("#{e.message} error while reading limits file")
+      $logger.info("'#{e.message}' error while reading limits file")
     rescue => e
-      $logger.info("#{e.message} error while reading limits file")
+      $logger.info("'#{e.message}' error while reading limits file")
     end
 
     return {};

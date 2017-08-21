@@ -38,13 +38,13 @@ def clean_up(client, repository, results_repository, results_path, age_limit, li
   end
 
   file_count = count_files(client, results_repository, results_path)
-  limit_reached = file_count >= limits["history_total_file_limit"])
+  limit_reached = (file_count >= limits["history_total_file_limit"])
 
   logger.info("File limits: total files found: #{file_count}, limits set to: #{limits["history_total_file_limit"]}, history file limit hit: #{limit_reached}")
 
   branches = limits["history_long_running_branch_names"]
   feature_branch_limit = limits["history_feature_branch_file_limit"]
-  long_running_branch_limit["history_long_running_branch_file_limit"]
+  long_running_branch_limit = limits["history_long_running_branch_file_limit"]
 
   if limit_reached 
     logger.info("Total file limits reached, long running branch names: '#{branches}', feature branch file limit: '#{feature_branch_limit}', long running branch file limit: '#{long_running_branch_limit}'")
@@ -74,7 +74,8 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
   files.each{ |file|
     if file.type == "dir"
       # Scan subfolder
-      clean_up_impl(client, repository, results_repository, file.path, age_limit)
+      clean_up_impl(client, repository, results_repository, file.path, age_limit, 
+                    limit_reached, long_running_branches, feature_branch_limit, long_running_branch_limit)
     elsif file.type == "file"
       folder_contains_files = true
     end
