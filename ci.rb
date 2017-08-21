@@ -176,12 +176,6 @@ def get_limits(t_options, t_client, t_repo)
       end
 
       return YAML.load(Base64.decode64(content.content.to_s))
-
-
-      $logger.debug("Successfully read .decent_ci-limits.yaml from '#{trusted_branch}', now attempting load")
-      file_data = YAML.load(file_content)
-      $logger.debug("Successfully loaded .decent_ci-limits.yaml from '#{trusted_branch}'")
-      return file_data;
     rescue SyntaxError => e
       $logger.info("'#{e.message}' error while reading limits file")
     rescue Psych::SyntaxError => e
