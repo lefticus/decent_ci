@@ -110,6 +110,12 @@ opts = OptionParser.new do |opts|
     end
   end
 
+  opts.on("--trusted_branch=[branch_name]", String, "Branch name to load trusted files from. Defaults to github default branch.") do |k|
+    if k != ""
+      options[:trusted_branch] = k
+    end
+  end
+
 
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
@@ -149,6 +155,66 @@ $logger.info "Environment: #{envdump}"
 # keep this after the above environment dump so the key isn't included there
 ENV["GITHUB_TOKEN"] = ARGV[1]
 
+puts("Configured trusted branch: #{options[:trusted_branch].to_s}")
+
+
+
+
+def get_limits(t_options, t_client, t_repo)
+
+  limits = lambda {
+    trusted_branch = t_options[:trusted_branch]
+    $logger.info("Loading decent_ci-limits.yaml from #{trusted_branch}")
+
+    begin
+      if trusted_branch.nil? || trusted_branch == ""
+        file_content = Base64.decode64(github_query(t_client) { t_client.contents(t_repo, :path=>".decent_ci-limits.yaml") })
+      else
+        file_content = Base64.decode64(github_query(t_client) { 
+          t_client.contents(@repository, { :path=>".decent_ci-limits.yaml", :ref=>trusted_branch } ) 
+        })
+      end
+
+
+      file_data = YAML.load(file_content)
+      $logger.debug("Successfully loaded .decent_ci-limits.yaml from '#{trusted_branch}'")
+      return file_data;
+    rescue SyntaxError => e
+      $logger.info("#{e.message} error while reading limits file")
+    rescue Psych::SyntaxError => e
+      $logger.info("#{e.message} error while reading limits file")
+    rescue => e
+      $logger.info("#{e.message} error while reading limits file")
+    end
+
+    return {};
+  }.();
+
+
+  if limits["history_total_file_limit"].nil?
+    limits["history_total_file_limit"] = 5000
+  end
+
+  if limits["history_long_running_branch_names"].nil? || !limits["history_long_running_branch_names"].is_a?
+    limits["history_long_running_branch_names"] = ["develop", "master"]
+  end
+
+  if limits["history_feature_branch_file_limit"].nil?
+    limits["history_feature_branch_file_limit"] = 5
+  end
+
+  if limits["history_long_running_branch_file_limit"].nil?
+    limits["history_long_running_branch_file_limit"] = 20
+  end
+
+  return limits
+end
+
+
+
+
+
+
 for conf in 2..ARGV.length-1
   $logger.info "Loading configuration #{ARGV[conf]}"
   $current_log_repository = ARGV[conf]
@@ -177,7 +243,8 @@ for conf in 2..ARGV.length-1
         while count < 5 && !succeeded do
           $logger.info "Executing clean_up task"
           begin
-            clean_up(b.client, repo, results_repo, results_path, options[:maximum_branch_age])
+            limits = get_limits(options, b.client, repo)
+            clean_up(b.client, repo, results_repo, results_path, options[:maximum_branch_age], limits)
             succeeded = true
           rescue => e
             $logger.error "Error running clean_up #{e} #{e.backtrace}"

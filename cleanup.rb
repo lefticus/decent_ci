@@ -12,7 +12,50 @@ require 'ostruct'
 require 'yaml'
 require 'base64'
 
-def clean_up(client, repository, results_repository, results_path, age_limit)
+
+def count_files(client, results_repository, results_path)
+  files = github_query(client) { client.contents(results_repository, :path=>results_path) }
+
+  file_count = 0;
+
+  files.each{ |file|
+    if file.type == "dir"
+      # Scan subfolder
+      file_count += count_files(client, results_repository, file.path)
+    elsif file.type == "file"
+      file_count += 1
+    end
+  }
+
+  return file_count
+end
+
+def clean_up(client, repository, results_repository, results_path, age_limit, limits)
+  if $logger.nil?
+    logger = Logger.new(STDOUT)
+  else
+    logger = $logger
+  end
+
+  file_count = count_files(client, results_repository, results_path)
+  limit_reached = file_count >= limits["history_total_file_limit"])
+
+  logger.info("File limits: total files found: #{file_count}, limits set to: #{limits["history_total_file_limit"]}, history file limit hit: #{limit_reached}")
+
+  branches = limits["history_long_running_branch_names"]
+  feature_branch_limit = limits["history_feature_branch_file_limit"]
+  long_running_branch_limit["history_long_running_branch_file_limit"]
+
+  if limit_reached 
+    logger.info("Total file limits reached, long running branch names: '#{branches}', feature branch file limit: '#{feature_branch_limit}', long running branch file limit: '#{long_running_branch_limit}'")
+  end
+
+  return clean_up_impl(client, repository, results_repository, results_path, age_limit,
+                      limit_reached, branches, feature_branch_limit, long_running_branch_limit)
+end
+
+def clean_up_impl(client, repository, results_repository, results_path, age_limit,
+                 limit_reached, long_running_branches, feature_branch_limit, long_running_branch_limit)
   if $logger.nil?
     logger = Logger.new(STDOUT)
   else
@@ -31,7 +74,7 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
   files.each{ |file|
     if file.type == "dir"
       # Scan subfolder
-      clean_up(client, repository, results_repository, file.path, age_limit)
+      clean_up_impl(client, repository, results_repository, file.path, age_limit)
     elsif file.type == "file"
       folder_contains_files = true
     end
@@ -46,12 +89,24 @@ def clean_up(client, repository, results_repository, results_path, age_limit)
   branch_history_limit = 20
   file_age_limit = 9000
 
+  if limit_reached
+    if results_path.end_with?(long_running_branches)
+      branch_history_limit = long_running_branch_limit
+      logger.info("Long running branch limit reached: #{branch_history_limit}")
+    else
+      branch_history_limit = feature_branch_limit
+      logger.info("Feature branch limit reached: #{branch_history_limit}")
+    end
+  end
+
+  # These are the absolute failsafe limits required by github
+  # if we are approaching 1000 files in a single directory
   if files.size > 800
     if files.size > 999
       branch_history_limit = 1
       file_age_limit = age_limit + 1
     else
-      branch_history_limit = 5
+      branch_history_limit = [5, branch_history_limit].min
       file_age_limit = 60
     end
     logger.info("Hitting directory size limit #{files.size}, reducing history to #{branch_history_limit} data points")
