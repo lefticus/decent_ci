@@ -76,6 +76,7 @@ class PotentialBuild
     @dateprefix = nil
     @failure = nil
     @test_run = false
+    @keep_build_folder = false
     @build_time = nil
     @test_time = nil
     @install_time = nil
@@ -110,6 +111,10 @@ class PotentialBuild
 
   def set_test_run new_test_run
     @test_run = new_test_run
+  end
+
+  def set_keep_build_folder new_keep_build_folder
+    @keep_build_folder = new_keep_build_folder
   end
 
   def descriptive_string
@@ -614,7 +619,7 @@ class PotentialBuild
 
 
   def clean_up compiler
-    if !@test_run
+    if !@test_run && !@keep_build_folder
       @created_dirs.each { |d|
         try_hard_to_remove_dir d
       }
@@ -622,7 +627,7 @@ class PotentialBuild
   end
 
   def clean_up_regressions compiler
-    if !@test_run
+    if !@test_run && !@keep_build_folder
       @created_regression_dirs.each { |d|
         try_hard_to_remove_dir d
       }

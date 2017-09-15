@@ -66,6 +66,8 @@ $logger.debug "Logging to decent_ci.log"
 options = {}
 options[:delay_after_run] = 300
 options[:maximum_branch_age] = 30
+options[:verbose] = false
+options[:keep_build_folder] = false
 
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: #{__FILE__} [options] <testruntrueorfalse> <githubtoken> <repositoryname> (<repositoryname> ...)"
@@ -77,6 +79,11 @@ opts = OptionParser.new do |opts|
   opts.on("-s", "--disable-ssl-verification", "Disable verification of ssl certificates") do |v|
     options[:disable_ssl_verification] = v
   end
+
+  opts.on("--keep-build-folder", "Do not delete build folder after build completes") do |v|
+    options[:keep_build_folder] = v
+  end
+
 
   opts.on("--aws-access-key-id=[key]") do |k|
     ENV["AWS_ACCESS_KEY_ID"] = k
@@ -312,6 +319,7 @@ for conf in 2..ARGV.length-1
             # reset potential build for the next build attempt
             p.next_build
             p.set_test_run test_mode
+            p.set_keep_build_folder options[:keep_build_folder]
 
             if p.needs_run compiler
               $logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
@@ -321,6 +329,8 @@ for conf in 2..ARGV.length-1
 
                 if p.needs_regression_test(compiler) && regression_base
                   regression_base.set_test_run test_mode
+                  regression_base.set_keep_build_folder options[:keep_build_folder]
+
                   p.clone_regression_repository compiler
                   regression_baselines << [compiler, regression_base];
 
