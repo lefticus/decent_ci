@@ -8,6 +8,7 @@ class CodeMessage
   attr_reader :colnumber
   attr_reader :messagetype
   attr_reader :message
+  attr_writer :message
 
   def initialize(filename, linenumber, colnumber, messagetype, message)
     @filename = filename

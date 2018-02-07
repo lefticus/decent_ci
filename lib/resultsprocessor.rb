@@ -145,12 +145,28 @@ module ResultsProcessor
 
     $logger.info("Parsing cmake error results")
 
+    previous_line = ""
+    last_was_error_line = false
+
     stderr.split("\n").each{ |err|
+
+      # Append next line to the message context for a CMake error
+      if last_was_error_line && !results.empty?
+        stripped = err.strip
+        if stripped != ""
+          last_item = results.last
+          last_item.message = last_item.message + "; " + stripped
+          results[results.length - 1] = last_item
+        end
+      end
+
+      last_was_error_line = false
 
       $logger.debug("Parsing cmake error Line: #{err}")
       if err.strip == ""
         if !file.nil? && !line.nil? && !msg.nil?
-          results << CodeMessage.new(relative_path(file, src_dir, build_dir, compiler), line, 0, type, msg)
+          results << CodeMessage.new(relative_path(file, src_dir, build_dir, compiler), line, 0, type, "#{previous_line}#{err}")
+          last_was_error_line = true
         end
         file = nil
         line = nil
@@ -159,16 +175,28 @@ module ResultsProcessor
       else
         if file.nil? 
           /^CPack Error: (?<message>.*)/ =~ err
-          results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", message) if !message.nil?
+          if !message.nil?
+            results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", "#{previous_line}#{err.strip}")
+            last_was_error_line = true
+          end
 
           /^CMake Error: (?<message>.*)/ =~ err
-          results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", message) if !message.nil?
+          if !message.nil?
+            results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", "#{previous_line}#{err.strip}")
+            last_was_error_line = true
+          end
 
           /^ERROR: (?<message>.*)/ =~ err
-          results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", message) if !message.nil?
+          if !message.nil?
+            results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", "#{previous_line}#{err.strip}")
+            last_was_error_line = true
+          end
 
           /^WARNING: (?<message>.*)/ =~ err
-          results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "warning", message) if !message.nil?
+          if !message.nil?
+            results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "warning", "#{previous_line}#{err.strip}")
+            last_was_error_line = true
+          end
 
 
           /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(\S+\):$/ =~ err
@@ -194,6 +222,11 @@ module ResultsProcessor
 
           msg << err
         end
+      end
+
+      previous_line = err.strip
+      if previous_line != ""
+        previous_line += "; "
       end
     }
 
