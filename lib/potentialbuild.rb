@@ -214,11 +214,11 @@ class PotentialBuild
         stdout, stderr, result = run_with_timeout(env, cmd, 60*60*6)
       end
 
-      stdout.encode('UTF-8',:invalid=>:replace).split("\n").each { |l| 
+      stdout.encode('UTF-8',:invalid=>:replace, undef: :replace, replace: '').split("\n").each { |l| 
         $logger.debug("cmd: #{cmd}: stdout: #{l}")
       }
 
-      stderr.encode('UTF-8',:invalid=>:replace).split("\n").each { |l| 
+      stderr.encode('UTF-8',:invalid=>:replace, undef: :replace, replace: '').split("\n").each { |l| 
         $logger.info("cmd: #{cmd}: stderr: #{l}")
       }
 
