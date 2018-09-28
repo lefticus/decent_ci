@@ -206,8 +206,8 @@ class PotentialBuild
     allresult = 0
 
     commands.each { |cmd|
-      if @config.os == "Windows"
-        $logger.warn "Unable to set timeout for process execution on windows"
+      if @config.os == 'Windows'
+        $logger.warn 'Unable to set timeout for process execution on windows'
         stdout, stderr, result = Open3::capture3(env, cmd)
       else
         # allow up to 6 hours
@@ -215,7 +215,7 @@ class PotentialBuild
       end
 
       begin
-        stdout.encode('UTF-8',:invalid=>:replace, undef: :replace, replace: '').split("\n").each { |l|
+        stdout.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split("\n").each { |l|
           $logger.debug("cmd: #{cmd}: stdout: #{l}")
         }
       rescue
@@ -223,7 +223,7 @@ class PotentialBuild
       end
 
       begin
-        stderr.encode('UTF-8',:invalid=>:replace, undef: :replace, replace: '').split("\n").each { |l|
+        stderr.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split("\n").each { |l|
           $logger.info("cmd: #{cmd}: stderr: #{l}")
         }
       rescue
