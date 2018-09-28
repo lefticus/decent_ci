@@ -206,21 +206,29 @@ class PotentialBuild
     allresult = 0
 
     commands.each { |cmd|
-      if @config.os == "Windows"
-        $logger.warn "Unable to set timeout for process execution on windows"
+      if @config.os == 'Windows'
+        $logger.warn 'Unable to set timeout for process execution on windows'
         stdout, stderr, result = Open3::capture3(env, cmd)
       else
         # allow up to 6 hours
         stdout, stderr, result = run_with_timeout(env, cmd, 60*60*6)
       end
 
-      stdout.encode('UTF-8',:invalid=>:replace).split("\n").each { |l| 
-        $logger.debug("cmd: #{cmd}: stdout: #{l}")
-      }
+      begin
+        stdout.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split("\n").each { |l|
+          $logger.debug("cmd: #{cmd}: stdout: #{l}")
+        }
+      rescue
+        $logger.debug("ERROR cmd: #{cmd}: stdout could not be parsed due to an encoding problem")
+      end
 
-      stderr.encode('UTF-8',:invalid=>:replace).split("\n").each { |l| 
-        $logger.info("cmd: #{cmd}: stderr: #{l}")
-      }
+      begin
+        stderr.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split("\n").each { |l|
+          $logger.info("cmd: #{cmd}: stderr: #{l}")
+        }
+      rescue
+        $logger.debug("ERROR cmd: #{cmd}: stderr could not be parsed due to an encoding problem")
+      end
 
       if cmd != commands.last && result != 0
         $logger.error("Error running script command: #{stderr}")
