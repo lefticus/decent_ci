@@ -1,4 +1,3 @@
-
 def github_check_ratelimit(headers)
   ratelimit = headers["x-ratelimit-limit"].to_i
   ratelimit_remaining = headers["x-ratelimit-remaining"].to_i

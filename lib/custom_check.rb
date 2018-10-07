@@ -6,10 +6,10 @@ module CustomCheck
 
     result = true
 
-    compiler[:commands].each{ |command|
+    compiler[:commands].each {|command|
       compiler_flags = "#{build_dir}"
       out, err, result = run_script(
-        ["cd #{src_dir} && #{command} #{compiler_flags}"])
+          ["cd #{src_dir} && #{command} #{compiler_flags}"])
 
 
       # expected fields to be read: "tool", "file", "line", "column" (optional), "message_type", "message", "id" (optional)

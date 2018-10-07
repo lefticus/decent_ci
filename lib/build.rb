@@ -21,26 +21,26 @@ require_relative 'github.rb'
 #
 class Build
   def initialize(token, repository, max_age)
-    @client = Octokit::Client.new(:access_token=>token)
+    @client = Octokit::Client.new(:access_token => token)
     @token = token
     @repository = repository
-    @user = github_query(@client) { @client.user }
-    github_query(@client) { @user.login }
+    @user = github_query(@client) {@client.user}
+    github_query(@client) {@user.login}
     @potential_builds = []
     @max_age = max_age
 
     github_check_ratelimit(@client.last_response.headers);
-   end
+  end
 
   def query_releases
-    releases = github_query(@client) { @client.releases(@repository) }
+    releases = github_query(@client) {@client.releases(@repository)}
 
-    releases.each { |r|
-      begin 
+    releases.each {|r|
+      begin
         days = (DateTime.now() - DateTime.parse(r.published_at.to_s)).round()
         if days <= @max_age
           @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
-        else 
+        else
           $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{r.tag_name}");
         end
       rescue => e
@@ -51,11 +51,11 @@ class Build
 
   def query_branches
     # todo properly handle paginated results from github
-    branches = github_query(@client) { @client.branches(@repository, :per_page => 100) }
+    branches = github_query(@client) {@client.branches(@repository, :per_page => 100)}
 
-    branches.each { |b| 
+    branches.each {|b|
       $logger.debug("Querying potential build: #{b.name}")
-      branch_details = github_query(@client) { @client.branch(@repository, b.name) }
+      branch_details = github_query(@client) {@client.branch(@repository, b.name)}
       begin
         days = (DateTime.now() - DateTime.parse(branch_details.commit.commit.author.date.to_s)).round()
         if days <= @max_age
@@ -83,14 +83,14 @@ class Build
   # note, only builds 'external' pull_requests. Internal ones would have already
   # been built as a branch
   def query_pull_requests
-    pull_requests = github_query(@client) { @client.pull_requests(@repository, :state=>"open") }
+    pull_requests = github_query(@client) {@client.pull_requests(@repository, :state => "open")}
 
     @pull_request_details = []
 
 
-    pull_requests.each { |p| 
+    pull_requests.each {|p|
 
-      issue = github_query(@client) { @client.issue(@repository, p.number) }
+      issue = github_query(@client) {@client.issue(@repository, p.number)}
 
       $logger.debug("Issue loaded: #{issue}")
 
@@ -128,7 +128,7 @@ class Build
         $logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
       end
 
-      @pull_request_details << { :id => p.number, :creator => p.user.login, :owner => (issue.assignee ? issue.assignee.login : nil), :last_updated => issue.updated_at, :repo => @repository, :notification_users => notification_users, :aging_pull_requests_notification => aging_pull_requests_notification, :aging_pull_requests_numdays => aging_pull_requests_numdays }
+      @pull_request_details << {:id => p.number, :creator => p.user.login, :owner => (issue.assignee ? issue.assignee.login : nil), :last_updated => issue.updated_at, :repo => @repository, :notification_users => notification_users, :aging_pull_requests_notification => aging_pull_requests_notification, :aging_pull_requests_numdays => aging_pull_requests_numdays}
     }
   end
 
@@ -155,7 +155,7 @@ class Build
       return nil
     end
 
-    @potential_builds.each { |p|
+    @potential_builds.each {|p|
       if p.branch_name == baseline
         return p
       end
@@ -169,25 +169,25 @@ class Build
   end
 
   def needs_daily_task(results_repo, results_path)
-    begin 
+    begin
       dateprefix = DateTime.now.utc.strftime("%F")
-      document = 
-<<-eos
+      document =
+          <<-eos
 ---
 title: #{dateprefix} Daily Task
 tags: daily_task
 date: #{DateTime.now.utc.strftime("%F %T")}
 repository: #{@repository}
 machine_name: #{Socket.gethostname}
-machine_ip: #{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}
+machine_ip: #{Socket.ip_address_list.find {|ai| ai.ipv4? && !ai.ipv4_loopback?}.ip_address}
 ---
 
-eos
+      eos
 
-      response = github_query(@client) { @client.create_contents(results_repo,
-                                                          "#{results_path}/#{dateprefix}-DailyTaskRun",
-                                                          "Commit daily task run file: #{dateprefix}-DailyTaskRun",
-                                                          document) } 
+      response = github_query(@client) {@client.create_contents(results_repo,
+                                                                "#{results_path}/#{dateprefix}-DailyTaskRun",
+                                                                "Commit daily task run file: #{dateprefix}-DailyTaskRun",
+                                                                document)}
 
       $logger.info("Daily task document sha: #{response.content.sha}")
       return true
@@ -205,7 +205,7 @@ eos
 
   def results_repositories
     s = Set.new()
-    @potential_builds.each { |p|
+    @potential_builds.each {|p|
       if !p.is_pull_request
         s << [p.configuration.repository, p.configuration.results_repository, p.configuration.results_path]
       end

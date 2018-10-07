@@ -38,11 +38,11 @@ class PotentialBuild
   attr_reader :commit_sha
   attr_reader :branch_name
 
-  def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, 
+  def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets,
                  pull_id, pull_request_base_repository, pull_request_base_ref)
     @client = client
     @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name), !release_url.nil?)
-    @config.repository_name = github_query(@client) { @client.repo(repository).name }
+    @config.repository_name = github_query(@client) {@client.repo(repository).name}
     @config.repository = repository
     @config.token = token
     @repository = repository
@@ -152,7 +152,7 @@ class PotentialBuild
   #
   # If you've got a cleaner way of doing this, I'd be interested to see it.
   # If you think you can do it with Ruby's Timeout module, think again.
-  def run_with_timeout(env, command, timeout=60*60*4, tick=2)
+  def run_with_timeout(env, command, timeout = 60 * 60 * 4, tick = 2)
     out = ""
     err = ""
     begin
@@ -168,10 +168,10 @@ class PotentialBuild
         # Try to read the data
         begin
           if !rs.nil?
-            rs.each { |r|
+            rs.each {|r|
               if r == stdout
                 out << stdout.read_nonblock(4096)
-              elsif r == stderr 
+              elsif r == stderr
                 err << stderr.read_nonblock(4096)
               end
             }
@@ -200,25 +200,25 @@ class PotentialBuild
     return out.force_encoding("UTF-8"), err.force_encoding("UTF-8"), thread.value
   end
 
-  def run_script(commands, env={})
+  def run_script(commands, env = {})
     allout = ""
-    allerr = "" 
+    allerr = ""
     allresult = 0
 
-    commands.each { |cmd|
+    commands.each {|cmd|
       if @config.os == "Windows"
         $logger.warn "Unable to set timeout for process execution on windows"
         stdout, stderr, result = Open3::capture3(env, cmd)
       else
         # allow up to 6 hours
-        stdout, stderr, result = run_with_timeout(env, cmd, 60*60*6)
+        stdout, stderr, result = run_with_timeout(env, cmd, 60 * 60 * 6)
       end
 
-      stdout.encode('UTF-8',:invalid=>:replace).split("\n").each { |l| 
+      stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|l|
         $logger.debug("cmd: #{cmd}: stdout: #{l}")
       }
 
-      stderr.encode('UTF-8',:invalid=>:replace).split("\n").each { |l| 
+      stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|l|
         $logger.info("cmd: #{cmd}: stderr: #{l}")
       }
 
@@ -234,7 +234,7 @@ class PotentialBuild
         allresult += result.exitstatus
       else
         # any old failure result will do
-        allresult = 1 
+        allresult = 1
       end
     }
 
@@ -288,17 +288,17 @@ class PotentialBuild
 
     if @config.pull_id.nil?
       out, err, result = run_script(
-        ["cd #{src_dir} && git init",
-         "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} \"#{@refspec}\"" ])
+          ["cd #{src_dir} && git init",
+           "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} \"#{@refspec}\""])
 
       if !@commit_sha.nil? && @commit_sha != "" && result == 0
-        out, err, result = run_script( ["cd #{src_dir} && git checkout #{@commit_sha}"] );
+        out, err, result = run_script(["cd #{src_dir} && git checkout #{@commit_sha}"]);
       end
-    else 
+    else
       out, err, result = run_script(
-        ["cd #{src_dir} && git init",
-         "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} refs/pull/#{@config.pull_id}/head",
-         "cd #{src_dir} && git checkout FETCH_HEAD" ])
+          ["cd #{src_dir} && git init",
+           "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} refs/pull/#{@config.pull_id}/head",
+           "cd #{src_dir} && git checkout FETCH_HEAD"])
     end
 
     return result == 0
@@ -328,7 +328,7 @@ class PotentialBuild
         s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
 
         out, err, result = run_script(
-          ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html coverage"])
+            ["#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html coverage"])
 
         @coverage_url = out
       end
@@ -344,7 +344,7 @@ class PotentialBuild
       s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
 
       out, err, result = run_script(
-        ["#{s3_script} #{compiler[:s3_upload_bucket]} #{get_full_build_name(compiler)} #{build_dir}/#{compiler[:s3_upload]} assets"])
+          ["#{s3_script} #{compiler[:s3_upload_bucket]} #{get_full_build_name(compiler)} #{build_dir}/#{compiler[:s3_upload]} assets"])
 
       @asset_url = out
     end
@@ -364,7 +364,7 @@ class PotentialBuild
 
       if compiler[:release_build_enable_pgo]
         $logger.info("Release build PGO enabled, starting training build")
-        build_succeeded = do_build compiler, regression_baseline, {:training => true, :release=>false}
+        build_succeeded = do_build compiler, regression_baseline, {:training => true, :release => false}
         $logger.info("Release build PGO enabled, starting training tests")
         do_test compiler, regression_baseline, {:training => true}
         $logger.info("Release build PGO enabled, starting final build")
@@ -397,17 +397,17 @@ class PotentialBuild
     return true if @test_run
 
     file_names = []
-    begin 
-      files = github_query(@client) { @client.content @config.results_repository, :path=>"#{@config.results_path}/#{get_branch_folder()}" }
+    begin
+      files = github_query(@client) {@client.content @config.results_repository, :path => "#{@config.results_path}/#{get_branch_folder()}"}
 
-      files.each { |f|
+      files.each {|f|
         file_names << f.name
       }
     rescue Octokit::NotFound => e
       # repository doesn't have a _posts folder yet
     end
 
-    file_names.each{ |f|
+    file_names.each {|f|
       return false if f.end_with? results_file_name(compiler)
     }
 
@@ -417,7 +417,7 @@ class PotentialBuild
 
   def get_initials(str)
     # extracts just the initials from the string
-    str.gsub(/[^A-Z0-9\.\-a-z_+]/, '').gsub(/[_\-+]./){ |s| s[1].upcase }.sub(/./){|s| s.upcase}.gsub(/[^A-Z0-9\.]/, '')
+    str.gsub(/[^A-Z0-9\.\-a-z_+]/, '').gsub(/[_\-+]./) {|s| s[1].upcase}.sub(/./) {|s| s.upcase}.gsub(/[^A-Z0-9\.]/, '')
   end
 
   def add_dashes(str)
@@ -425,13 +425,13 @@ class PotentialBuild
   end
 
   def get_short_form(str)
-    if str.nil? 
+    if str.nil?
       return nil
     end
 
     if str.length <= 10 && str =~ /[a-zA-Z]/
       return str
-    elsif ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/ || str =~ /.*\+.*/ )
+    elsif ((str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/ || str =~ /.*\+.*/)
       return add_dashes(get_initials(str))
     else
       return str.gsub(/[^a-zA-Z0-9\.+_]/, '')
@@ -465,14 +465,14 @@ class PotentialBuild
   end
 
 
-  def do_build(compiler, regression_baseline, flags={:training => false, :release => false} )
+  def do_build(compiler, regression_baseline, flags = {:training => false, :release => false})
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
 
     add_created_dir src_dir
     add_created_dir build_dir
 
-    checkout_succeeded  = checkout src_dir
+    checkout_succeeded = checkout src_dir
 
     if compiler[:name] == "custom_check"
       start_time = Time.now
@@ -500,7 +500,7 @@ class PotentialBuild
     end
   end
 
-  def do_test(compiler, regression_baseline, flags={:training => false} )
+  def do_test(compiler, regression_baseline, flags = {:training => false})
     src_dir = get_src_dir compiler
     build_dir = get_build_dir compiler
 
@@ -515,7 +515,7 @@ class PotentialBuild
       when "cmake"
         start_time = Time.now
         if !ENV["DECENT_CI_SKIP_TEST"]
-          cmake_test compiler, src_dir, build_dir, compiler[:build_type], flags if build_succeeded 
+          cmake_test compiler, src_dir, build_dir, compiler[:build_type], flags if build_succeeded
         else
           $logger.debug("Skipping test, DECENT_CI_SKIP_TEST is set in the environment")
         end
@@ -543,7 +543,6 @@ class PotentialBuild
     FileUtils.mkdir_p regression_dir
 
 
-
     if !@config.regression_repository.nil?
       if !@config.regression_commit_sha.nil? && @config.regression_commit_sha != ""
         refspec = @config.regression_commit_sha
@@ -554,9 +553,9 @@ class PotentialBuild
       end
 
       out, err, result = run_script(
-        ["cd #{regression_dir} && git init",
-         "cd #{regression_dir} && git fetch https://#{@config.token}@github.com/#{@config.regression_repository} #{refspec}",
-         "cd #{regression_dir} && git checkout FETCH_HEAD"]
+          ["cd #{regression_dir} && git init",
+           "cd #{regression_dir} && git fetch https://#{@config.token}@github.com/#{@config.regression_repository} #{refspec}",
+           "cd #{regression_dir} && git checkout FETCH_HEAD"]
       )
     end
 
@@ -574,7 +573,7 @@ class PotentialBuild
     script << @config.regression_script
     script.flatten!
 
-    script.map! { |line|
+    script.map! {|line|
       line = "cd #{regression_dir} && #{line}"
     }
 
@@ -584,9 +583,9 @@ class PotentialBuild
     if !script.empty?
       start_time = Time.now
 
-      out,err,result = run_script(script, {"REGRESSION_NUM_PROCESSES"=>compiler[:num_parallel_builds].to_s, "REGRESSION_BASE"=>build_dir_1, "REGRESSION_MOD"=>build_dir_2, "REGRESSION_BASE_SRC"=>src_dir_1, "REGRESSION_MOD_SRC"=>src_dir_2})
+      out, err, result = run_script(script, {"REGRESSION_NUM_PROCESSES" => compiler[:num_parallel_builds].to_s, "REGRESSION_BASE" => build_dir_1, "REGRESSION_MOD" => build_dir_2, "REGRESSION_BASE_SRC" => src_dir_1, "REGRESSION_MOD_SRC" => src_dir_2})
 
-      results = process_regression_results out,err,result
+      results = process_regression_results out, err, result
       if @test_results.nil?
         @test_results = results
       else
@@ -612,15 +611,14 @@ class PotentialBuild
 
   def inspect
     hash = {}
-    instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var) }
+    instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var)}
     return hash
   end
 
 
-
   def clean_up compiler
     if !@test_run && !@keep_build_folder
-      @created_dirs.each { |d|
+      @created_dirs.each {|d|
         try_hard_to_remove_dir d
       }
     end
@@ -628,7 +626,7 @@ class PotentialBuild
 
   def clean_up_regressions compiler
     if !@test_run && !@keep_build_folder
-      @created_regression_dirs.each { |d|
+      @created_regression_dirs.each {|d|
         try_hard_to_remove_dir d
       }
     end
@@ -686,7 +684,7 @@ class PotentialBuild
     called_function_name = nil
     called_functions = Hash.new()
 
-    IO.foreach(file) { |line|
+    IO.foreach(file) {|line|
       if /^(?<field>[a-z]+): (?<data>.*)/ =~ line then
         if field == "totals" then
           props[field] = data.to_i
@@ -715,7 +713,7 @@ class PotentialBuild
           sfile = called_source_file.nil? ? source_file : called_source_file
 
           if called_functions[[ofile, sfile, called_function_name]].nil? then
-            called_functions[[ofile, sfile, called_function_name]] = { "count" => 0, "cost" => 0 }
+            called_functions[[ofile, sfile, called_function_name]] = {"count" => 0, "cost" => 0}
           end
 
           called_functions[[ofile, sfile, called_function_name]]["count"] += call_count.to_i
@@ -734,36 +732,33 @@ class PotentialBuild
 
     props["object_files"] = Array.new()
 
-    object_files.values.each { |file|
+    object_files.values.each {|file|
       abs_path = File.absolute_path(file, build_dir)
       if abs_path.start_with?(File.absolute_path(build_dir)) && File.exists?(abs_path) then
         # is in subdir?
         $logger.info("Path: #{abs_path}  build_dir #{build_dir}")
-        props["object_files"] << {"name"=>Pathname.new(abs_path).relative_path_from(Pathname.new(build_dir)).to_s, "size" => File.size(abs_path) };
+        props["object_files"] << {"name" => Pathname.new(abs_path).relative_path_from(Pathname.new(build_dir)).to_s, "size" => File.size(abs_path)};
       end
     }
 
 
-    most_expensive = called_functions.sort_by { |k,v| v["cost"] }.reverse.slice(0,50);
-    most_called = called_functions.sort_by { |k,v| v["count"] }.reverse.slice(0,50);
+    most_expensive = called_functions.sort_by {|k, v| v["cost"]}.reverse.slice(0, 50);
+    most_called = called_functions.sort_by {|k, v| v["count"]}.reverse.slice(0, 50);
 
 
-    important_functions = Hash[most_expensive].merge(Hash[most_called]).collect { |k, v| {"object_file"=>k[0], "source_file"=>k[1], "function_name"=>k[2]}.merge(v) }
+    important_functions = Hash[most_expensive].merge(Hash[most_called]).collect {|k, v| {"object_file" => k[0], "source_file" => k[1], "function_name" => k[2]}.merge(v)}
 
     return props.merge({"data" => important_functions})
 
   end
 
 
-
-
-
   def collect_performance_results compiler
     build_dir = File.absolute_path(get_build_dir(compiler))
 
-    results = {"object_files" => [], "test_files"=>[]}
+    results = {"object_files" => [], "test_files" => []}
 
-    Dir[build_dir + '/**/callgrind.*'].each{ |file|
+    Dir[build_dir + '/**/callgrind.*'].each {|file|
       performance_test_name = file.sub(/.*callgrind\./, '');
       callgrind_output = parse_callgrind(build_dir, file)
       object_files = callgrind_output.delete("object_files")
@@ -798,8 +793,8 @@ class PotentialBuild
         while try_num < num_tries && !succeeded && !fatal_failure
           response = nil
 
-          begin 
-            response = github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type=>compiler[:package_mimetype], :name=>asset_name) }
+          begin
+            response = github_query(@client) {@client.upload_asset(@release_url, @package_location, :content_type => compiler[:package_mimetype], :name => asset_name)}
           rescue => e
             if try_num == 0 && e.to_s.include?("already_exists")
               $logger.error("already_exists error on 0th attempt, fatal, we shall not overwrite existing upload");
@@ -827,9 +822,9 @@ class PotentialBuild
 
             if asset_url.nil?
               $logger.error("nil response, attempting to find release url");
-              assets = github_query(@client) { @client.release_assets(@release_url) }
+              assets = github_query(@client) {@client.release_assets(@release_url)}
 
-              assets.each { |a|
+              assets.each {|a|
                 if a.name == asset_name
                   asset_url = a.url
                   break
@@ -844,8 +839,8 @@ class PotentialBuild
             if asset_url
               $logger.error("Deleting existing asset_url and trying again #{asset_url}");
               @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to upload release asset, deleting and trying again. #{asset_url}\nDuring attempt #{try_num}")
-              begin 
-                response = github_query(@client) { @client.delete_release_asset(asset_url) }
+              begin
+                response = github_query(@client) {@client.delete_release_asset(asset_url)}
               rescue => e
                 $logger.error("Error deleting failed asset, continuing to next try #{e}")
                 @package_results << CodeMessage.new("CMakeLists.txt", 1, 0, "warning", "Error while attempting to delete failed release asset upload.\nDuring attempt #{try_num}\nRelease asset #{e.to_s}")
@@ -870,10 +865,10 @@ class PotentialBuild
     test_results_total = 0
     test_results_warning = 0
 
-    test_results_failure_counts= {}
+    test_results_failure_counts = {}
 
     if !@test_results.nil?
-      @test_results.each { |t| 
+      @test_results.each {|t|
         test_results_total += 1
         test_results_passed += 1 if t.passed
         test_results_warning += 1 if t.warning
@@ -903,7 +898,7 @@ class PotentialBuild
     build_results_data = []
 
     if !@build_results.nil?
-      @build_results.each { |b|
+      @build_results.each {|b|
         build_errors += 1 if b.is_error
         build_results_data << b.inspect
       }
@@ -916,7 +911,7 @@ class PotentialBuild
     package_results_data = []
 
     if !@package_results.nil?
-      @package_results.each { |b|
+      @package_results.each {|b|
         package_errors += 1 if b.is_error
         package_warnings += 1 if b.is_warning
 
@@ -930,7 +925,7 @@ class PotentialBuild
     if !@performance_results.nil?
       performance_total_time = 0
 
-      @performance_results["test_files"].each{ |v|
+      @performance_results["test_files"].each {|v|
         performance_test_count += 1
         if !v["totals"].nil?
           performance_total_time += v["totals"]
@@ -939,75 +934,75 @@ class PotentialBuild
     end
 
     yaml_data = {
-      "title"=>build_base_name(compiler),
-      "permalink"=>"#{build_base_name(compiler)}.html",
-      "tags"=>"data",
-      "layout"=>"ci_results",
-      "date" => DateTime.now.utc.strftime("%F %T"),
-      "unhandled_failure"=>!@failure.nil?,
-      "build_error_count"=>build_errors,
-      "build_warning_count"=>build_warnings,
-      "package_error_count"=>package_errors,
-      "package_warning_count"=>package_warnings,
-      "test_count"=>test_results_total,
-      "test_passed_count"=>test_results_passed,
-      "repository"=>@repository,
-      "compiler"=>compiler[:name],
-      "compiler_version"=>compiler[:version],
-      "architecture"=>compiler[:architecture],
-      "os"=>@config.os,
-      "os_release"=>@config.os_release,
-      "is_release"=>is_release,
-      "release_packaged"=>(!@package_location.nil?),
-      "packaging_skipped"=>compiler[:skip_packaging],
-      "package_name"=>@package_location.nil? ? nil : Pathname.new(@package_location).basename,
-      "tag_name"=>@tag_name,
-      "commit_sha"=>@commit_sha,
-      "branch_name"=>@branch_name,
-      "test_run"=>!@test_results.nil?,
-      "pull_request_issue_id"=>"#{pull_request_issue_id}",
-      "pull_request_base_repository"=>"#{@pull_request_base_repository}",
-      "pull_request_base_ref"=>"#{@pull_request_base_ref}",
-      "device_id"=>"#{device_id compiler}",
-      "pending"=>pending,
-      "analyze_only"=>compiler[:analyze_only],
-      "build_time"=>@build_time,
-      "test_time"=>@test_time,
-      "package_time"=>@package_time,
-      "install_time"=>@install_time,
-      "results_repository"=>"#{@config.results_repository}",
-      "machine_name"=>"#{Socket.gethostname}",
-      "machine_ip"=>"#{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}",
-      "test_pass_limit"=>@config.test_pass_limit,
-      "test_warn_limit"=>@config.test_warn_limit,
-      "coverage_enabled"=>compiler[:coverage_enabled],
-      "coverage_pass_limit"=>compiler[:coverage_pass_limit],
-      "coverage_warn_limit"=>compiler[:coverage_warn_limit],
-      "coverage_lines"=>@coverage_lines,
-      "coverage_total_lines"=>@coverage_total_lines,
-      "coverage_functions"=>@coverage_functions,
-      "coverage_total_functions"=>@coverage_total_functions,
-      "coverage_url"=>@coverage_url,
-      "asset_url"=>@asset_url,
-      "performance_total_time"=>performance_total_time,
-      "performance_test_count"=>performance_test_count
+        "title" => build_base_name(compiler),
+        "permalink" => "#{build_base_name(compiler)}.html",
+        "tags" => "data",
+        "layout" => "ci_results",
+        "date" => DateTime.now.utc.strftime("%F %T"),
+        "unhandled_failure" => !@failure.nil?,
+        "build_error_count" => build_errors,
+        "build_warning_count" => build_warnings,
+        "package_error_count" => package_errors,
+        "package_warning_count" => package_warnings,
+        "test_count" => test_results_total,
+        "test_passed_count" => test_results_passed,
+        "repository" => @repository,
+        "compiler" => compiler[:name],
+        "compiler_version" => compiler[:version],
+        "architecture" => compiler[:architecture],
+        "os" => @config.os,
+        "os_release" => @config.os_release,
+        "is_release" => is_release,
+        "release_packaged" => (!@package_location.nil?),
+        "packaging_skipped" => compiler[:skip_packaging],
+        "package_name" => @package_location.nil? ? nil : Pathname.new(@package_location).basename,
+        "tag_name" => @tag_name,
+        "commit_sha" => @commit_sha,
+        "branch_name" => @branch_name,
+        "test_run" => !@test_results.nil?,
+        "pull_request_issue_id" => "#{pull_request_issue_id}",
+        "pull_request_base_repository" => "#{@pull_request_base_repository}",
+        "pull_request_base_ref" => "#{@pull_request_base_ref}",
+        "device_id" => "#{device_id compiler}",
+        "pending" => pending,
+        "analyze_only" => compiler[:analyze_only],
+        "build_time" => @build_time,
+        "test_time" => @test_time,
+        "package_time" => @package_time,
+        "install_time" => @install_time,
+        "results_repository" => "#{@config.results_repository}",
+        "machine_name" => "#{Socket.gethostname}",
+        "machine_ip" => "#{Socket.ip_address_list.find {|ai| ai.ipv4? && !ai.ipv4_loopback?}.ip_address}",
+        "test_pass_limit" => @config.test_pass_limit,
+        "test_warn_limit" => @config.test_warn_limit,
+        "coverage_enabled" => compiler[:coverage_enabled],
+        "coverage_pass_limit" => compiler[:coverage_pass_limit],
+        "coverage_warn_limit" => compiler[:coverage_warn_limit],
+        "coverage_lines" => @coverage_lines,
+        "coverage_total_lines" => @coverage_total_lines,
+        "coverage_functions" => @coverage_functions,
+        "coverage_total_functions" => @coverage_total_functions,
+        "coverage_url" => @coverage_url,
+        "asset_url" => @asset_url,
+        "performance_total_time" => performance_total_time,
+        "performance_test_count" => performance_test_count
     }
 
     json_data = {
-      "build_results"=>build_results_data, 
-      "test_results"=>test_results_data, 
-      "failure" => @failure, 
-      "package_results"=>package_results_data,
-      "configuration"=>yaml_data,
-      "performance_results"=>@performance_results
+        "build_results" => build_results_data,
+        "test_results" => test_results_data,
+        "failure" => @failure,
+        "package_results" => package_results_data,
+        "configuration" => yaml_data,
+        "performance_results" => @performance_results
     }
 
-    json_document = 
-<<-eos
+    json_document =
+        <<-eos
 #{yaml_data.to_yaml}
 ---
 #{JSON.pretty_generate(json_data)}
-eos
+    eos
 
 
     test_failed = false
@@ -1018,7 +1013,7 @@ eos
     else
       if test_results_total == 0
         test_percent = 100.0
-      else 
+      else
         test_percent = (test_results_passed.to_f / test_results_total.to_f) * 100.0
       end
 
@@ -1035,11 +1030,10 @@ eos
 
     test_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Test Badge](http://img.shields.io/badge/tests%20passed-#{test_string}-#{test_color}.png)</a>"
 
-    if compiler[:analyze_only] 
+    if compiler[:analyze_only]
       test_failed = false
       test_badge = ""
     end
-
 
 
     build_failed = false
@@ -1071,7 +1065,7 @@ eos
         coverage_color = "green"
       elsif coverage_percent >= compiler[:coverage_warn_limit]
         coverage_color = "yellow"
-      else 
+      else
         coverage_color = "red"
         coverage_failed = true
       end
@@ -1083,7 +1077,7 @@ eos
     failed = build_failed || test_failed || coverage_failed || !@failure.nil?
     github_status = pending ? "pending" : (failed ? "failure" : "success")
 
-    if pending 
+    if pending
       github_status_message = "Build Pending"
     else
       if build_failed
@@ -1098,15 +1092,15 @@ eos
     end
 
     message_counts = Hash.new(0)
-    @test_messages.each { |x| 
+    @test_messages.each {|x|
       message_counts[x.message] += 1
     }
 
     $logger.debug("Message counts loaded: #{message_counts}")
 
     message_counts_str = ""
-    message_counts.each{ |message, count|
-      if count > 1 
+    message_counts.each {|message, count|
+      if count > 1
         message_counts_str += " * #{count} tests had: #{message}\n"
       else
         message_counts_str += " * 1 test had: #{message}\n"
@@ -1116,35 +1110,35 @@ eos
     $logger.debug("Message counts string: #{message_counts_str}")
 
     test_results_failure_counts_str = ""
-    test_results_failure_counts.sort{ |a, b| a[0].casecmp(b[0]) }.each{ |category, value|
+    test_results_failure_counts.sort {|a, b| a[0].casecmp(b[0])}.each {|category, value|
 
       if value.size > 1
         test_results_failure_counts_str += "\n#{category} Test Summary\n"
 
-        value.sort{ |a, b| (a[0] == "Passed"? -1 : (b[0] == "Passed" ? 1 : a[0].casecmp(b[0]))) }.each { |failure, count| 
-          test_results_failure_counts_str += " * #{failure}: #{count}\n" 
+        value.sort {|a, b| (a[0] == "Passed" ? -1 : (b[0] == "Passed" ? 1 : a[0].casecmp(b[0])))}.each {|failure, count|
+          test_results_failure_counts_str += " * #{failure}: #{count}\n"
         }
       end
     }
 
 
-    if !@failure.nil?    
-      github_document = 
-<<-eos
+    if !@failure.nil?
+      github_document =
+          <<-eos
 <a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>Unhandled Failure</a>
-eos
+      eos
     else
-      github_document = 
-<<-eos
+      github_document =
+          <<-eos
 #{@refspec} (#{@author}) - #{device_id compiler}: #{github_status_message}
 
-#{message_counts_str == "" ? "" : "Messages:\n"}
-#{message_counts_str}
-#{test_results_failure_counts_str == "" ? "" : "Failures:\n"}
-#{test_results_failure_counts_str}
+      #{message_counts_str == "" ? "" : "Messages:\n"}
+      #{message_counts_str}
+      #{test_results_failure_counts_str == "" ? "" : "Failures:\n"}
+      #{test_results_failure_counts_str}
 
-#{build_badge} #{test_badge} #{coverage_badge}
-eos
+      #{build_badge} #{test_badge} #{coverage_badge}
+      eos
 
 
     end
@@ -1153,10 +1147,10 @@ eos
       begin
         if pending
           $logger.info("Posting pending results file");
-          response =  github_query(@client) { @client.create_contents(@config.results_repository,
-                                             "#{@config.results_path}/#{get_branch_folder()}/#{@dateprefix}-#{results_file_name compiler}",
-                                             "#{Socket.gethostname}: Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}", 
-                                             json_document) }
+          response = github_query(@client) {@client.create_contents(@config.results_repository,
+                                                                    "#{@config.results_path}/#{get_branch_folder()}/#{@dateprefix}-#{results_file_name compiler}",
+                                                                    "#{Socket.gethostname}: Commit initial build results file: #{@dateprefix}-#{results_file_name compiler}",
+                                                                    json_document)}
 
           $logger.debug("Results document sha set: #{response.content.sha}")
 
@@ -1168,11 +1162,11 @@ eos
           end
 
           $logger.info("Updating contents with sha #{@results_document_sha}")
-          response =  github_query(@client) { @client.update_contents(@config.results_repository,
-                                             "#{@config.results_path}/#{get_branch_folder()}/#{@dateprefix}-#{results_file_name compiler}",
-                                             "#{Socket.gethostname}: Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
-                                             @results_document_sha,
-                                             json_document) }
+          response = github_query(@client) {@client.update_contents(@config.results_repository,
+                                                                    "#{@config.results_path}/#{get_branch_folder()}/#{@dateprefix}-#{results_file_name compiler}",
+                                                                    "#{Socket.gethostname}: Commit final build results file: #{@dateprefix}-#{results_file_name compiler}",
+                                                                    @results_document_sha,
+                                                                    json_document)}
         end
       rescue => e
         $logger.error "Error creating / updating results contents file: #{e}"
@@ -1181,23 +1175,23 @@ eos
 
       if !pending && @config.post_results_comment
         if !@commit_sha.nil? && @repository == @config.repository
-          response = github_query(@client) { @client.create_commit_comment(@config.repository, @commit_sha, github_document) }
+          response = github_query(@client) {@client.create_commit_comment(@config.repository, @commit_sha, github_document)}
         elsif !pull_request_issue_id.nil?
-          response = github_query(@client) { @client.add_comment(@config.repository, pull_request_issue_id, github_document) }
+          response = github_query(@client) {@client.add_comment(@config.repository, pull_request_issue_id, github_document)}
         end
       end
 
       if !@commit_sha.nil? && @config.post_results_status
         if !@pull_request_base_repository.nil?
-          response = github_query(@client) { @client.create_status(@pull_request_base_repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message) }
+          response = github_query(@client) {@client.create_status(@pull_request_base_repository, @commit_sha, github_status, :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message)}
         else
-          response = github_query(@client) { @client.create_status(@config.repository, @commit_sha, github_status, :context=>device_id(compiler), :target_url=>"#{@config.results_base_url}/#{build_base_name compiler}.html", :description=>github_status_message) }
+          response = github_query(@client) {@client.create_status(@config.repository, @commit_sha, github_status, :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message)}
         end
       end
 
-    else 
-      File.open("#{@dateprefix}-#{results_file_name compiler}", "w+") { |f| f.write(json_document) }
-      File.open("#{@dateprefix}-COMMENT-#{results_file_name compiler}", "w+") { |f| f.write(github_document) }
+    else
+      File.open("#{@dateprefix}-#{results_file_name compiler}", "w+") {|f| f.write(json_document)}
+      File.open("#{@dateprefix}-COMMENT-#{results_file_name compiler}", "w+") {|f| f.write(github_document)}
     end
 
 
