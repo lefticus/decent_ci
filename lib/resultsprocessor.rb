@@ -90,7 +90,7 @@ module ResultsProcessor
   def process_regression_results(stdout, stderr, result)
     results = []
 
-    stdout.split("\n").each { |line|
+    stdout.encode('UTF-8',:invalid=>:replace).split("\n").each { |line|
       $logger.debug("Parsing regression line: #{line}")
       msg = parse_regression_line(line)
       if !msg.nil?
@@ -104,7 +104,7 @@ module ResultsProcessor
   def process_custom_check_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
 
-    stdout.split("\n").each { |line|
+    stdout.encode('UTF-8',:invalid=>:replace).split("\n").each { |line|
       $logger.debug("Parsing custom_check line: #{line}")
       msg = parse_custom_check_line(compiler, src_dir, build_dir, line)
       if !msg.nil?
@@ -122,7 +122,7 @@ module ResultsProcessor
   def process_cppcheck_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
 
-    stderr.split("\n").each { |line|
+    stderr.encode('UTF-8',:invalid=>:replace).split("\n").each { |line|
       $logger.debug("Parsing cppcheck line: #{line}")
       msg = parse_cppcheck_line(compiler, src_dir, build_dir, line)
       if !msg.nil?
@@ -148,7 +148,7 @@ module ResultsProcessor
     previous_line = ""
     last_was_error_line = false
 
-    stderr.split("\n").each{ |err|
+    stderr.encode('UTF-8',:invalid=>:replace).split("\n").each{ |err|
 
       # Append next line to the message context for a CMake error
       if last_was_error_line && !results.empty?
@@ -276,7 +276,7 @@ module ResultsProcessor
 
   def process_msvc_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
-    stdout.split("\n").each{ |err|
+    stdout.encode('UTF-8',:invalid=>:replace).split("\n").each{ |err|
       msg = parse_msvc_line(compiler, src_dir, build_dir, err)
       if !msg.nil?
         results << msg
@@ -310,7 +310,7 @@ module ResultsProcessor
     results = []
     linkerrmsg = nil
 
-    stderr.split("\n").each { |line|
+    stderr.encode('UTF-8',:invalid=>:replace).split("\n").each { |line|
       if !linkerrmsg.nil?
         if line =~ /^\s.*/
           linkerrmsg += "\n" + line
@@ -342,7 +342,7 @@ module ResultsProcessor
 
   def parse_error_messages compiler, src_dir, build_dir, output
     results = []
-    output.split("\n").each{ |l|
+    output.encode('UTF-8',:invalid=>:replace).split("\n").each{ |l|
       msg = parse_gcc_line(compiler, src_dir, build_dir, l)
       msg = parse_msvc_line(compiler, src_dir, build_dir, l) if msg.nil?
       msg = parse_generic_line(compiler, src_dir, build_dir, l) if msg.nil?
@@ -369,7 +369,7 @@ module ResultsProcessor
 
   def process_python_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
-    stdout.split("\n").each{ |err|
+    stdout.encode('UTF-8',:invalid=>:replace).split("\n").each{ |err|
       msg = parse_python_line(compiler, src_dir, build_dir, err)
       if !msg.nil?
         results << msg
@@ -378,7 +378,7 @@ module ResultsProcessor
     $logger.debug("stdout results: #{results}")
     @build_results.merge(results)
     results = []
-    stderr.split("\n").each{ |err|
+    stderr.encode('UTF-8',:invalid=>:replace).split("\n").each{ |err|
       msg = parse_python_line(compiler, src_dir, build_dir, err)
       if !msg.nil?
         results << msg
@@ -394,7 +394,7 @@ module ResultsProcessor
 
   def parse_package_names(output)
     results = []
-    output.split("\n").each { |l| 
+    output.encode('UTF-8',:invalid=>:replace).split("\n").each { |l|
       /CPack: - package: (?<filename>.*) generated./ =~ l
       results << filename if filename
     }
@@ -412,7 +412,7 @@ module ResultsProcessor
     total_functions = 0
     covered_functions = 0
 
-    out.split("\n").each{ |l|
+    out.encode('UTF-8',:invalid=>:replace).split("\n").each{ |l|
       /.*\((?<covered_lines_str>[0-9]+) of (?<total_lines_str>[0-9]+) lines.*/ =~ l
       covered_lines = covered_lines_str.to_i if !covered_lines_str.nil?
       total_lines = total_lines_str.to_i if !total_lines_str.nil?
