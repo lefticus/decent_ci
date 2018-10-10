@@ -1,0 +1,6 @@
+.idea
+.ruby-version
+*-results.html
+EnergyPlus*
+Gemfile.lock
+*.log

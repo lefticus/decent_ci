@@ -43,18 +43,18 @@ class TestResult
     parsed_errors_array = []
 
     if !@parsed_errors.nil?
-      @parsed_errors.each { |e|
+      @parsed_errors.each {|e|
         parsed_errors_array << e.inspect
       }
     end
 
     hash = {:name => @name,
-      :status => @status,
-      :time => @time,
-      :output => @output,
-      :parsed_errors => parsed_errors_array,
-      :failure_type => @failure_type
-      }
+            :status => @status,
+            :time => @time,
+            :output => @output,
+            :parsed_errors => parsed_errors_array,
+            :failure_type => @failure_type
+    }
     return hash
   end
 end
@@ -70,8 +70,8 @@ class TestMessage
 
   def inspect
     hash = {:name => @name,
-      :message => @message
-      }
+            :message => @message
+    }
     return hash
   end
 end

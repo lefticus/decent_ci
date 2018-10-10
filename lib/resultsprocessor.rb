@@ -11,7 +11,7 @@ module ResultsProcessor
       begin
         return Pathname.new("#{build_dir}/#{p}").realpath.relative_path_from(Pathname.new(get_src_dir compiler).realdirpath)
       rescue
-        begin 
+        begin
           return Pathname.new(p).realpath.relative_path_from(Pathname.new(get_src_dir compiler).realdirpath)
         rescue
           return Pathname.new(p)
@@ -23,21 +23,23 @@ module ResultsProcessor
   def recover_file_case(name)
     if RbConfig::CONFIG["target_os"] =~ /mingw|mswin/
       require 'win32api'
+
       def get_short_win32_filename(long_name)
         max_path = 1024
         short_name = " " * max_path
         lfn_size = Win32API.new("kernel32",
-                                "GetShortPathName", ['P','P','L'],'L').call(long_name, short_name, max_path)
-        return (1..max_path).include?(lfn_size) ? short_name[0..lfn_size-1] : long_name
+                                "GetShortPathName", ['P', 'P', 'L'], 'L').call(long_name, short_name, max_path)
+        return (1..max_path).include?(lfn_size) ? short_name[0..lfn_size - 1] : long_name
       end
 
       def get_long_win32_filename(short_name)
         max_path = 1024
         long_name = " " * max_path
         lfn_size = Win32API.new("kernel32",
-                                "GetLongPathName", ['P','P','L'],'L').call(short_name, long_name, max_path)
-        return (1..max_path).include?(lfn_size) ? long_name[0..lfn_size-1] : short_name
+                                "GetLongPathName", ['P', 'P', 'L'], 'L').call(short_name, long_name, max_path)
+        return (1..max_path).include?(lfn_size) ? long_name[0..lfn_size - 1] : short_name
       end
+
       return get_long_win32_filename(get_short_win32_filename(name))
     else
       return name
@@ -90,7 +92,7 @@ module ResultsProcessor
   def process_regression_results(stdout, stderr, result)
     results = []
 
-    stdout.split("\n").each { |line|
+    stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
       $logger.debug("Parsing regression line: #{line}")
       msg = parse_regression_line(line)
       if !msg.nil?
@@ -104,7 +106,7 @@ module ResultsProcessor
   def process_custom_check_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
 
-    stdout.split("\n").each { |line|
+    stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
       $logger.debug("Parsing custom_check line: #{line}")
       msg = parse_custom_check_line(compiler, src_dir, build_dir, line)
       if !msg.nil?
@@ -118,11 +120,10 @@ module ResultsProcessor
   end
 
 
-
   def process_cppcheck_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
 
-    stderr.split("\n").each { |line|
+    stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
       $logger.debug("Parsing cppcheck line: #{line}")
       msg = parse_cppcheck_line(compiler, src_dir, build_dir, line)
       if !msg.nil?
@@ -148,7 +149,7 @@ module ResultsProcessor
     previous_line = ""
     last_was_error_line = false
 
-    stderr.split("\n").each{ |err|
+    stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
 
       # Append next line to the message context for a CMake error
       if last_was_error_line && !results.empty?
@@ -170,10 +171,10 @@ module ResultsProcessor
         end
         file = nil
         line = nil
-        msg = "" 
+        msg = ""
         type = nil
       else
-        if file.nil? 
+        if file.nil?
           /^CPack Error: (?<message>.*)/ =~ err
           if !message.nil?
             results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", "#{previous_line}#{err.strip}")
@@ -235,7 +236,7 @@ module ResultsProcessor
       results << CodeMessage.new(relative_path(file, src_dir, build_dir, compiler), line, 0, type, msg)
     end
 
-    results.each { |r| 
+    results.each {|r|
       $logger.debug("CMake error message parsed: #{r.inspect}")
     }
 
@@ -276,7 +277,7 @@ module ResultsProcessor
 
   def process_msvc_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
-    stdout.split("\n").each{ |err|
+    stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
       msg = parse_msvc_line(compiler, src_dir, build_dir, err)
       if !msg.nil?
         results << msg
@@ -285,7 +286,7 @@ module ResultsProcessor
 
     @build_results.merge(results)
 
-    return result == 0 
+    return result == 0
   end
 
   def parse_gcc_line(compiler, src_path, build_path, line)
@@ -310,7 +311,7 @@ module ResultsProcessor
     results = []
     linkerrmsg = nil
 
-    stderr.split("\n").each { |line|
+    stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
       if !linkerrmsg.nil?
         if line =~ /^\s.*/
           linkerrmsg += "\n" + line
@@ -323,7 +324,7 @@ module ResultsProcessor
       msg = parse_gcc_line(compiler, src_path, build_path, line)
       if !msg.nil?
         results << msg
-      else 
+      else
         # try to catch some goofy clang linker errors that don't give us very much info
         if /^Undefined symbols for architecture.*/ =~ line
           linkerrmsg = line
@@ -342,7 +343,7 @@ module ResultsProcessor
 
   def parse_error_messages compiler, src_dir, build_dir, output
     results = []
-    output.split("\n").each{ |l|
+    output.encode('UTF-8', :invalid => :replace).split("\n").each {|l|
       msg = parse_gcc_line(compiler, src_dir, build_dir, l)
       msg = parse_msvc_line(compiler, src_dir, build_dir, l) if msg.nil?
       msg = parse_generic_line(compiler, src_dir, build_dir, l) if msg.nil?
@@ -369,7 +370,7 @@ module ResultsProcessor
 
   def process_python_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
-    stdout.split("\n").each{ |err|
+    stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
       msg = parse_python_line(compiler, src_dir, build_dir, err)
       if !msg.nil?
         results << msg
@@ -378,7 +379,7 @@ module ResultsProcessor
     $logger.debug("stdout results: #{results}")
     @build_results.merge(results)
     results = []
-    stderr.split("\n").each{ |err|
+    stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
       msg = parse_python_line(compiler, src_dir, build_dir, err)
       if !msg.nil?
         results << msg
@@ -389,12 +390,12 @@ module ResultsProcessor
     $logger.debug("stderr results: #{results}")
     @build_results.merge(results)
 
-    return result == 0 
+    return result == 0
   end
 
   def parse_package_names(output)
     results = []
-    output.split("\n").each { |l| 
+    output.encode('UTF-8', :invalid => :replace).split("\n").each {|l|
       /CPack: - package: (?<filename>.*) generated./ =~ l
       results << filename if filename
     }
@@ -412,7 +413,7 @@ module ResultsProcessor
     total_functions = 0
     covered_functions = 0
 
-    out.split("\n").each{ |l|
+    out.encode('UTF-8', :invalid => :replace).split("\n").each {|l|
       /.*\((?<covered_lines_str>[0-9]+) of (?<total_lines_str>[0-9]+) lines.*/ =~ l
       covered_lines = covered_lines_str.to_i if !covered_lines_str.nil?
       total_lines = total_lines_str.to_i if !total_lines_str.nil?
@@ -440,12 +441,12 @@ module ResultsProcessor
         xml = Hash.from_xml(File.open(path).read)
         testresults = xml["Site"]["Testing"]
         t = testresults["Test"]
-        if !t.nil? 
+        if !t.nil?
           tests = []
           tests << t
           tests.flatten!
 
-          tests.each { |n|
+          tests.each {|n|
             $logger.debug("N: #{n}")
             $logger.debug("Results: #{n["Results"]}")
             r = n["Results"]
@@ -462,7 +463,7 @@ module ResultsProcessor
                   if !value.nil?
                     errors = parse_error_messages(compiler, src_dir, build_dir, value)
 
-                    value.split("\n").each { |line|
+                    value.split("\n").each {|line|
                       if /\[decent_ci:test_result:message\] (?<message>.+)/ =~ line
                         messages << TestMessage.new(n["Name"], message);
                       end
@@ -476,7 +477,7 @@ module ResultsProcessor
 
                 if !nm.nil?
                   failure_type = ""
-                  nm.each { |measurement|
+                  nm.each {|measurement|
                     if measurement["name"] == "Exit Code"
                       ft = measurement["Value"]
                       if !ft.nil?
@@ -485,11 +486,11 @@ module ResultsProcessor
                     end
                   }
 
-                  nm.each { |measurement|
+                  nm.each {|measurement|
                     if measurement["name"] == "Execution Time"
                       status_string = n["Status"]
                       if !value.nil? && value =~ /\[decent_ci:test_result:warn\]/ && status_string == "passed"
-                        status_string = "warning" 
+                        status_string = "warning"
                       end
                       results << TestResult.new(n["Name"], status_string, measurement["Value"], value, errors, failure_type);
                     end

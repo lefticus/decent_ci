@@ -9,7 +9,7 @@ module Configuration
   # Cross-platform way of finding an executable in the $PATH.
   #
   #   which('ruby') #=> /usr/bin/ruby
-  def which(cmd, extra_paths=nil)
+  def which(cmd, extra_paths = nil)
     exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
     path_array = ENV['PATH'].split(File::PATH_SEPARATOR)
     if !extra_paths.nil?
@@ -17,7 +17,7 @@ module Configuration
     end
 
     path_array.each do |path|
-      exts.each { |ext|
+      exts.each {|ext|
         exe = File.join(path, "#{cmd}#{ext}")
         return Pathname.new(exe).cleanpath.to_s if File.executable? exe
       }
@@ -30,7 +30,7 @@ module Configuration
 
       if !location.nil? && !name.nil?
         begin
-          content = @client.content(location, {:path=>name, :ref=>ref} )
+          content = @client.content(location, {:path => name, :ref => ref})
           contents = content.content
           return YAML.load(Base64.decode64(contents.to_s))
         rescue SyntaxError => e
@@ -54,17 +54,17 @@ module Configuration
 
     def symbolize(obj)
       return obj.reduce({}) do |memo, (k, v)|
-        memo.tap { |m| m[k.to_sym] = symbolize(v) }
+        memo.tap {|m| m[k.to_sym] = symbolize(v)}
       end if obj.is_a? Hash
 
-      return obj.reduce([]) do |memo, v| 
+      return obj.reduce([]) do |memo, v|
         memo << symbolize(v); memo
       end if obj.is_a? Array
 
       obj
     end
 
-    if RUBY_PLATFORM  =~ /darwin/i
+    if RUBY_PLATFORM =~ /darwin/i
       os_distribution = nil
       os_version = "MacOS"
       ver_string = `uname -v`.strip
@@ -133,7 +133,7 @@ module Configuration
 
     fileset = Set.new()
 
-    @client.content(location, {:path=>".", :ref=>ref} ).each { |path|
+    @client.content(location, {:path => ".", :ref => ref}).each {|path|
       if path.name =~ /\.decent_ci.*/
         fileset << path.name
       end
@@ -160,15 +160,15 @@ module Configuration
                    "C:\\Program Files (x86)\\CMake 2.8\\bin"]
 
     result_yaml = {
-      :os => os_version,
-      :os_release => os_release,
-      :engine => "cmake",
-      :post_results_comment => true,
-      :post_results_status => true,
-      :post_release_package => true,
-      :cmake_bin => "\"#{which("cmake", cmake_paths)}\"",
-      :ctest_bin => "\"#{which("ctest", cmake_paths)}\"",
-      :cpack_bin => "\"#{which("cpack", cmake_paths)}\""
+        :os => os_version,
+        :os_release => os_release,
+        :engine => "cmake",
+        :post_results_comment => true,
+        :post_results_status => true,
+        :post_release_package => true,
+        :cmake_bin => "\"#{which("cmake", cmake_paths)}\"",
+        :ctest_bin => "\"#{which("ctest", cmake_paths)}\"",
+        :cpack_bin => "\"#{which("cpack", cmake_paths)}\""
     }
 
     result_yaml.merge!(base_yaml) if !base_yaml.nil?
@@ -189,9 +189,9 @@ module Configuration
 
     raise "No compilers defined" if configuration.compilers.nil?
 
-    # go through the list of compilers specified and fill in reasonable defaults
-    # if there are not any specified already
-    configuration.compilers.each { |compiler|
+# go through the list of compilers specified and fill in reasonable defaults
+# if there are not any specified already
+    configuration.compilers.each {|compiler|
 
       $logger.debug("Working on compiler: #{compiler[:name]}")
       if compiler[:architecture].nil? || compiler[:architecture] == ""
@@ -245,7 +245,7 @@ module Configuration
           end
         end
 
-        if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?  || !(`#{compiler[:cc_bin]} --version` =~ /.*#{compiler[:version]}/) || !(`#{compiler[:cxx_bin]} --version` =~ /.*#{compiler[:version]}/)
+        if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil? || !(`#{compiler[:cc_bin]} --version` =~ /.*#{compiler[:version]}/) || !(`#{compiler[:cxx_bin]} --version` =~ /.*#{compiler[:version]}/)
 
           raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
         end
@@ -402,7 +402,7 @@ module Configuration
     if configuration.aging_pull_requests_notification.nil?
       configuration.aging_pull_requests_notification = true
     end
-    
+
     if configuration.aging_pull_requests_numdays.nil?
       configuration.aging_pull_requests_numdays = 7
     end
