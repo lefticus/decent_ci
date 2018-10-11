@@ -1133,13 +1133,13 @@ class PotentialBuild
           <<-eos
 #{@refspec} (#{@author}) - #{device_id compiler}: #{github_status_message}
 
-      #{message_counts_str == "" ? "" : "Messages:\n"}
-      #{message_counts_str}
-      #{test_results_failure_counts_str == "" ? "" : "Failures:\n"}
-      #{test_results_failure_counts_str}
+#{message_counts_str == "" ? "" : "Messages:\n"}
+#{message_counts_str}
+#{test_results_failure_counts_str == "" ? "" : "Failures:\n"}
+#{test_results_failure_counts_str}
 
-      #{build_badge} #{test_badge} #{coverage_badge}
-      eos
+#{build_badge} #{test_badge} #{coverage_badge}
+          eos
 
 
     end
