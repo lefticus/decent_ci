@@ -33,9 +33,9 @@ module CMake
     env = {}
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
-      env = {"CXXFLAGS"=>"#{compiler_extra_flags}", "CFLAGS"=>"#{compiler_extra_flags}", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime", "CC"=>compiler[:cc_bin], "CXX"=>compiler[:cxx_bin]}
+      env = {"CXXFLAGS" => "#{compiler_extra_flags}", "CFLAGS" => "#{compiler_extra_flags}", "CCACHE_BASEDIR" => build_dir, "CCACHE_UNIFY" => "true", "CCACHE_SLOPPINESS" => "include_file_mtime", "CC" => compiler[:cc_bin], "CXX" => compiler[:cxx_bin]}
     else
-      env = {"CXXFLAGS"=>"/FC #{compiler_extra_flags}", "CFLAGS"=>"/FC #{compiler_extra_flags}", "CCACHE_BASEDIR"=>build_dir, "CCACHE_UNIFY"=>"true", "CCACHE_SLOPPINESS"=>"include_file_mtime"}
+      env = {"CXXFLAGS" => "/FC #{compiler_extra_flags}", "CFLAGS" => "/FC #{compiler_extra_flags}", "CCACHE_BASEDIR" => build_dir, "CCACHE_UNIFY" => "true", "CCACHE_SLOPPINESS" => "include_file_mtime"}
     end
 
     env["PATH"] = cmake_remove_git_from_path(ENV['PATH']);
@@ -49,13 +49,13 @@ module CMake
       env["REGRESSION_BASELINE"] = " "
       env["REGRESSION_DIR"] = " "
       env["REGRESSION_BASELINE_SHA"] = " "
-      env["COMMIT_SHA"] = " "	
+      env["COMMIT_SHA"] = " "
     end
-    
+
     env["GITHUB_TOKEN"] = ENV["GITHUB_TOKEN"]
 
     out, err, result = run_script(
-      ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
+        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
 
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
@@ -85,7 +85,7 @@ module CMake
     # not conflict with other operations
     if @config.os == "Windows"
       paths = old_path.split(";")
-      paths.delete_if { |p| p =~ /Git/ }
+      paths.delete_if {|p| p =~ /Git/}
       return paths.join(";")
     end
 
@@ -98,10 +98,10 @@ module CMake
 
 
     if @config.os == "Windows"
-      File.open("#{build_dir}/extract_linker_path.cmake", "w+") { |f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")') }
+      File.open("#{build_dir}/extract_linker_path.cmake", "w+") {|f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")')}
 
       script_stdout, script_stderr, script_result = run_script(
-                  ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
+          ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
 
       /.*LINKER:(?<linker_path>.*)/ =~ script_stdout
       $logger.debug("Parsed linker path from cmake: #{linker_path}")
@@ -122,10 +122,10 @@ module CMake
 
     if !compiler[:package_command].nil?
       pack_stdout, pack_stderr, pack_result = run_script(
-        ["cd #{build_dir} && #{compiler[:package_command]} "], {"PATH"=>new_path})
+          ["cd #{build_dir} && #{compiler[:package_command]} "], {"PATH" => new_path})
     else
       pack_stdout, pack_stderr, pack_result = run_script(
-        ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], {"PATH"=>new_path})
+          ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], {"PATH" => new_path})
     end
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stdout, pack_stderr, pack_result, true)
@@ -133,7 +133,7 @@ module CMake
     if !cmake_result
       if @package_results.empty?
         raise "Error building package: #{pack_stderr}"
-      else 
+      else
         return nil
       end
     end
@@ -168,9 +168,9 @@ module CMake
       ctest_filter = "" if ctest_filter.nil?
     end
 
-    test_dirs.each{ |test_dir|
+    test_dirs.each {|test_dir|
       $logger.info("Running tests in dir: '#{test_dir}'")
-      env = {"PATH"=>cmake_remove_git_from_path(ENV['PATH'])}
+      env = {"PATH" => cmake_remove_git_from_path(ENV['PATH'])}
       test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type} #{ctest_filter}"], env);
       test_results, test_messages = process_ctest_results compiler, src_dir, build_dir, "#{build_dir}/#{test_dir}", test_stdout, test_stderr, test_result
 
