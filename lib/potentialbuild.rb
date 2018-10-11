@@ -476,7 +476,8 @@ class PotentialBuild
 
     if compiler[:name] == "custom_check"
       start_time = Time.now
-      custom_check compiler, src_dir, build_dir
+      @test_results = custom_check compiler, src_dir, build_dir
+
       @build_time = 0 if @build_time.nil?
       # handle the case where build is called more than once
       @build_time = @build_time + (Time.now - start_time)
@@ -509,7 +510,7 @@ class PotentialBuild
 
     build_succeeded = do_build compiler, regression_baseline
 
-    if compiler[:name] == "cppcheck"
+    if compiler[:name] == "cppcheck" || compiler[:name] == "custom_check"
     else
       case @config.engine
       when "cmake"
