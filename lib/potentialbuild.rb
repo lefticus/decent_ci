@@ -476,7 +476,8 @@ class PotentialBuild
 
     if compiler[:name] == "custom_check"
       start_time = Time.now
-      custom_check compiler, src_dir, build_dir
+      @test_results = custom_check compiler, src_dir, build_dir
+
       @build_time = 0 if @build_time.nil?
       # handle the case where build is called more than once
       @build_time = @build_time + (Time.now - start_time)
@@ -509,7 +510,7 @@ class PotentialBuild
 
     build_succeeded = do_build compiler, regression_baseline
 
-    if compiler[:name] == "cppcheck"
+    if compiler[:name] == "cppcheck" || compiler[:name] == "custom_check"
     else
       case @config.engine
       when "cmake"
@@ -1132,15 +1133,13 @@ class PotentialBuild
           <<-eos
 #{@refspec} (#{@author}) - #{device_id compiler}: #{github_status_message}
 
-      #{message_counts_str == "" ? "" : "Messages:\n"}
-      #{message_counts_str}
-      #{test_results_failure_counts_str == "" ? "" : "Failures:\n"}
-      #{test_results_failure_counts_str}
+#{message_counts_str == "" ? "" : "Messages:\n"}
+#{message_counts_str}
+#{test_results_failure_counts_str == "" ? "" : "Failures:\n"}
+#{test_results_failure_counts_str}
 
-      #{build_badge} #{test_badge} #{coverage_badge}
-      eos
-
-
+#{build_badge} #{test_badge} #{coverage_badge}
+eos
     end
 
     if !@test_run
