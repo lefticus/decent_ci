@@ -171,7 +171,7 @@ module CMake
     test_dirs.each {|test_dir|
       $logger.info("Running tests in dir: '#{test_dir}'")
       env = {"PATH" => cmake_remove_git_from_path(ENV['PATH'])}
-      test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 3600 -D ExperimentalTest -C #{build_type} #{ctest_filter}"], env);
+      test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 4200 --no-compress-output -D ExperimentalTest -C #{build_type} #{ctest_filter}"], env);
       test_results, test_messages = process_ctest_results compiler, src_dir, build_dir, "#{build_dir}/#{test_dir}", test_stdout, test_stderr, test_result
 
       if @test_results.nil?

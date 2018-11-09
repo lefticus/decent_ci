@@ -1139,9 +1139,7 @@ class PotentialBuild
 #{test_results_failure_counts_str}
 
 #{build_badge} #{test_badge} #{coverage_badge}
-          eos
-
-
+eos
     end
 
     if !@test_run

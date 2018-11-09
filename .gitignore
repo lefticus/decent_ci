@@ -4,3 +4,4 @@
 EnergyPlus*
 Gemfile.lock
 *.log
+decent_ci.log*
