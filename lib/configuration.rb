@@ -304,7 +304,7 @@ module Configuration
             compiler[:build_package_generator] = "RPM"
           end
         when "MacOS"
-          compiler[:build_package_generator] = "PackageMaker"
+          compiler[:build_package_generator] = "IFW"
         end
       end
 
@@ -329,7 +329,7 @@ module Configuration
         case compiler[:build_package_generator]
         when /.*NSIS.*/
           compiler[:package_extension] = "exe"
-        when /.*PackageMaker.*/
+        when /.*IFW.*/
           compiler[:package_extension] = "dmg"
         when /.*STGZ.*/
           compiler[:package_extension] = "sh"
