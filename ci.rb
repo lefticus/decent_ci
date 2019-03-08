@@ -335,12 +335,15 @@ for conf in 2..ARGV.length-1
                   regression_baselines << [compiler, regression_base];
 
                   if !File.directory?(regression_base.get_build_dir(compiler))
+                    $logger.info "Removing pre-existing regression build directory (#{regression_base.get_build_dir(compiler)})"
+                    system("rm -rf #{regression_base.get_build_dir(compiler)}")
                     $logger.info "Beginning regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
                     regression_base.do_build compiler, nil
                     regression_base.do_test compiler, nil
                   else
                     $logger.info "Skipping already completed regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
                   end
+
                 end
 
                 p.do_package compiler, regression_base
