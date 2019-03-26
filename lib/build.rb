@@ -18,7 +18,6 @@ require_relative 'potentialbuild.rb'
 require_relative 'github.rb'
 
 # Top level class that loads the list of potential builds from github
-#
 class Build
   def initialize(token, repository, max_age)
     @client = Octokit::Client.new(:access_token => token)
@@ -37,7 +36,7 @@ class Build
 
     releases.each {|r|
       begin
-        days = (DateTime.now() - DateTime.parse(r.published_at.to_s)).round()
+        days = (DateTime.now - DateTime.parse(r.published_at.to_s)).round
         if days <= @max_age
           @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
         else
@@ -57,14 +56,14 @@ class Build
       $logger.debug("Querying potential build: #{b.name}")
       branch_details = github_query(@client) {@client.branch(@repository, b.name)}
       begin
-        days = (DateTime.now() - DateTime.parse(branch_details.commit.commit.author.date.to_s)).round()
+        days = (DateTime.now - DateTime.parse(branch_details.commit.commit.author.date.to_s)).round
         if days <= @max_age
           login = "Unknown"
           if !branch_details.commit.author.nil?
             login = branch_details.commit.author.login
           else
             $logger.debug("Commit author is nil, getting login details from committer information")
-            if !branch_details.commit.committer.nil?
+            unless branch_details.commit.committer.nil?
               login = branch_details.commit.committer.login
             end
             $logger.debug("Login set to #{login}")
@@ -95,7 +94,7 @@ class Build
       $logger.debug("Issue loaded: #{issue}")
 
 
-      notification_users = Set.new()
+      notification_users = Set.new
 
       if issue.assignee
         notification_users << issue.assignee.login
@@ -110,17 +109,17 @@ class Build
 
       begin
         pb = PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p.head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
-        configed_notifications = pb.configuration.notification_recipients
-        if !configed_notifications.nil?
-          $logger.debug("Merging notifications user: #{configed_notifications}")
-          notification_users.merge(configed_notifications)
+        configured_notifications = pb.configuration.notification_recipients
+        unless configured_notifications.nil?
+          $logger.debug("Merging notifications user: #{configured_notifications}")
+          notification_users.merge(configured_notifications)
         end
 
         aging_pull_requests_notification = pb.configuration.aging_pull_requests_notification
         aging_pull_requests_numdays = pb.configuration.aging_pull_requests_numdays
 
         if p.head.repo.full_name == p.base.repo.full_name
-          $logger.info("Skipping pullrequest originating from head repo")
+          $logger.info("Skipping pull-request originating from head repo")
         else
           @potential_builds << pb
         end
@@ -136,7 +135,7 @@ class Build
     @pull_request_details
   end
 
-  def get_regression_base t_potential_build
+  def get_regression_base(t_potential_build)
     config = t_potential_build.configuration
     defined_baseline = config.send("regression_baseline_#{t_potential_build.branch_name}")
 
@@ -156,16 +155,17 @@ class Build
     end
 
     @potential_builds.each {|p|
+      # TODO: Protect other fork develop branches from inadvertently becoming the baseline branch
       if p.branch_name == baseline
         return p
       end
     }
 
-    return nil
+    nil
   end
 
   def potential_builds
-    return @potential_builds
+    @potential_builds
   end
 
   def needs_daily_task(results_repo, results_path)
@@ -191,7 +191,7 @@ machine_ip: #{Socket.ip_address_list.find {|ai| ai.ipv4? && !ai.ipv4_loopback?}.
 
       $logger.info("Daily task document sha: #{response.content.sha}")
       return true
-    rescue => e
+    rescue
       $logger.info("Daily task file not created, skipping daily task")
       return false
     end
@@ -202,17 +202,15 @@ machine_ip: #{Socket.ip_address_list.find {|ai| ai.ipv4? && !ai.ipv4_loopback?}.
     @client
   end
 
-
   def results_repositories
-    s = Set.new()
+    s = Set.new
     @potential_builds.each {|p|
-      if !p.is_pull_request
+      unless p.is_pull_request
         s << [p.configuration.repository, p.configuration.results_repository, p.configuration.results_path]
       end
     }
-    return s
+    s
   end
-
 
 end
 

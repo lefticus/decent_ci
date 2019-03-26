@@ -13,7 +13,11 @@ module CustomCheck
       unless File.directory?(build_dir)
         FileUtils.mkdir_p(build_dir)
       end
-      out, err, result = run_script(["cd #{src_dir} && #{command} #{compiler_flags}"])
+      begin
+        out, err, result = run_script(["cd #{src_dir} && #{command} #{compiler_flags}"])
+      rescue
+        test_results.push(TestResult.new(command, 'failed', 0, 'Could not run file, check permissions, executable bit, etc.', [], ''))
+      end
 
       # expected fields to be read: "tool", "file", "line", "column" (optional), "message_type", "message", "id" (optional)
       if process_custom_check_results(compiler, src_dir, build_dir, out, err, result)

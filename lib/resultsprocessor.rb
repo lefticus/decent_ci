@@ -49,16 +49,24 @@ module ResultsProcessor
 
   def parse_custom_check_line(compiler, src_path, build_path, line)
     # JSON formatted output is expected here
-    json = JSON.parse(line)
+    begin
+      json = JSON.parse(line)
+    rescue JSON::ParserError
+      return CodeMessage.new('DecentCI::resultsprocessor::parse_custom_check_line', __LINE__, 0, "error", "Output of custom_check script was not formatted properly; should be individual line-by-line JSON objects")
+    end
+
+    if json.is_a?(Array)
+      return CodeMessage.new('DecentCI::resultsprocessor::parse_custom_check_line', __LINE__, 0, "error", "Output of custom_check script was not formatted properly, it was an array; should be individual line-by-line JSON objects")
+    end
 
     # expected fields to be read: "tool", "file", "line", "column" (optional), "messagetype", "message", "id" (optional)
     if !json["filename"].nil?
       message = json["message"]
-      if !json["id"].nil?
+      unless json["id"].nil?
         message = "(#{json["id"]}) #{message}"
       end
 
-      if !json["tool"].nil?
+      unless json["tool"].nil?
         message = "[#{json["tool"]}] #{message}"
       end
 
@@ -354,16 +362,35 @@ module ResultsProcessor
     return results
   end
 
-  def parse_python_line(compiler, src_dir, build_dir, line)
-    /File "(?<filename>.+)", line (?<linenumber>[0-9]+),.*/ =~ line
-    /^.*Error: (?<message>.+)/ =~ line
+  def parse_python_or_latex_line(compiler, src_dir, build_dir, line)
+    # Since we are just doing line-by-line parsing, it really limits what we can get, but we'll try our best anyway
+    if 'LaTeX Error'.include?(line)
+      # Example LaTeX Error (third line):
+      # LaTeX Font Info: Checking defaults for U/cmr/m/n on input line 3.
+      # LaTeX Font Info: ... okay on input line 3.
+      # ! LaTeX Error: Environment itemiz undefined.
+      # See the LaTeX manual or LaTeX Companion for explanation.
+      # Type H <return> for immediate help.
+      /^.*Error: (?<message>.+)/ =~ line
+      compiler_string = 'LaTeX'
+    else
+      # assume Python
+      # Example Python Error (last line)
+      # Traceback (most recent call last):
+      #   File "/tmp/pythonerror.py", line 1, in <module>
+      #     print('c' + 3)
+      # TypeError: cannot concatenate 'str' and 'int' objects
+      /File "(?<filename>.+)", line (?<linenumber>[0-9]+),.*/ =~ line
+      /^.*Error: (?<message>.+)/ =~ line
+      compiler_string = 'Python'
+    end
 
-    $logger.debug("Parsing line for python errors: #{line}: #{filename} #{linenumber} #{message}")
+    $logger.debug("Parsing line for python/LaTeX errors: #{line}: #{filename} #{linenumber} #{message}")
 
     if !filename.nil? && !linenumber.nil?
       return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir, compiler), linenumber, 0, "error", "Error")
     elsif !message.nil?
-      return CodeMessage.new(relative_path("python", src_dir, build_dir, compiler), 0, 0, "error", message)
+      return CodeMessage.new(relative_path(compiler_string, src_dir, build_dir, compiler), 0, 0, "error", message)
     end
 
   end
@@ -371,8 +398,8 @@ module ResultsProcessor
   def process_python_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
     stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
-      msg = parse_python_line(compiler, src_dir, build_dir, err)
-      if !msg.nil?
+      msg = parse_python_or_latex_line(compiler, src_dir, build_dir, err)
+      unless msg.nil?
         results << msg
       end
     }
@@ -380,8 +407,8 @@ module ResultsProcessor
     @build_results.merge(results)
     results = []
     stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
-      msg = parse_python_line(compiler, src_dir, build_dir, err)
-      if !msg.nil?
+      msg = parse_python_or_latex_line(compiler, src_dir, build_dir, err)
+      unless msg.nil?
         results << msg
       end
     }

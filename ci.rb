@@ -14,12 +14,8 @@ $current_log_repository = nil
 $current_log_deviceid = nil
 $current_log_devicename = "#{Socket.gethostname}-#{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}"
 
-remote_logger = nil
-
-
 original_formatter = Logger::Formatter.new
 $logger.formatter = proc { |severity, datetime, progname, msg|
-  sev = nil
   case severity
   when "DEBUG"
     sev = Logger::DEBUG
@@ -37,15 +33,15 @@ $logger.formatter = proc { |severity, datetime, progname, msg|
 
   msg = msg.gsub(/\/\/\S+@github/, "//<redacted>@github")
 
-  if !$current_log_devicename.nil?
+  unless $current_log_devicename.nil?
     msg = "[#{$current_log_devicename}] #{msg}"
   end
 
-  if !$current_log_deviceid.nil?
+  unless $current_log_deviceid.nil?
     msg = "[#{$current_log_deviceid}] #{msg}"
   end
 
-  if !$current_log_repository.nil?
+  unless $current_log_repository.nil?
     msg = "[#{$current_log_repository}] #{msg}"
   end
 
@@ -61,7 +57,6 @@ $logger.formatter = proc { |severity, datetime, progname, msg|
 $logger.info "#{__FILE__} starting"
 $logger.debug "#{__FILE__} starting, ARGV: #{ARGV}"
 $logger.debug "Logging to decent_ci.log"
-
 
 options = {}
 options[:delay_after_run] = 300
@@ -83,7 +78,6 @@ opts = OptionParser.new do |opts|
   opts.on("--keep-build-folder", "Do not delete build folder after build completes") do |v|
     options[:keep_build_folder] = v
   end
-
 
   opts.on("--aws-access-key-id=[key]") do |k|
     ENV["AWS_ACCESS_KEY_ID"] = k
@@ -123,7 +117,6 @@ opts = OptionParser.new do |opts|
     end
   end
 
-
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
     exit
@@ -131,7 +124,6 @@ opts = OptionParser.new do |opts|
 end
 
 opts.parse!
-
 
 if ARGV.length < 3
   opts.abort(opts.to_s)
@@ -145,27 +137,23 @@ else
   $logger.level = Logger::INFO
 end
 
-
 if options[:disable_ssl_verification]
   $logger.warn "Disabling SSL certificate verification"
   require 'openssl'
   OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE # warning: already initialized constant VERIFY_PEER
 end
 
-envdump = ""
+env_dump = ""
 ENV.sort.each { |k,v|
-  envdump += "#{k}=#{v}; "
+  env_dump += "#{k}=#{v}; "
 }
 
-$logger.info "Environment: #{envdump}"
+$logger.info "Environment: #{env_dump}"
 
 # keep this after the above environment dump so the key isn't included there
 ENV["GITHUB_TOKEN"] = ARGV[1]
 
 puts("Configured trusted branch: #{options[:trusted_branch].to_s}")
-
-
-
 
 def get_limits(t_options, t_client, t_repo)
 
@@ -191,9 +179,8 @@ def get_limits(t_options, t_client, t_repo)
       $logger.info("'#{e.message}' '#{e.backtrace}' error while reading limits file")
     end
 
-    return {};
-  }.();
-
+    return {}
+  }.()
 
   if limits["history_total_file_limit"].nil?
     limits["history_total_file_limit"] = 5000
@@ -213,11 +200,6 @@ def get_limits(t_options, t_client, t_repo)
 
   return limits
 end
-
-
-
-
-
 
 for conf in 2..ARGV.length-1
   $logger.info "Loading configuration #{ARGV[conf]}"
@@ -302,9 +284,9 @@ for conf in 2..ARGV.length-1
         p.compilers.each { |compiler|
           $current_log_deviceid = p.device_id compiler
 
-          if !(ENV["DECENT_CI_COMPILER_FILTER"].nil? || ENV["DECENT_CI_COMPILER_FILTER"] == '')
+          unless ENV["DECENT_CI_COMPILER_FILTER"].nil? || ENV["DECENT_CI_COMPILER_FILTER"] == ''
             compiler_string = p.device_id compiler
-            if !(compiler_string =~ /#{ENV["DECENT_CI_COMPILER_FILTER"]}/)
+            unless compiler_string =~ /#{ENV["DECENT_CI_COMPILER_FILTER"]}/
               $logger.info "#{compiler_string} does not match filter of #{ENV["DECENT_CI_COMPILER_FILTER"]}, skipping this compiler build"
               next
             end
@@ -332,7 +314,7 @@ for conf in 2..ARGV.length-1
                   regression_base.set_keep_build_folder options[:keep_build_folder]
 
                   p.clone_regression_repository compiler
-                  regression_baselines << [compiler, regression_base];
+                  regression_baselines << [compiler, regression_base]
 
                   if !File.directory?(regression_base.get_build_dir(compiler))
                     $logger.info "Removing pre-existing regression build directory (#{regression_base.get_build_dir(compiler)})"
