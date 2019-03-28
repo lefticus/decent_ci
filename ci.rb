@@ -15,21 +15,7 @@ $current_log_deviceid = nil
 $current_log_devicename = "#{Socket.gethostname}-#{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}"
 
 original_formatter = Logger::Formatter.new
-$logger.formatter = proc { |severity, datetime, progname, msg|
-  case severity
-  when "DEBUG"
-    sev = Logger::DEBUG
-  when "INFO"
-    sev = Logger::INFO
-  when "ERROR"
-    sev = Logger::ERROR
-  when "FATAL"
-    sev = Logger::FATAL
-  when "WARN"
-    sev = Logger::WARN
-  else
-    sev = Logger::Unknown
-  end
+$logger.formatter = proc { |severity, datetime, program_name, msg|
 
   msg = msg.gsub(/\/\/\S+@github/, "//<redacted>@github")
 
@@ -45,11 +31,7 @@ $logger.formatter = proc { |severity, datetime, progname, msg|
     msg = "[#{$current_log_repository}] #{msg}"
   end
 
-  if $remote_logger
-    $remote_logger.add(sev, msg, progname)
-  end
-
-  res = original_formatter.call(severity, datetime, progname, msg.dump)
+  res = original_formatter.call(severity, datetime, program_name, msg.dump)
   puts res
   res
 }
@@ -62,7 +44,6 @@ options = {}
 options[:delay_after_run] = 300
 options[:maximum_branch_age] = 30
 options[:verbose] = false
-options[:keep_build_folder] = false
 
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: #{__FILE__} [options] <testruntrueorfalse> <githubtoken> <repositoryname> (<repositoryname> ...)"
@@ -73,10 +54,6 @@ opts = OptionParser.new do |opts|
 
   opts.on("-s", "--disable-ssl-verification", "Disable verification of ssl certificates") do |v|
     options[:disable_ssl_verification] = v
-  end
-
-  opts.on("--keep-build-folder", "Do not delete build folder after build completes") do |v|
-    options[:keep_build_folder] = v
   end
 
   opts.on("--aws-access-key-id=[key]") do |k|
@@ -102,14 +79,6 @@ opts = OptionParser.new do |opts|
   end
 
   $logger.info "maximum_branch_age : #{options[:maximum_branch_age]}"
-
-  opts.on("--logentries-key=[secret]") do |k|
-    if k != ""
-      require 'le'
-      $remote_logger = Le.new(k, :log_level => Logger::INFO)
-      $logger.info "Initialized logentries.com remote logging"
-    end
-  end
 
   opts.on("--trusted_branch=[branch_name]", String, "Branch name to load trusted files from. Defaults to github default branch.") do |k|
     if k != ""
@@ -187,7 +156,7 @@ def get_limits(t_options, t_client, t_repo)
   end
 
   if limits["history_long_running_branch_names"].nil?
-    limits["history_long_running_branch_names"] = ["develop", "master"]
+    limits["history_long_running_branch_names"] = %w(develop master)
   end
 
   if limits["history_feature_branch_file_limit"].nil?
@@ -198,10 +167,12 @@ def get_limits(t_options, t_client, t_repo)
     limits["history_long_running_branch_file_limit"] = 20
   end
 
-  return limits
+  limits
 end
 
-for conf in 2..ARGV.length-1
+did_any_builds = false
+
+(2..ARGV.length - 1).each {|conf|
   $logger.info "Loading configuration #{ARGV[conf]}"
   $current_log_repository = ARGV[conf]
 
@@ -218,10 +189,10 @@ for conf in 2..ARGV.length-1
 
     did_daily_task = false
 
-    b.results_repositories.each { |repo, results_repo, results_path|
+    b.results_repositories.each {|repo, results_repo, results_path|
       $logger.info "Checking daily task status for #{repo} #{results_repo} #{results_path}"
 
-      if (test_mode || b.needs_daily_task(results_repo, results_path)) && ENV["DECENT_CI_SKIP_DAILY_TASKS"].nil? 
+      if (test_mode || b.needs_daily_task(results_repo, results_path)) && ENV["DECENT_CI_SKIP_DAILY_TASKS"].nil?
         did_daily_task = true
 
         count = 0
@@ -241,15 +212,15 @@ for conf in 2..ARGV.length-1
     }
 
     if did_daily_task
-      b.get_pull_request_details.each { |d|
+      b.get_pull_request_details.each {|d|
 
         $logger.debug "PullRequestDetail: #{d}"
 
-        days = (DateTime.now() - DateTime.parse(d[:last_updated].to_s)).round()
+        days = (DateTime.now - DateTime.parse(d[:last_updated].to_s)).round
 
         references = ""
 
-        d[:notification_users].each { |u|
+        d[:notification_users].each {|u|
           references += "@#{u} "
         }
 
@@ -277,11 +248,11 @@ for conf in 2..ARGV.length-1
     regression_baselines = []
 
     # loop over each potential build
-    b.potential_builds.each { |p|
+    b.potential_builds.each {|p|
 
       if ENV["DECENT_CI_BRANCH_FILTER"].nil? || ENV["DECENT_CI_BRANCH_FILTER"] == '' || p.branch_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.tag_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.descriptive_string =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/
         $logger.info "Looping over compilers"
-        p.compilers.each { |compiler|
+        p.compilers.each {|compiler|
           $current_log_deviceid = p.device_id compiler
 
           unless ENV["DECENT_CI_COMPILER_FILTER"].nil? || ENV["DECENT_CI_COMPILER_FILTER"] == ''
@@ -298,33 +269,37 @@ for conf in 2..ARGV.length-1
           end
 
           begin
+            did_any_builds = true
+
             # reset potential build for the next build attempt
             p.next_build
             p.set_test_run test_mode
-            p.set_keep_build_folder options[:keep_build_folder]
 
             if p.needs_run compiler
               $logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
               p.post_results compiler, true
               begin
                 regression_base = b.get_regression_base p
+                if File.directory?(p.get_src_dir)
+                  $logger.info "Removing pre-existing branch directory (#{p.get_build_dir})"
+                  system("rm -rf #{regression_base.get_src_dir}")
+                end
 
                 if p.needs_regression_test(compiler) && regression_base
+                  regression_base.set_as_baseline
                   regression_base.set_test_run test_mode
-                  regression_base.set_keep_build_folder options[:keep_build_folder]
 
                   p.clone_regression_repository compiler
                   regression_baselines << [compiler, regression_base]
 
-                  if !File.directory?(regression_base.get_build_dir(compiler))
-                    $logger.info "Removing pre-existing regression build directory (#{regression_base.get_build_dir(compiler)})"
-                    system("rm -rf #{regression_base.get_build_dir(compiler)}")
-                    $logger.info "Beginning regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
-                    regression_base.do_build compiler, nil
-                    regression_base.do_test compiler, nil
-                  else
-                    $logger.info "Skipping already completed regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
+                  if File.directory?(regression_base.get_src_dir)
+                    $logger.info "Removing pre-existing baseline directory (#{regression_base.get_build_dir})"
+                    system("rm -rf #{regression_base.get_src_dir}")
                   end
+
+                  $logger.info "Beginning regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
+                  regression_base.do_build compiler, nil
+                  regression_base.do_test compiler, nil
 
                 end
 
@@ -346,7 +321,7 @@ for conf in 2..ARGV.length-1
               end
 
               if compiler[:collect_performance_results]
-                p.collect_performance_results compiler
+                p.collect_performance_results
               end
 
               p.post_results compiler, false
@@ -369,9 +344,9 @@ for conf in 2..ARGV.length-1
       end
     }
 
-    regression_baselines.each{ |compiler, baseline| 
+    regression_baselines.each {|compiler, baseline|
       begin
-        $logger.info "Cleaning up regression_basline: #{baseline.descriptive_string} #{compiler}"
+        $logger.info "Cleaning up regression_baseline: #{baseline.descriptive_string} #{compiler}"
         baseline.clean_up compiler
       rescue => e
         $logger.error "Error cleaning up regression_baseline: #{baseline.descriptive_string} #{compiler} #{e} #{e.backtrace}"
@@ -383,15 +358,12 @@ for conf in 2..ARGV.length-1
   end
 
   $current_log_repository = nil
-end
-
-$logger.info "Execution completed, attempting to remove any left over files from the process"
-
-$created_dirs.each{ |dir|
-  try_hard_to_remove_dir dir
 }
 
-$logger.info "Execution completed, sleeping for #{options[:delay_after_run]}"
-sleep(options[:delay_after_run])
-
-
+if did_any_builds
+  $logger.info "Execution completed, since builds were run we wont sleep}"
+  sleep(options[:delay_after_run])
+else
+  $logger.info "No builds were run, sleeping for #{options[:delay_after_run]}"
+  sleep(options[:delay_after_run])
+end

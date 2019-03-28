@@ -1,4 +1,4 @@
-def try_hard_to_remove_dir d
+def try_hard_to_remove_dir(d)
 
   begin
     `rm -rf #{d}`
@@ -19,9 +19,4 @@ def try_hard_to_remove_dir d
 
   $logger.error("Failed in cleaning up directory #{e}")
 
-end
-
-
-def add_global_created_dir d
-  $created_dirs << d
 end

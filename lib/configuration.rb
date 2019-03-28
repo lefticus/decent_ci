@@ -246,7 +246,6 @@ module Configuration
         end
 
         if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil? || !(`#{compiler[:cc_bin]} --version` =~ /.*#{compiler[:version]}/) || !(`#{compiler[:cxx_bin]} --version` =~ /.*#{compiler[:version]}/)
-
           raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
         end
       end

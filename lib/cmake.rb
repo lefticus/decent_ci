@@ -10,16 +10,9 @@ module CMake
     compiler_extra_flags = compiler[:compiler_extra_flags]
     compiler_extra_flags = "" if compiler_extra_flags.nil?
 
-    if running_extra_tests()
-      if !@config.extra_tests_cmake_extra_flags.nil?
+    if running_extra_tests
+      unless @config.extra_tests_cmake_extra_flags.nil?
         cmake_flags = cmake_flags + " " + @config.extra_tests_cmake_extra_flags
-      end
-    end
-
-    if flags[:training]
-      training_flags = compiler[:release_build_training_cmake_extra_flags]
-      if !training_flags.nil?
-        cmake_flags = cmake_flags + " " + training_flags
       end
     end
 
@@ -41,7 +34,7 @@ module CMake
     env["PATH"] = cmake_remove_git_from_path(ENV['PATH']);
 
     if !regression_baseline.nil?
-      env["REGRESSION_BASELINE"] = File.expand_path(regression_baseline.get_build_dir(compiler))
+      env["REGRESSION_BASELINE"] = File.expand_path(regression_baseline.get_build_dir)
       env["REGRESSION_DIR"] = File.expand_path(regression_dir)
       env["REGRESSION_BASELINE_SHA"] = regression_baseline.commit_sha
       env["COMMIT_SHA"] = (@commit_sha && @commit_sha != "") ? @commit_sha : @tag_name
@@ -57,10 +50,9 @@ module CMake
     out, err, result = run_script(
         ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
 
-
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
 
-    if !cmake_result
+    unless cmake_result
       return false;
     end
 
@@ -89,7 +81,7 @@ module CMake
       return paths.join(";")
     end
 
-    return old_path
+    old_path
   end
 
 
@@ -100,7 +92,7 @@ module CMake
     if @config.os == "Windows"
       File.open("#{build_dir}/extract_linker_path.cmake", "w+") {|f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")')}
 
-      script_stdout, script_stderr, script_result = run_script(
+      script_stdout, _, _ = run_script(
           ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
 
       /.*LINKER:(?<linker_path>.*)/ =~ script_stdout
@@ -116,10 +108,6 @@ module CMake
       $logger.info("New path set for executing cpack, to help with get_requirements: #{new_path}")
     end
 
-    pack_stdout = nil
-    pack_stderr = nil
-    pack_result = nil
-
     if !compiler[:package_command].nil?
       pack_stdout, pack_stderr, pack_result = run_script(
           ["cd #{build_dir} && #{compiler[:package_command]} "], {"PATH" => new_path})
@@ -130,7 +118,7 @@ module CMake
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stdout, pack_stderr, pack_result, true)
 
-    if !cmake_result
+    unless cmake_result
       if @package_results.empty?
         raise "Error building package: #{pack_stderr}"
       else
@@ -143,7 +131,7 @@ module CMake
     $logger.debug("package names parsed: #{package_names}")
     if package_names.empty?
       return nil
-    elsif package_names.size() > 1
+    elsif package_names.size > 1
       $logger.error("More than one package name was returned #{package_names}, returning the 1st one only")
     end
 
@@ -151,22 +139,17 @@ module CMake
   end
 
 
-  def cmake_test(compiler, src_dir, build_dir, build_type, flags)
+  def cmake_test(compiler, src_dir, build_dir, build_type)
     test_dirs = [@config.tests_dir]
 
-    if running_extra_tests()
-      if !@config.extra_tests_test_dir.nil?
+    if running_extra_tests
+      unless @config.extra_tests_test_dir.nil?
         test_dirs << @config.extra_tests_test_dir
       end
     end
 
-    if flags[:training]
-      ctest_filter = compiler[:release_build_training_ctest_filter]
-      ctest_filter = "" if ctest_filter.nil?
-    else
-      ctest_filter = compiler[:ctest_filter]
-      ctest_filter = "" if ctest_filter.nil?
-    end
+    ctest_filter = compiler[:ctest_filter]
+    ctest_filter = "" if ctest_filter.nil?
 
     test_dirs.each {|test_dir|
       $logger.info("Running tests in dir: '#{test_dir}'")
