@@ -245,8 +245,6 @@ did_any_builds = false
       }
     end
 
-    regression_baselines = []
-
     # loop over each potential build
     b.potential_builds.each {|p|
 
@@ -280,27 +278,25 @@ did_any_builds = false
               p.post_results compiler, true
               begin
                 regression_base = b.get_regression_base p
+
+                # clean up any current branch folder here because we'll clone the regression repository into a fresh folder shortly
                 if File.directory?(p.get_src_dir)
                   $logger.info "Removing pre-existing branch directory (#{p.get_build_dir})"
                   system("rm -rf #{regression_base.get_src_dir}")
                 end
 
+                # if we need regressions and this branch has a valid regression branch, clone, build, and test it
                 if p.needs_regression_test(compiler) && regression_base
                   regression_base.set_as_baseline
                   regression_base.set_test_run test_mode
-
                   p.clone_regression_repository compiler
-                  regression_baselines << [compiler, regression_base]
-
                   if File.directory?(regression_base.get_src_dir)
                     $logger.info "Removing pre-existing baseline directory (#{regression_base.get_build_dir})"
                     system("rm -rf #{regression_base.get_src_dir}")
                   end
-
                   $logger.info "Beginning regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
                   regression_base.do_build compiler, nil
                   regression_base.do_test compiler, nil
-
                 end
 
                 p.do_package compiler, regression_base
@@ -308,16 +304,9 @@ did_any_builds = false
                 p.do_coverage compiler, regression_base
                 p.do_upload compiler, regression_base
 
-                if p.needs_regression_test(compiler) && regression_base
-                  p.do_regression_test compiler, regression_base
-                  p.clean_up_regressions compiler
-                end
               rescue => e
                 $logger.error "Logging unhandled failure #{e} #{e.backtrace}"
                 p.unhandled_failure "#{e}\n#{e.backtrace}"
-
-                p.clean_up compiler
-                p.clean_up_regressions compiler
               end
 
               if compiler[:collect_performance_results]
@@ -326,15 +315,11 @@ did_any_builds = false
 
               p.post_results compiler, false
 
-              p.clean_up compiler
-              p.clean_up_regressions compiler
             else
               $logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
             end
           rescue => e
             $logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e} #{e.backtrace}"
-            p.clean_up compiler
-            p.clean_up_regressions compiler
           end
 
         }
@@ -343,16 +328,6 @@ did_any_builds = false
         $logger.info("Skipping build #{p.descriptive_string}, doesn't match environment filter #{ENV["DECENT_CI_BRANCH_FILTER"]}")
       end
     }
-
-    regression_baselines.each {|compiler, baseline|
-      begin
-        $logger.info "Cleaning up regression_baseline: #{baseline.descriptive_string} #{compiler}"
-        baseline.clean_up compiler
-      rescue => e
-        $logger.error "Error cleaning up regression_baseline: #{baseline.descriptive_string} #{compiler} #{e} #{e.backtrace}"
-      end
-    }
-
   rescue => e
     $logger.fatal "Unable to initiate build system #{e} #{e.backtrace}"
   end

@@ -66,8 +66,6 @@ class PotentialBuild
       @short_buildid = "#{@short_buildid}-PR#{@pull_id}"
     end
 
-    @created_dirs = []
-    @created_regression_dirs = []
     @package_location = nil
     @test_results = nil
     @test_messages = []
@@ -496,7 +494,6 @@ class PotentialBuild
   def clone_regression_repository compiler
     regression_dir = get_regression_dir
 
-    add_created_regression_dir regression_dir
     FileUtils.mkdir_p regression_dir
 
     unless @config.regression_repository.nil?
@@ -570,21 +567,7 @@ class PotentialBuild
     hash
   end
 
-  def clean_up(compiler)
-    unless @test_run
-      @created_dirs.each(&method(:try_hard_to_remove_dir))
-    end
-  end
-
-  def clean_up_regressions compiler
-    unless @test_run
-      @created_regression_dirs.each(&method(:try_hard_to_remove_dir))
-    end
-  end
-
   def next_build
-    @created_dirs = []
-    @created_regression_dirs = []
     @package_location = nil
     @test_results = nil
     @test_messages = []
