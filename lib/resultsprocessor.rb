@@ -73,7 +73,6 @@ module ResultsProcessor
     end
   end
 
-
   def parse_cppcheck_line(compiler, src_path, build_path, line)
     line_number = nil
     message_type = nil
@@ -113,7 +112,6 @@ module ResultsProcessor
     @build_results.merge(results)
     result == 0
   end
-
 
   def process_cppcheck_results(compiler, src_dir, build_dir, stderr, result)
     results = []
@@ -205,7 +203,12 @@ module ResultsProcessor
             if !filename.nil? && !line_number.nil? && !(filename =~ /file included/i) && !(filename =~ /^\s*from\s+/i)
               file = filename
               line = line_number
-              type = "error"
+              if err.include?('.f90')
+                # this is a bad assumption, but right now fortran warnings are being taken as uncategorized build errors
+                type = "warning"
+              else
+                type = "error"
+              end
             end
           end
 

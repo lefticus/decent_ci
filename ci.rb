@@ -274,18 +274,16 @@ did_any_builds = false
               $logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
               p.post_results compiler, true
               begin
-                regression_base = b.get_regression_base p
-
-                # clean up any current branch folder here because we'll clone the regression repository into a fresh folder shortly
-                if File.directory?(p.get_src_dir)
-                  $logger.info "Removing pre-existing branch directory (#{p.get_build_dir})"
-                  system("rm -rf #{regression_base.get_src_dir}")
-                end
 
                 # if we need regressions and this branch has a valid regression branch, clone, build, and test it
+                regression_base = b.get_regression_base p
                 if p.needs_regression_test(compiler) && regression_base
                   regression_base.set_as_baseline
                   regression_base.set_test_run test_mode
+                  if File.directory?(p.get_regression_dir)
+                    $logger.info "Removing pre-existing regressions directory (#{p.get_regression_dir})"
+                    system("rm -rf #{p.get_regression_dir}")
+                  end
                   p.clone_regression_repository
                   if File.directory?(regression_base.get_src_dir)
                     $logger.info "Removing pre-existing baseline directory (#{regression_base.get_build_dir})"
@@ -296,6 +294,11 @@ did_any_builds = false
                   regression_base.do_test compiler, nil
                 end
 
+                # now build this branch
+                if File.directory?(p.get_src_dir)
+                  $logger.info "Removing pre-existing branch directory (#{p.get_build_dir})"
+                  system("rm -rf #{p.get_src_dir}")
+                end
                 p.do_package compiler, regression_base
                 p.do_test compiler, regression_base
                 p.do_coverage compiler
