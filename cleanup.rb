@@ -16,18 +16,18 @@ require 'base64'
 def count_files(client, results_repository, results_path)
   files = github_query(client) { client.contents(results_repository, :path=>results_path) }
 
-  file_count = 0;
+  file_count = 0
 
   files.each{ |file|
     if file.type == "dir"
-      # Scan subfolder
+      # Scan sub-folder
       file_count += count_files(client, results_repository, file.path)
     elsif file.type == "file"
       file_count += 1
     end
   }
 
-  return file_count
+  file_count
 end
 
 def clean_up(client, repository, results_repository, results_path, age_limit, limits)
@@ -50,7 +50,7 @@ def clean_up(client, repository, results_repository, results_path, age_limit, li
     logger.info("Total file limits reached, long running branch names: '#{branches}', feature branch file limit: '#{feature_branch_limit}', long running branch file limit: '#{long_running_branch_limit}'")
   end
 
-  return clean_up_impl(client, repository, results_repository, results_path, age_limit,
+  clean_up_impl(client, repository, results_repository, results_path, age_limit,
                       limit_reached, branches, feature_branch_limit, long_running_branch_limit)
 end
 
@@ -62,18 +62,15 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
     logger = $logger
   end
 
-  # client = Octokit::Client.new(:access_token=>token)
-
   # be sure to get files first and branches second so we don't race
   # to delete the results for a branch that doesn't yet exist
   files = github_query(client) { client.contents(results_repository, :path=>results_path) }
-
 
   folder_contains_files = false
 
   files.each{ |file|
     if file.type == "dir"
-      # Scan subfolder
+      # Scan sub-folder
       clean_up_impl(client, repository, results_repository, file.path, age_limit, 
                     limit_reached, long_running_branches, feature_branch_limit, long_running_branch_limit)
     elsif file.type == "file"
@@ -81,7 +78,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
     end
   }
 
-  if !folder_contains_files
+  unless folder_contains_files
     # No reason to continue from here if no files are found
     return
   end
@@ -133,14 +130,13 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
     if file.type == "file"
       logger.debug("Examining file #{file.sha} #{file.path}")
 
-      file_content = nil
       file_data = nil
 
       begin
         file_content = Base64.decode64(github_query(client) { client.blob(results_repository, file.sha).content })
         #      file_content = Base64.decode64(github_query(client) { client.contents(results_repository, :path=>file.path) })
         file_data = YAML.load(file_content)
-      rescue Psych::SyntaxError => e
+      rescue Psych::SyntaxError
         logger.info("Results file has bad data, deleting. #{file.path}")
         files_for_deletion << file
         next
@@ -150,7 +146,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
 
 
       days_old = (DateTime.now - file_data["date"].to_datetime).to_f
-      if (days_old > file_age_limit) 
+      if days_old > file_age_limit
         logger.debug("Results file has been around for #{days_old} days. Deleting.")
         files_for_deletion << file
         next
@@ -175,7 +171,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
               break
             end
           }
-          if !pr_found
+          unless pr_found
             logger.debug("PR not found, queuing results file for deletion: #{file_data["title"]}")
             files_for_deletion << file
             prs_deleted << file_data["pull_request_issue_id"]
@@ -192,7 +188,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
             if r.tag_name == file_data["tag_name"]
               tag_found = true
               days_after = (file_data["date"].to_datetime - DateTime.parse(r.published_at.to_s)).to_f
-              if (days_after < -1)
+              if days_after < -1
                 logger.debug(" release is newer than results? (#{DateTime.parse(r.published_at.to_s)} vs #{file_data["date"].to_datetime})")
               end
               break
@@ -203,7 +199,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
             logger.debug("Release not found, queuing results for deletion: #{file_data["title"]}, tag: '#{file_data["tag_name"]}'")
             files_for_deletion << file
           else
-            logger.debug("Release results created #{days_after} days  after tag was created");
+            logger.debug("Release results created #{days_after} days  after tag was created")
             if days_after < -1
               logger.debug("Release created AFTER results, queuing results for deletion: #{file_data["title"]}")
               files_for_deletion << file
@@ -221,7 +217,6 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
           end
           branch_files[file_key] << file_data
 
-
           branch_found = false
           branches.each{ |b|
             if b.name == branch_name
@@ -230,7 +225,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
             end
           }
 
-          if !branch_found
+          unless branch_found
             logger.debug("Branch not found, queuing results file for deletion: #{file_data["title"]}")
             files_for_deletion << file
             file_branch[file.path] = branch_name
@@ -242,7 +237,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
         # is pending
         logger.debug("Pending build was created on: #{file_data["date"]}")
         days_pending = (DateTime.now - file_data["date"].to_datetime).to_f
-        if (days_pending > 1) 
+        if days_pending > 1
           logger.debug("Build has been pending for > 1 day, deleting pending file to try again: #{file_data["title"]}")
           files_for_deletion << file
         end
@@ -254,13 +249,13 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
 
   logger.info("#{files.size} files found. #{branches.size} active branches found. #{branches_deleted.size} deleted branches found (#{branches_deleted}). #{prs_deleted.size} deleted pull requests found (#{prs_deleted}). #{files_for_deletion.size} files queued for deletion")
 
-  branch_files.each { |key, filedata|
+  branch_files.each { |key, file_data|
     logger.info("Examining branch data: #{key}")
-    filedata.sort_by! { |i| i[:date] }
+    file_data.sort_by! { |i| i[:date] }
 
-    # allow at most branch_history_limit results for each device_id / branchname combination. The newest, specifically
-    if filedata.size() > branch_history_limit
-      filedata[0..filedata.size() - (branch_history_limit + 1)].each { |file|
+    # allow at most branch_history_limit results for each device_id / branch_name combination. The newest, specifically
+    if file_data.size > branch_history_limit
+      file_data[0..file_data.size - (branch_history_limit + 1)].each { |file|
         logger.debug("Marking old branch results file for deletion #{file[:file].path}")
         files_for_deletion << file[:file]
       }
@@ -277,6 +272,6 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
     end
   }
 
-  return true
+  true
 end
 

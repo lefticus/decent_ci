@@ -28,7 +28,7 @@ class Build
     @potential_builds = []
     @max_age = max_age
 
-    github_check_ratelimit(@client.last_response.headers);
+    github_check_rate_limit(@client.last_response.headers);
   end
 
   def query_releases
@@ -104,8 +104,8 @@ class Build
         notification_users << p.user.login
       end
 
-      aging_pull_requests_notification = true
-      aging_pull_requests_numdays = 7
+      aging_pull_requests_notify = true
+      aging_pull_requests_num_days = 7
 
       begin
         pb = PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p.head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
@@ -115,8 +115,8 @@ class Build
           notification_users.merge(configured_notifications)
         end
 
-        aging_pull_requests_notification = pb.configuration.aging_pull_requests_notification
-        aging_pull_requests_numdays = pb.configuration.aging_pull_requests_numdays
+        aging_pull_requests_notify = pb.configuration.aging_pull_requests_notification
+        aging_pull_requests_num_days = pb.configuration.aging_pull_requests_numdays
 
         if p.head.repo.full_name == p.base.repo.full_name
           $logger.info("Skipping pull-request originating from head repo")
@@ -127,7 +127,7 @@ class Build
         $logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
       end
 
-      @pull_request_details << {:id => p.number, :creator => p.user.login, :owner => (issue.assignee ? issue.assignee.login : nil), :last_updated => issue.updated_at, :repo => @repository, :notification_users => notification_users, :aging_pull_requests_notification => aging_pull_requests_notification, :aging_pull_requests_numdays => aging_pull_requests_numdays}
+      @pull_request_details << {:id => p.number, :creator => p.user.login, :owner => (issue.assignee ? issue.assignee.login : nil), :last_updated => issue.updated_at, :repo => @repository, :notification_users => notification_users, :aging_pull_requests_notification => aging_pull_requests_notify, :aging_pull_requests_numdays => aging_pull_requests_num_days}
     }
   end
 

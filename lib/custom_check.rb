@@ -17,6 +17,7 @@ module CustomCheck
         out, err, result = run_script(["cd #{src_dir} && #{command} #{compiler_flags}"])
       rescue
         test_results.push(TestResult.new(command, 'failed', 0, 'Could not run file, check permissions, executable bit, etc.', [], ''))
+        return test_results
       end
 
       # expected fields to be read: "tool", "file", "line", "column" (optional), "message_type", "message", "id" (optional)
@@ -27,7 +28,7 @@ module CustomCheck
       end
     }
 
-    return test_results
+    test_results
   end
 end
 

@@ -22,7 +22,6 @@ require_relative 'cppcheck.rb'
 require_relative 'custom_check.rb'
 require_relative 'github.rb'
 require_relative 'lcov.rb'
-require_relative 'utility.rb'
 
 
 ## Contains the logic flow for executing builds and parsing results
@@ -39,7 +38,7 @@ class PotentialBuild
   attr_reader :branch_name
 
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets,
-                 pull_id, pull_request_base_repository, pull_request_base_ref)
+                 pull_id, pr_base_repository, pr_base_ref)
     @client = client
     @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name), !release_url.nil?)
     @config.repository_name = github_query(@client) {@client.repo(repository).name}
@@ -57,8 +56,8 @@ class PotentialBuild
     @refspec = @tag_name ? @tag_name : @branch_name
 
     @pull_id = pull_id
-    @pull_request_base_repository = pull_request_base_repository
-    @pull_request_base_ref = pull_request_base_ref
+    @pull_request_base_repository = pr_base_repository
+    @pull_request_base_ref = pr_base_ref
 
     @short_buildid = get_short_form(@tag_name) ? get_short_form(@tag_name) : @commit_sha[0..9]
     unless @pull_id.nil?
@@ -299,12 +298,12 @@ class PotentialBuild
     !compiler[:s3_upload].nil?
   end
 
-  def do_coverage(compiler, regression_baseline)
+  def do_coverage(compiler)
     $logger.info("Beginning coverage calculation phase #{is_release} #{needs_release_package(compiler)}")
 
     if needs_coverage(compiler)
       build_dir = get_build_dir
-      @coverage_total_lines, @coverage_lines, @coverage_total_functions, @coverage_functions = lcov compiler, get_src_dir, build_dir
+      @coverage_total_lines, @coverage_lines, @coverage_total_functions, @coverage_functions = lcov compiler, build_dir
       unless compiler[:coverage_s3_bucket].nil?
         s3_script = File.dirname(File.dirname(__FILE__)) + "/send_to_s3.py"
 
@@ -316,7 +315,7 @@ class PotentialBuild
     end
   end
 
-  def do_upload(compiler, regression_baseline)
+  def do_upload(compiler)
     $logger.info("Beginning upload phase #{is_release} #{needs_upload(compiler)}")
 
     if needs_upload(compiler)
@@ -363,12 +362,12 @@ class PotentialBuild
 
     file_names = []
     begin
-      files = github_query(@client) {@client.content @config.results_repository, :path => "#{@config.results_path}/#{get_branch_folder()}"}
+      files = github_query(@client) {@client.content @config.results_repository, :path => "#{@config.results_path}/#{get_branch_folder}"}
 
       files.each {|f|
         file_names << f.name
       }
-    rescue Octokit::NotFound => e
+    rescue Octokit::NotFound
       # repository doesn't have a _posts folder yet
     end
 
@@ -393,12 +392,13 @@ class PotentialBuild
       return nil
     end
     if str.length <= 10 && str =~ /[a-zA-Z]/
-      return str
+      return_value = str
     elsif (str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/ || str =~ /.*\+.*/
-      return add_dashes(get_initials(str))
+      return_value = add_dashes(get_initials(str))
     else
-      return str.gsub(/[^a-zA-Z0-9\.+_]/, '')
+      return_value = str.gsub(/[^a-zA-Z0-9\.+_]/, '')
     end
+    return_value
   end
 
   def get_branch_folder
@@ -426,7 +426,7 @@ class PotentialBuild
   end
 
   def get_regression_dir
-    "#{get_src_dir}/regressions"
+    File.join(Dir.pwd, "clone_regressions")
   end
 
   def do_build(compiler, regression_baseline, flags = {:release => false})
@@ -491,11 +491,9 @@ class PotentialBuild
     (!@config.regression_script.nil? || !@config.regression_repository.nil?) && !compiler[:analyze_only] && !ENV["DECENT_CI_SKIP_REGRESSIONS"] && !compiler[:skip_regression]
   end
 
-  def clone_regression_repository compiler
+  def clone_regression_repository
     regression_dir = get_regression_dir
-
     FileUtils.mkdir_p regression_dir
-
     unless @config.regression_repository.nil?
       if !@config.regression_commit_sha.nil? && @config.regression_commit_sha != ""
         refspec = @config.regression_commit_sha
@@ -503,57 +501,13 @@ class PotentialBuild
         refspec = @config.regression_branch
       else
         $logger.debug("No regression repository checkout info!?!")
+        return
       end
-
       run_script(
           ["cd #{regression_dir} && git init",
            "cd #{regression_dir} && git fetch https://#{@config.token}@github.com/#{@config.regression_repository} #{refspec}",
            "cd #{regression_dir} && git checkout FETCH_HEAD"]
       )
-    end
-
-  end
-
-  def do_regression_test(compiler, base)
-    regression_dir = get_regression_dir
-
-    build_dir_1 = File.expand_path(base.get_build_dir)
-    build_dir_2 = File.expand_path(get_build_dir)
-    src_dir_1 = File.expand_path(base.get_src_dir)
-    src_dir_2 = File.expand_path(get_src_dir)
-
-    script = []
-    script << @config.regression_script
-    script.flatten!
-
-    script.map! {|line|
-      line = "cd #{regression_dir} && #{line}"
-    }
-
-    $logger.debug("Running regression script: " + script.to_s)
-
-    if !script.empty?
-      start_time = Time.now
-
-      out, err, result = run_script(script, {"REGRESSION_NUM_PROCESSES" => compiler[:num_parallel_builds].to_s, "REGRESSION_BASE" => build_dir_1, "REGRESSION_MOD" => build_dir_2, "REGRESSION_BASE_SRC" => src_dir_1, "REGRESSION_MOD_SRC" => src_dir_2})
-
-      results = process_regression_results out, err, result
-      if @test_results.nil?
-        @test_results = results
-      else
-        @test_results = @test_results + results
-      end
-
-      time = Time.now - start_time
-      if @test_time.nil?
-        @test_time = time
-      else
-        @test_time += time
-      end
-
-      return result == 0
-    else
-      return true
     end
   end
 
@@ -598,13 +552,14 @@ class PotentialBuild
 
     def get_name(files, id, name)
       if name.nil? || name == ""
-        return files[id]
+        return_value = files[id]
       elsif id.nil?
-        return name
+        return_value = name
       else
         files[id] = name
-        return name
+        return_value = name
       end
+      return_value
     end
 
     object_file = nil
@@ -616,8 +571,8 @@ class PotentialBuild
     called_functions = Hash.new
 
     IO.foreach(file) {|line|
-      if /^(?<field>[a-z]+): (?<data>.*)/ =~ line then
-        if field == "totals" then
+      if /^(?<field>[a-z]+): (?<data>.*)/ =~ line
+        if field == "totals"
           props[field] = data.to_i
         else
           props[field] = data
@@ -639,27 +594,25 @@ class PotentialBuild
       elsif /^calls=(?<count>[0-9]+)?\s+(?<target_position>[0-9]+)/ =~ line then
         call_count = count
       elsif /^(?<subposition>(((\+|-)?[0-9]+)|\*)) (?<cost>[0-9]+)/ =~ line then
-        if !call_count.nil? then
-          ofile = called_object_file.nil? ? object_file : called_object_file
-          sfile = called_source_file.nil? ? source_file : called_source_file
+        unless call_count.nil?
+          this_object_file = called_object_file.nil? ? object_file : called_object_file
+          this_source_file = called_source_file.nil? ? source_file : called_source_file
 
-          if called_functions[[ofile, sfile, called_function_name]].nil? then
-            called_functions[[ofile, sfile, called_function_name]] = {"count" => 0, "cost" => 0}
+          if called_functions[[this_object_file, this_source_file, called_function_name]].nil? then
+            called_functions[[this_object_file, this_source_file, called_function_name]] = {"count" => 0, "cost" => 0}
           end
 
-          called_functions[[ofile, sfile, called_function_name]]["count"] += call_count.to_i
-          called_functions[[ofile, sfile, called_function_name]]["cost"] += cost.to_i
+          called_functions[[this_object_file, this_source_file, called_function_name]]["count"] += call_count.to_i
+          called_functions[[this_object_file, this_source_file, called_function_name]]["cost"] += cost.to_i
 
           call_count = nil
           called_object_file = nil
           called_source_file = nil
           called_function_name = nil
         end
-
       elsif line == "\n" then
       end
     }
-
 
     props["object_files"] = Array.new
 
@@ -1045,14 +998,14 @@ class PotentialBuild
 
     $logger.debug("Message counts string: #{message_counts_str}")
 
-    test_results_failure_counts_str = ""
+    test_failures_counts_str = ""
     test_results_failure_counts.sort {|a, b| a[0].casecmp(b[0])}.each {|category, value|
 
       if value.size > 1
-        test_results_failure_counts_str += "\n#{category} Test Summary\n"
+        test_failures_counts_str += "\n#{category} Test Summary\n"
 
         value.sort {|a, b| (a[0] == "Passed" ? -1 : (b[0] == "Passed" ? 1 : a[0].casecmp(b[0])))}.each {|failure, count|
-          test_results_failure_counts_str += " * #{failure}: #{count}\n"
+          test_failures_counts_str += " * #{failure}: #{count}\n"
         }
       end
     }
@@ -1069,8 +1022,8 @@ class PotentialBuild
 
 #{message_counts_str == "" ? "" : "Messages:\n"}
 #{message_counts_str}
-#{test_results_failure_counts_str == "" ? "" : "Failures:\n"}
-#{test_results_failure_counts_str}
+#{test_failures_counts_str == "" ? "" : "Failures:\n"}
+#{test_failures_counts_str}
 
 #{build_badge} #{test_badge} #{coverage_badge}
       eos

@@ -4,8 +4,6 @@
 require 'logger'
 require_relative 'lib/build'
 require_relative 'cleanup.rb'
-require_relative 'lib/utility.rb'
-
 require 'optparse'
 
 $logger = Logger.new "decent_ci.log", 10
@@ -178,7 +176,6 @@ did_any_builds = false
 
   begin
     # Loads the list of potential builds and their config files for the given
-    # repository name
     b = Build.new(ARGV[1], ARGV[conf], options[:maximum_branch_age])
     test_mode = !(ARGV[0] =~ /false/i)
 
@@ -289,7 +286,7 @@ did_any_builds = false
                 if p.needs_regression_test(compiler) && regression_base
                   regression_base.set_as_baseline
                   regression_base.set_test_run test_mode
-                  p.clone_regression_repository compiler
+                  p.clone_regression_repository
                   if File.directory?(regression_base.get_src_dir)
                     $logger.info "Removing pre-existing baseline directory (#{regression_base.get_build_dir})"
                     system("rm -rf #{regression_base.get_src_dir}")
@@ -301,8 +298,8 @@ did_any_builds = false
 
                 p.do_package compiler, regression_base
                 p.do_test compiler, regression_base
-                p.do_coverage compiler, regression_base
-                p.do_upload compiler, regression_base
+                p.do_coverage compiler
+                p.do_upload compiler
 
               rescue => e
                 $logger.error "Logging unhandled failure #{e} #{e.backtrace}"

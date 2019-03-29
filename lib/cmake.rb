@@ -18,12 +18,11 @@ module CMake
 
     if flags[:release]
       extra_flags = compiler[:release_build_cmake_extra_flags]
-      if !extra_flags.nil?
+      unless extra_flags.nil?
         cmake_flags = cmake_flags + " " + extra_flags
       end
     end
 
-    env = {}
     if !compiler[:cc_bin].nil?
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
       env = {"CXXFLAGS" => "#{compiler_extra_flags}", "CFLAGS" => "#{compiler_extra_flags}", "CCACHE_BASEDIR" => build_dir, "CCACHE_UNIFY" => "true", "CCACHE_SLOPPINESS" => "include_file_mtime", "CC" => compiler[:cc_bin], "CXX" => compiler[:cxx_bin]}
@@ -31,7 +30,7 @@ module CMake
       env = {"CXXFLAGS" => "/FC #{compiler_extra_flags}", "CFLAGS" => "/FC #{compiler_extra_flags}", "CCACHE_BASEDIR" => build_dir, "CCACHE_UNIFY" => "true", "CCACHE_SLOPPINESS" => "include_file_mtime"}
     end
 
-    env["PATH"] = cmake_remove_git_from_path(ENV['PATH']);
+    env["PATH"] = cmake_remove_git_from_path(ENV['PATH'])
 
     if !regression_baseline.nil?
       env["REGRESSION_BASELINE"] = File.expand_path(regression_baseline.get_build_dir)
@@ -47,13 +46,13 @@ module CMake
 
     env["GITHUB_TOKEN"] = ENV["GITHUB_TOKEN"]
 
-    out, err, result = run_script(
+    _, err, result = run_script(
         ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
 
-    cmake_result = process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
+    cmake_result = process_cmake_results(compiler, src_dir, build_dir, err, result, false)
 
     unless cmake_result
-      return false;
+      return false
     end
 
     if @config.os != "Windows"
@@ -65,11 +64,11 @@ module CMake
     out, err, result = run_script(
         ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --use-stderr -- #{build_switches}"], env)
 
-    msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, err, result)
-    gcc_success = process_gcc_results(compiler, src_dir, build_dir, out, err, result)
-    process_cmake_results(compiler, src_dir, build_dir, out, err, result, false)
+    msvc_success = process_msvc_results(compiler, src_dir, build_dir, out, result)
+    gcc_success = process_gcc_results(compiler, src_dir, build_dir, err, result)
+    process_cmake_results(compiler, src_dir, build_dir, err, result, false)
     process_python_results(compiler, src_dir, build_dir, out, err, result)
-    return msvc_success && gcc_success
+    msvc_success && gcc_success
   end
 
   def cmake_remove_git_from_path(old_path)
@@ -84,17 +83,15 @@ module CMake
     old_path
   end
 
-
   def cmake_package(compiler, src_dir, build_dir, build_type)
     new_path = ENV['PATH']
-
 
     if @config.os == "Windows"
       File.open("#{build_dir}/extract_linker_path.cmake", "w+") {|f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")')}
 
-      script_stdout, _, _ = run_script(
-          ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
+      script_stdout, _, _ = run_script(["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
 
+      linker_path = nil
       /.*LINKER:(?<linker_path>.*)/ =~ script_stdout
       $logger.debug("Parsed linker path from cmake: #{linker_path}")
 
@@ -116,7 +113,7 @@ module CMake
           ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], {"PATH" => new_path})
     end
 
-    cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stdout, pack_stderr, pack_result, true)
+    cmake_result = process_cmake_results(compiler, src_dir, build_dir, pack_stderr, pack_result, true)
 
     unless cmake_result
       if @package_results.empty?
@@ -154,8 +151,8 @@ module CMake
     test_dirs.each {|test_dir|
       $logger.info("Running tests in dir: '#{test_dir}'")
       env = {"PATH" => cmake_remove_git_from_path(ENV['PATH'])}
-      test_stdout, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 4200 --no-compress-output -D ExperimentalTest -C #{build_type} #{ctest_filter}"], env);
-      test_results, test_messages = process_ctest_results compiler, src_dir, build_dir, "#{build_dir}/#{test_dir}", test_stdout, test_stderr, test_result
+      _, test_stderr, test_result = run_script(["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 4200 --no-compress-output -D ExperimentalTest -C #{build_type} #{ctest_filter}"], env)
+      test_results, test_messages = process_ctest_results compiler, src_dir, build_dir, "#{build_dir}/#{test_dir}"
 
       if @test_results.nil?
         @test_results = test_results
@@ -166,7 +163,7 @@ module CMake
       @test_messages.concat(test_messages)
 
       # may as well see if there are some cmake results to pick up here
-      process_cmake_results(compiler, src_dir, build_dir, test_stdout, test_stderr, test_result, false)
+      process_cmake_results(compiler, src_dir, build_dir, test_stderr, test_result, false)
     }
   end
 end
