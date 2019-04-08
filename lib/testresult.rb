@@ -24,38 +24,36 @@ class TestResult
   end
 
   def passed
-    return @status == "passed" || @status == "warning"
+    @status == "passed" || @status == "warning"
   end
 
   def warning
-    return @status == "warning"
+    @status == "warning"
   end
 
   def failure_type
-    return @failure_type
+    @failure_type
   end
 
   def name
-    return @name
+    @name
   end
 
   def inspect
     parsed_errors_array = []
 
-    if !@parsed_errors.nil?
+    unless @parsed_errors.nil?
       @parsed_errors.each {|e|
         parsed_errors_array << e.inspect
       }
     end
 
-    hash = {:name => @name,
+    {:name => @name,
             :status => @status,
             :time => @time,
             :output => @output,
             :parsed_errors => parsed_errors_array,
-            :failure_type => @failure_type
-    }
-    return hash
+            :failure_type => @failure_type}
   end
 end
 
@@ -69,10 +67,7 @@ class TestMessage
   end
 
   def inspect
-    hash = {:name => @name,
-            :message => @message
-    }
-    return hash
+    {:name => @name, :message => @message}
   end
 end
 

@@ -1,13 +1,7 @@
-[![Code Climate](https://codeclimate.com/github/lefticus/decent_ci/badges/gpa.svg)](https://codeclimate.com/github/lefticus/decent_ci)
-[![Test Coverage](https://codeclimate.com/github/lefticus/decent_ci/badges/coverage.svg)](https://codeclimate.com/github/lefticus/decent_ci)
-[![status](https://sourcegraph.com/api/repos/github.com/lefticus/decent_ci/.badges/status.png)](https://sourcegraph.com/github.com/lefticus/decent_ci)
-[![docs examples](https://sourcegraph.com/api/repos/github.com/lefticus/decent_ci/.badges/docs-examples.png)](https://sourcegraph.com/github.com/lefticus/decent_ci)
-[![Build Status](https://travis-ci.org/lefticus/decent_ci.svg)](https://travis-ci.org/lefticus/decent_ci)
-
-(Note: for NREL specific notes, see here: https://github.com/lefticus/decent_ci/wiki/Decent-CI-Cheat-Sheet)
-
 decent_ci
 =========
+
+Forked from https://github.com/lefticus/decent_ci, tailored to our specific needs.  If you are using this fork of it for anything other than EnergyPlus, please be aware we are not guaranteeing anything stable here.
 
 Decent CI is a decentralized continuous integration system for cmake based projects designed for use with github.
 
@@ -26,6 +20,8 @@ Decent CI is tested on Windows, Linux and MacOS.
 
 # Windows Installation / Usage
 
+TO BE UPDATED
+
  1. Install git bash http://git-scm.com/download/win
  2. Install python https://www.python.org/downloads/ add it to the path (needed for energyplus regressions)
  3. Install ruby 2.0+ http://rubyinstaller.org/downloads/ add it to the path
@@ -39,6 +35,8 @@ Decent CI is tested on Windows, Linux and MacOS.
 
 # MacOS Installation / Usage
 
+TO BE UPDATED 
+
  1. Install ruby gems octokit and activesupport. You will need to follow these instructions http://stackoverflow.com/questions/22352838/ruby-gem-install-json-fails-on-mavericks-and-xcode-5-1-unknown-argument-mul
  2. `sudo gem install octokit activesupport`
  3. Get gist from here https://gist.github.com/lefticus/10914850
@@ -47,12 +45,16 @@ Decent CI is tested on Windows, Linux and MacOS.
 
 # Linux Installation / Usage
 
- 1. `sudo apt-get install cmake git g++ ruby irb python gfortran cppcheck` Make sure ruby installed is 1.9+
- 2. `sudo gem install octokit activesupport`
- 3. Get gist from here https://gist.github.com/lefticus/10914850
- 4. Create github token for the user
- 5. Execute `ruby ./run_ci.rb <build_folder> <true/false test mode> <token> <respository>`
-
+```
+sudo apt-get install git cmake g++ gfortran cmake-curses-gui curl ccache python-pip texlive-full valgrind lcov gcovr clang-format cppcheck
+pip install boto beautifulsoup4 soupsieve
+sudo gem install activesupport octokit
+cd ~
+mkdir ~/ci
+git clone https://gist.github.com/c51580a92556ef344216c22ec390aa31.git ci_script
+cd ci_script
+ruby run_ci.rb ~/ci <AWS_STUFF> <true/false test mode> <GH_TOKEN> NREL/EnergyPlus
+```
 
 
 

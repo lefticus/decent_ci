@@ -1,7 +1,6 @@
 # encoding: UTF-8 
 #
 
-
 # Implementation for parsing of build messages
 module ResultsProcessor
   def relative_path(p, src_dir, build_dir, compiler)
@@ -27,116 +26,107 @@ module ResultsProcessor
       def get_short_win32_filename(long_name)
         max_path = 1024
         short_name = " " * max_path
-        lfn_size = Win32API.new("kernel32",
-                                "GetShortPathName", ['P', 'P', 'L'], 'L').call(long_name, short_name, max_path)
-        return (1..max_path).include?(lfn_size) ? short_name[0..lfn_size - 1] : long_name
+        lfn_size = Win32API.new("kernel32", "GetShortPathName", %w(P P L), 'L').call(long_name, short_name, max_path)
+        (1..max_path).include?(lfn_size) ? short_name[0..lfn_size - 1] : long_name
       end
 
       def get_long_win32_filename(short_name)
         max_path = 1024
         long_name = " " * max_path
-        lfn_size = Win32API.new("kernel32",
-                                "GetLongPathName", ['P', 'P', 'L'], 'L').call(short_name, long_name, max_path)
-        return (1..max_path).include?(lfn_size) ? long_name[0..lfn_size - 1] : short_name
+        lfn_size = Win32API.new("kernel32", "GetLongPathName", %w(P P L), 'L').call(short_name, long_name, max_path)
+        (1..max_path).include?(lfn_size) ? long_name[0..lfn_size - 1] : short_name
       end
 
-      return get_long_win32_filename(get_short_win32_filename(name))
+      get_long_win32_filename(get_short_win32_filename(name))
     else
-      return name
+      name
     end
 
   end
 
   def parse_custom_check_line(compiler, src_path, build_path, line)
     # JSON formatted output is expected here
-    json = JSON.parse(line)
+    begin
+      json = JSON.parse(line)
+    rescue JSON::ParserError
+      return CodeMessage.new('DecentCI::resultsprocessor::parse_custom_check_line', __LINE__, 0, "error", "Output of custom_check script was not formatted properly; should be individual line-by-line JSON objects")
+    end
+
+    if json.is_a?(Array)
+      return CodeMessage.new('DecentCI::resultsprocessor::parse_custom_check_line', __LINE__, 0, "error", "Output of custom_check script was not formatted properly, it was an array; should be individual line-by-line JSON objects")
+    end
 
     # expected fields to be read: "tool", "file", "line", "column" (optional), "messagetype", "message", "id" (optional)
     if !json["filename"].nil?
       message = json["message"]
-      if !json["id"].nil?
+      unless json["id"].nil?
         message = "(#{json["id"]}) #{message}"
       end
 
-      if !json["tool"].nil?
+      unless json["tool"].nil?
         message = "[#{json["tool"]}] #{message}"
       end
 
-      return CodeMessage.new(relative_path(json["filename"], src_path, build_path, compiler), json["line"], (json["column"].nil? ? 0 : json["column"]), json["messagetype"], message)
+      CodeMessage.new(relative_path(json["filename"], src_path, build_path, compiler), json["line"], (json["column"].nil? ? 0 : json["column"]), json["messagetype"], message)
     else
-      return nil
+      nil
     end
   end
 
-
   def parse_cppcheck_line(compiler, src_path, build_path, line)
-    /\[(?<filename>.*)\]:(?<linenumber>[0-9]+):(?<messagetype>\S+):(?<message>.*)/ =~ line
-
-    if !filename.nil? && !messagetype.nil?
-      return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, 0, messagetype, message)
+    line_number = nil
+    message_type = nil
+    /\[(?<filename>.*)\]:(?<line_number>[0-9]+):(?<message_type>\S+):(?<message>.*)/ =~ line
+    if !filename.nil? && !message_type.nil?
+      CodeMessage.new(relative_path(filename, src_path, build_path, compiler), line_number, 0, message_type, message)
     else
-      return nil
+      nil
     end
   end
 
   def parse_regression_line(line)
     /(?<name>\S+);(?<status>\S+);(?<time>\S+);(?<message>.*)/ =~ line
-
     if !name.nil? && !status.nil?
-      return TestResult.new("regression.#{name}", status, time, message, nil, status)
+      TestResult.new("regression.#{name}", status, time, message, nil, status)
     else
-      return nil
+      nil
     end
-  end
-
-  def process_regression_results(stdout, stderr, result)
-    results = []
-
-    stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
-      $logger.debug("Parsing regression line: #{line}")
-      msg = parse_regression_line(line)
-      if !msg.nil?
-        results << msg
-      end
-    }
-
-    return results
   end
 
   def process_custom_check_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
-
     stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
-      $logger.debug("Parsing custom_check line: #{line}")
+      $logger.debug("Parsing custom_check stdout line: #{line}")
       msg = parse_custom_check_line(compiler, src_dir, build_dir, line)
-      if !msg.nil?
+      unless msg.nil?
         results << msg
       end
     }
-
+    stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
+      $logger.debug("Parsing custom_check stderr line: #{line}")
+      msg = parse_custom_check_line(compiler, src_dir, build_dir, line)
+      unless msg.nil?
+        results << msg
+      end
+    }
     @build_results.merge(results)
-
-    return result == 0
+    result == 0
   end
 
-
-  def process_cppcheck_results(compiler, src_dir, build_dir, stdout, stderr, result)
+  def process_cppcheck_results(compiler, src_dir, build_dir, stderr, result)
     results = []
-
     stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
       $logger.debug("Parsing cppcheck line: #{line}")
       msg = parse_cppcheck_line(compiler, src_dir, build_dir, line)
-      if !msg.nil?
+      unless msg.nil?
         results << msg
       end
     }
-
     @build_results.merge(results)
-
-    return result == 0
+    result == 0
   end
 
-  def process_cmake_results(compiler, src_dir, build_dir, stdout, stderr, result, is_package)
+  def process_cmake_results(compiler, src_dir, build_dir, stderr, result, is_package)
     results = []
 
     file = nil
@@ -176,43 +166,49 @@ module ResultsProcessor
       else
         if file.nil?
           /^CPack Error: (?<message>.*)/ =~ err
-          if !message.nil?
+          unless message.nil?
             results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", "#{previous_line}#{err.strip}")
             last_was_error_line = true
           end
 
           /^CMake Error: (?<message>.*)/ =~ err
-          if !message.nil?
+          unless message.nil?
             results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", "#{previous_line}#{err.strip}")
             last_was_error_line = true
           end
 
           /^ERROR: (?<message>.*)/ =~ err
-          if !message.nil?
+          unless message.nil?
             results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "error", "#{previous_line}#{err.strip}")
             last_was_error_line = true
           end
 
           /^WARNING: (?<message>.*)/ =~ err
-          if !message.nil?
+          unless message.nil?
             results << CodeMessage.new(relative_path("CMakeLists.txt", src_dir, build_dir, compiler), 1, 0, "warning", "#{previous_line}#{err.strip}")
             last_was_error_line = true
           end
 
+          message_type = nil
+          line_number = nil
+          /CMake (?<message_type>\S+) at (?<filename>.*):(?<line_number>[0-9]+) \(\S+\):$/ =~ err
 
-          /CMake (?<messagetype>\S+) at (?<filename>.*):(?<linenumber>[0-9]+) \(\S+\):$/ =~ err
-
-          if !filename.nil? && !linenumber.nil?
+          if !filename.nil? && !line_number.nil?
             file = filename
-            line = linenumber
-            type = messagetype.downcase
+            line = line_number
+            type = message_type.nil? ? "error" : message_type.downcase
           else
-            /(?<filename>.*):(?<linenumber>[0-9]+):$/ =~ err
+            /(?<filename>.*):(?<line_number>[0-9]+):$/ =~ err
 
-            if !filename.nil? && !linenumber.nil? && !(filename =~ /file included/i) && !(filename =~ /^\s*from\s+/i)
+            if !filename.nil? && !line_number.nil? && !(filename =~ /file included/i) && !(filename =~ /^\s*from\s+/i)
               file = filename
-              line = linenumber
-              type = "error"
+              line = line_number
+              if err.include?('.f90')
+                # this is a bad assumption, but right now fortran warnings are being taken as uncategorized build errors
+                type = "warning"
+              else
+                type = "error"
+              end
             end
           end
 
@@ -246,78 +242,80 @@ module ResultsProcessor
       @build_results.merge(results)
     end
 
-    return result == 0
+    result == 0
   end
 
   def parse_generic_line(compiler, src_dir, build_dir, line)
-    /\s*(?<filename>\S+):(?<linenumber>[0-9]+): (?<message>.*)/ =~ line
-
+    line_number = nil
+    message = nil
+    /\s*(?<filename>\S+):(?<line_number>[0-9]+): (?<message>.*)/ =~ line
     if !filename.nil? && !message.nil?
-      return CodeMessage.new(relative_path(filename, src_dir, build_dir, compiler), linenumber, 0, "error", message)
+      CodeMessage.new(relative_path(filename, src_dir, build_dir, compiler), line_number, 0, "error", message)
     else
-      return nil
+      nil
     end
   end
 
   def parse_msvc_line(compiler, src_dir, build_dir, line)
-    /(?<filename>.+)\((?<linenumber>[0-9]+)\): (?<messagetype>.+?) (?<messagecode>\S+): (?<message>.*) \[.*\]?/ =~ line
-
-    if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
-      return CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir, compiler), linenumber, 0, messagetype, messagecode + " " + message)
+    line_number = nil
+    message_type = nil
+    message_code = nil
+    message = nil
+    /(?<filename>.+)\((?<line_number>[0-9]+)\): (?<message_type>.+?) (?<message_code>\S+): (?<message>.*) \[.*\]?/ =~ line
+    if !filename.nil? && !message_type.nil? && message_type != "info" && message_type != "note"
+      CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir, compiler), line_number, 0, message_type, message_code + " " + message)
     else
-      /(?<filename>.+) : (?<messagetype>\S+) (?<messagecode>\S+): (?<message>.*) \[.*\]?/ =~ line
-
-      if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
-        return CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir, compiler), 0, 0, messagetype, messagecode + " " + message)
+      /(?<filename>.+) : (?<message_type>\S+) (?<message_code>\S+): (?<message>.*) \[.*\]?/ =~ line
+      if !filename.nil? && !message_type.nil? && message_type != "info" && message_type != "note"
+        return CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir, compiler), 0, 0, message_type, message_code + " " + message)
       else
         return nil
       end
     end
   end
 
-  def process_msvc_results(compiler, src_dir, build_dir, stdout, stderr, result)
+  def process_msvc_results(compiler, src_dir, build_dir, stdout, result)
     results = []
     stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
       msg = parse_msvc_line(compiler, src_dir, build_dir, err)
-      if !msg.nil?
+      unless msg.nil?
         results << msg
       end
     }
-
     @build_results.merge(results)
-
-    return result == 0
+    result == 0
   end
 
   def parse_gcc_line(compiler, src_path, build_path, line)
-    /(?<filename>.*):(?<linenumber>[0-9]+):(?<colnumber>[0-9]+): (?<messagetype>.+?): (?<message>.*)/ =~ line
-
-    if !filename.nil? && !messagetype.nil? && messagetype != "info" && messagetype != "note"
-      return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, colnumber, messagetype, message)
+    line_number = nil
+    column_number = nil
+    message_type = nil
+    message = nil
+    /(?<filename>.*):(?<line_number>[0-9]+):(?<column_number>[0-9]+): (?<message_type>.+?): (?<message>.*)/ =~ line
+    if !filename.nil? && !message_type.nil? && message_type != "info" && message_type != "note"
+      CodeMessage.new(relative_path(filename, src_path, build_path, compiler), line_number, column_number, message_type, message)
     else
-      /(?<filename>.*):(?<linenumber>[0-9]+): (?<message>.*)/ =~ line
-
+      /(?<filename>.*):(?<line_number>[0-9]+): (?<message>.*)/ =~ line
       # catch linker errors
       if !filename.nil? && !message.nil? && (message =~ /.*multiple definition.*/ || message =~ /.*undefined.*/)
-        return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), linenumber, 0, "error", message)
+        return CodeMessage.new(relative_path(filename, src_path, build_path, compiler), line_number, 0, "error", message)
       else
         return nil
       end
     end
-
   end
 
-  def process_gcc_results(compiler, src_path, build_path, stdout, stderr, result)
+  def process_gcc_results(compiler, src_path, build_path, stderr, result)
     results = []
-    linkerrmsg = nil
+    linker_msg = nil
 
     stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|line|
-      if !linkerrmsg.nil?
+      unless linker_msg.nil?
         if line =~ /^\s.*/
-          linkerrmsg += "\n" + line
+          linker_msg += "\n" + line
         else
-          results << CodeMessage.new("CMakeLists.txt", 0, 0, "error", linkerrmsg)
-          linkerrmsg = nil
+          results << CodeMessage.new("CMakeLists.txt", 0, 0, "error", linker_msg)
+          linker_msg = nil
         end
       end
 
@@ -327,43 +325,61 @@ module ResultsProcessor
       else
         # try to catch some goofy clang linker errors that don't give us very much info
         if /^Undefined symbols for architecture.*/ =~ line
-          linkerrmsg = line
+          linker_msg = line
         end
       end
     }
 
-    if !linkerrmsg.nil?
-      results << CodeMessage.new("CMakeLists.txt", 0, 0, "error", linkerrmsg)
+    unless linker_msg.nil?
+      results << CodeMessage.new("CMakeLists.txt", 0, 0, "error", linker_msg)
     end
 
     @build_results.merge(results)
 
-    return result == 0
+    result == 0
   end
 
-  def parse_error_messages compiler, src_dir, build_dir, output
+  def parse_error_messages(compiler, src_dir, build_dir, output)
     results = []
     output.encode('UTF-8', :invalid => :replace).split("\n").each {|l|
       msg = parse_gcc_line(compiler, src_dir, build_dir, l)
       msg = parse_msvc_line(compiler, src_dir, build_dir, l) if msg.nil?
       msg = parse_generic_line(compiler, src_dir, build_dir, l) if msg.nil?
-
-      results << msg if !msg.nil?
+      results << msg unless msg.nil?
     }
-
-    return results
+    results
   end
 
-  def parse_python_line(compiler, src_dir, build_dir, line)
-    /File "(?<filename>.+)", line (?<linenumber>[0-9]+),.*/ =~ line
-    /^.*Error: (?<message>.+)/ =~ line
+  def parse_python_or_latex_line(compiler, src_dir, build_dir, line)
+    line_number = nil
+    # Since we are just doing line-by-line parsing, it really limits what we can get, but we'll try our best anyway
+    if 'LaTeX Error'.include?(line)
+      # Example LaTeX Error (third line):
+      # LaTeX Font Info: Checking defaults for U/cmr/m/n on input line 3.
+      # LaTeX Font Info: ... okay on input line 3.
+      # ! LaTeX Error: Environment itemize undefined.
+      # See the LaTeX manual or LaTeX Companion for explanation.
+      # Type H <return> for immediate help.
+      /^.*Error: (?<message>.+)/ =~ line
+      compiler_string = 'LaTeX'
+    else
+      # assume Python
+      # Example Python Error (last line)
+      # Traceback (most recent call last):
+      #   File "/tmp/python_error.py", line 1, in <module>
+      #     print('c' + 3)
+      # TypeError: cannot concatenate 'str' and 'int' objects
+      /File "(?<filename>.+)", line (?<line_number>[0-9]+),.*/ =~ line
+      /^.*Error: (?<message>.+)/ =~ line
+      compiler_string = 'Python'
+    end
 
-    $logger.debug("Parsing line for python errors: #{line}: #{filename} #{linenumber} #{message}")
+    $logger.debug("Parsing line for python/LaTeX errors: #{line}: #{filename} #{line_number} #{message}")
 
-    if !filename.nil? && !linenumber.nil?
-      return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir, compiler), linenumber, 0, "error", "Error")
+    if !filename.nil? && !line_number.nil?
+      CodeMessage.new(relative_path(filename.strip, src_dir, build_dir, compiler), line_number, 0, "error", "Error")
     elsif !message.nil?
-      return CodeMessage.new(relative_path("python", src_dir, build_dir, compiler), 0, 0, "error", message)
+      return CodeMessage.new(relative_path(compiler_string, src_dir, build_dir, compiler), 0, 0, "error", message)
     end
 
   end
@@ -371,8 +387,8 @@ module ResultsProcessor
   def process_python_results(compiler, src_dir, build_dir, stdout, stderr, result)
     results = []
     stdout.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
-      msg = parse_python_line(compiler, src_dir, build_dir, err)
-      if !msg.nil?
+      msg = parse_python_or_latex_line(compiler, src_dir, build_dir, err)
+      unless msg.nil?
         results << msg
       end
     }
@@ -380,17 +396,14 @@ module ResultsProcessor
     @build_results.merge(results)
     results = []
     stderr.encode('UTF-8', :invalid => :replace).split("\n").each {|err|
-      msg = parse_python_line(compiler, src_dir, build_dir, err)
-      if !msg.nil?
+      msg = parse_python_or_latex_line(compiler, src_dir, build_dir, err)
+      unless msg.nil?
         results << msg
       end
     }
-
-
     $logger.debug("stderr results: #{results}")
     @build_results.merge(results)
-
-    return result == 0
+    result == 0
   end
 
   def parse_package_names(output)
@@ -399,11 +412,10 @@ module ResultsProcessor
       /CPack: - package: (?<filename>.*) generated./ =~ l
       results << filename if filename
     }
-
-    return results
+    results
   end
 
-  def process_lcov_results(compiler, src_dir, build_dir, out, err, result)
+  def process_lcov_results(out)
     #Overall coverage rate:
     #  lines......: 67.9% (173188 of 255018 lines)
     #  functions..: 83.8% (6228 of 7433 functions)
@@ -412,22 +424,26 @@ module ResultsProcessor
     covered_lines = 0
     total_functions = 0
     covered_functions = 0
+    total_lines_str = nil
+    covered_lines_str = nil
+    total_functions_str = nil
+    covered_functions_str = nil
 
     out.encode('UTF-8', :invalid => :replace).split("\n").each {|l|
       /.*\((?<covered_lines_str>[0-9]+) of (?<total_lines_str>[0-9]+) lines.*/ =~ l
-      covered_lines = covered_lines_str.to_i if !covered_lines_str.nil?
-      total_lines = total_lines_str.to_i if !total_lines_str.nil?
+      covered_lines = covered_lines_str.to_i unless covered_lines_str.nil?
+      total_lines = total_lines_str.to_i unless total_lines_str.nil?
 
       /.*\((?<covered_functions_str>[0-9]+) of (?<total_functions_str>[0-9]+) functions.*/ =~ l
-      covered_functions = covered_functions_str.to_i if !covered_functions_str.nil?
-      total_functions = total_functions_str.to_i if !total_functions_str.nil?
+      covered_functions = covered_functions_str.to_i unless covered_functions_str.nil?
+      total_functions = total_functions_str.to_i unless total_functions_str.nil?
     }
 
-    return [total_lines, covered_lines, total_functions, covered_functions]
+    [total_lines, covered_lines, total_functions, covered_functions]
   end
 
-  def process_ctest_results compiler, src_dir, build_dir, test_dir, stdout, stderr, result
-    if !File.directory?(test_dir)
+  def process_ctest_results(compiler, src_dir, build_dir, test_dir)
+    unless File.directory?(test_dir)
       $logger.error("Error: test_dir #{test_dir} does not exist, cannot parse test results")
       return nil, []
     end
@@ -439,9 +455,9 @@ module ResultsProcessor
         results = []
 
         xml = Hash.from_xml(File.open(path).read)
-        testresults = xml["Site"]["Testing"]
-        t = testresults["Test"]
-        if !t.nil?
+        test_results = xml["Site"]["Testing"]
+        t = test_results["Test"]
+        unless t.nil?
           tests = []
           tests << t
           tests.flatten!
@@ -458,9 +474,9 @@ module ResultsProcessor
                 value = nil
                 errors = nil
 
-                if !m.nil?
+                unless m.nil?
                   value = m["Value"]
-                  if !value.nil?
+                  unless value.nil?
                     errors = parse_error_messages(compiler, src_dir, build_dir, value)
 
                     value.split("\n").each {|line|
@@ -475,12 +491,12 @@ module ResultsProcessor
 
                 nm = r["NamedMeasurement"]
 
-                if !nm.nil?
+                unless nm.nil?
                   failure_type = ""
                   nm.each {|measurement|
                     if measurement["name"] == "Exit Code"
                       ft = measurement["Value"]
-                      if !ft.nil?
+                      unless ft.nil?
                         failure_type = ft
                       end
                     end
@@ -492,7 +508,7 @@ module ResultsProcessor
                       if !value.nil? && value =~ /\[decent_ci:test_result:warn\]/ && status_string == "passed"
                         status_string = "warning"
                       end
-                      results << TestResult.new(n["Name"], status_string, measurement["Value"], value, errors, failure_type);
+                      results << TestResult.new(n["Name"], status_string, measurement["Value"], value, errors, failure_type)
                     end
                   }
                 end

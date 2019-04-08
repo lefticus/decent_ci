@@ -12,7 +12,7 @@ module Configuration
   def which(cmd, extra_paths = nil)
     exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
     path_array = ENV['PATH'].split(File::PATH_SEPARATOR)
-    if !extra_paths.nil?
+    unless extra_paths.nil?
       path_array = path_array.concat(extra_paths)
     end
 
@@ -22,17 +22,16 @@ module Configuration
         return Pathname.new(exe).cleanpath.to_s if File.executable? exe
       }
     end
-    return nil
+    nil
   end
 
   def load_configuration(location, ref, is_release)
     def load_yaml(name, location, ref)
-
       if !location.nil? && !name.nil?
         begin
           content = @client.content(location, {:path => name, :ref => ref})
           contents = content.content
-          return YAML.load(Base64.decode64(contents.to_s))
+          return_value = YAML.load(Base64.decode64(contents.to_s))
         rescue SyntaxError => e
           raise "#{e.message} while parsing #{name}@#{ref}"
         rescue => e
@@ -41,15 +40,16 @@ module Configuration
           path = File.expand_path(name, location)
           $logger.info("Attempting to load yaml config file: #{path}")
           if File.exists?(path)
-            return YAML.load_file(path)
+            return_value = YAML.load_file(path)
           else
             $logger.info("yaml file does not exist: #{path}")
-            return nil
+            return_value = nil
           end
         end
       else
-        return nil
+        return_value = nil
       end
+      return_value
     end
 
     def symbolize(obj)
@@ -82,39 +82,22 @@ module Configuration
       os_version = "Windows"
       ver_string = `cmd /c ver`.strip
 
+      # rubymine doesn't understand that the RE capture groups are creating the ver_minor and ver_major variables
+      ver_minor = nil
+      ver_major = nil
       /.* \[Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\..*\]/ =~ ver_string
-
       os_release = nil
-
-      case ver_major.to_i
-      when 5
-        case ver_minor.to_i
-        when 0
-          os_release = "2000"
-        when 1
-          os_release = "XP"
-        when 2
-          os_release = "2003"
-        end
-      when 6
-        case ver_minor.to_i
-        when 0
-          os_release = "Vista"
-        when 1
+      if ver_major.to_i == 6
+        if ver_minor.to_i == 1
           os_release = "7"
-        when 2
+        elsif ver_minor.to_i == 2
           os_release = "8"
-        when 3
+        elsif ver_minor.to_i == 3
           os_release = "8.1"
         end
-      when 10
-        case ver_minor.to_i
-        when 0
-          os_release = "10"
-        end
+      elsif ver_major.to_i == 10
+        os_release = "10"
       end
-
-
       if os_release.nil?
         os_release = "Unknown-#{ver_major}.#{ver_minor}"
       end
@@ -125,13 +108,13 @@ module Configuration
     yaml_os_name = "#{yaml_base_name}-#{os_version}.yaml"
     yaml_os_distribution_name = nil
 
-    if !os_distribution.nil?
+    unless os_distribution.nil?
       yaml_os_distribution_name = "#{yaml_base_name}-#{os_version}-#{os_distribution}.yaml"
     end
 
     yaml_os_release_name = "#{yaml_base_name}-#{os_version}-#{os_release}.yaml"
 
-    fileset = Set.new()
+    fileset = Set.new
 
     @client.content(location, {:path => ".", :ref => ref}).each {|path|
       if path.name =~ /\.decent_ci.*/
@@ -143,14 +126,18 @@ module Configuration
 
     raise "No .decent_ci input files" if fileset.empty?
 
+    base_yaml = nil
+    os_yaml = nil
+    os_distribution_yaml = nil
+    os_distribution_release_yaml = nil
     base_yaml = load_yaml(yaml_name, location, ref) if fileset.include?(yaml_name)
-    $logger.debug("Base yaml loaded: #{base_yaml}") if !base_yaml.nil?
+    $logger.debug("Base yaml loaded: #{base_yaml}") unless base_yaml.nil?
     os_yaml = load_yaml(yaml_os_name, location, ref) if fileset.include?(yaml_os_name)
-    $logger.debug("os yaml loaded: #{os_yaml}") if !os_yaml.nil?
+    $logger.debug("os yaml loaded: #{os_yaml}") unless os_yaml.nil?
     os_distribution_yaml = load_yaml(yaml_os_distribution_name, location, ref) if fileset.include?(yaml_os_distribution_name)
-    $logger.debug("os distribution yaml loaded: #{os_distribution_yaml}") if !os_distribution_yaml.nil?
+    $logger.debug("os distribution yaml loaded: #{os_distribution_yaml}") unless os_distribution_yaml.nil?
     os_distribution_release_yaml = load_yaml(yaml_os_release_name, location, ref) if fileset.include?(yaml_os_release_name)
-    $logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") if !os_distribution_release_yaml.nil?
+    $logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") unless os_distribution_release_yaml.nil?
 
     cmake_paths = ["C:\\Program Files\\CMake\\bin",
                    "C:\\Program Files (x86)\\CMake\\bin",
@@ -171,10 +158,10 @@ module Configuration
         :cpack_bin => "\"#{which("cpack", cmake_paths)}\""
     }
 
-    result_yaml.merge!(base_yaml) if !base_yaml.nil?
-    result_yaml.merge!(os_yaml) if !os_yaml.nil?
-    result_yaml.merge!(os_distribution_yaml) if !os_distribution_yaml.nil?
-    result_yaml.merge!(os_distribution_release_yaml) if !os_distribution_release_yaml.nil?
+    result_yaml.merge!(base_yaml) unless base_yaml.nil?
+    result_yaml.merge!(os_yaml) unless os_yaml.nil?
+    result_yaml.merge!(os_distribution_yaml) unless os_distribution_yaml.nil?
+    result_yaml.merge!(os_distribution_release_yaml) unless os_distribution_release_yaml.nil?
 
 #    if result_yaml[:extra_tests_branches].nil?
 #      result_yaml[:extra_tests_branches] = []
@@ -191,9 +178,10 @@ module Configuration
 
 # go through the list of compilers specified and fill in reasonable defaults
 # if there are not any specified already
-    configuration.compilers.each {|compiler|
-
+    # noinspection RubyScope
+    configuration.compilers.each { |compiler|
       $logger.debug("Working on compiler: #{compiler[:name]}")
+
       if compiler[:architecture].nil? || compiler[:architecture] == ""
         if compiler[:name] == "Visual Studio"
           compiler[:architecture_description] = "i386"
@@ -202,10 +190,6 @@ module Configuration
         end
       else
         compiler[:architecture_description] = compiler[:architecture]
-      end
-
-      if compiler[:release_build_enable_pgo].nil?
-        compiler[:release_build_enable_pgo] = false
       end
 
       if compiler[:version].nil?
@@ -246,7 +230,6 @@ module Configuration
         end
 
         if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil? || !(`#{compiler[:cc_bin]} --version` =~ /.*#{compiler[:version]}/) || !(`#{compiler[:cxx_bin]} --version` =~ /.*#{compiler[:version]}/)
-
           raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
         end
       end
@@ -258,7 +241,6 @@ module Configuration
       if compiler[:release_only].nil?
         compiler[:release_only] = false
       end
-
 
       if compiler[:name] == "cppcheck" && compiler[:bin].nil?
         potential_name = which("cppcheck-#{compiler[:version]}")
@@ -280,7 +262,7 @@ module Configuration
       if compiler[:skip_packaging].nil?
         compiler[:skip_packaging] = false
       else
-        if ((compiler[:skip_packaging] =~ /true/i) || compiler[:skip_packaging] == true)
+        if (compiler[:skip_packaging] =~ /true/i) || compiler[:skip_packaging] == true
           compiler[:skip_packaging] = true
         end
       end
@@ -385,14 +367,13 @@ module Configuration
       end
 
       if compiler[:num_parallel_builds].nil?
-        numprocs = processor_count
-        if numprocs > 2
-          numprocs -= 1
+        num_processors = processor_count
+        if num_processors > 2
+          num_processors -= 1
         end
 
-        compiler[:num_parallel_builds] = numprocs
+        compiler[:num_parallel_builds] = num_processors
       end
-
     }
 
     if configuration.tests_dir.nil?
@@ -415,8 +396,7 @@ module Configuration
       configuration.test_warn_limit = 90.00
     end
 
-
-    return configuration
+    configuration
   end
 
 end

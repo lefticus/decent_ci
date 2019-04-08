@@ -29,15 +29,15 @@ class CodeMessage
   def inspect
     hash = {}
     instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var)}
-    return hash
+    hash
   end
 
   def hash
-    return inspect.hash
+    inspect.hash
   end
 
   def eql?(other)
-    return (self <=> other) == 0
+    (self <=> other) == 0
   end
 
   def <=> (other)
@@ -48,16 +48,17 @@ class CodeMessage
     m = @message[0..10] <=> other.message[0..10]
 
     if f != 0
-      return f
+      ret = f
     elsif l != 0
-      return l
+      ret = l
     elsif c != 0
-      return c
+      ret = c
     elsif mt != 0
-      return mt
+      ret = mt
     else
-      return m
+      ret = m
     end
+    ret
   end
 
 end
