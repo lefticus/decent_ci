@@ -453,8 +453,12 @@ module ResultsProcessor
     Find.find(test_dir) do |path|
       if path =~ /.*Test.xml/
         results = []
-
-        xml = Hash.from_xml(File.open(path).read)
+        # read the test.xml file but make sure to close it
+        f = File.open(path, "r")
+        contents = f.read
+        f.close
+        # then get the XML contents into a Ruby Hash
+        xml = Hash.from_xml(contents)
         test_results = xml["Site"]["Testing"]
         t = test_results["Test"]
         unless t.nil?
