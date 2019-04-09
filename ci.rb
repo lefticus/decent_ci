@@ -265,13 +265,14 @@ did_any_builds = false
           end
 
           begin
-            did_any_builds = true
 
             # reset potential build for the next build attempt
             p.next_build
             p.set_test_run test_mode
 
             if p.needs_run compiler
+              did_any_builds = true
+
               $logger.info "Beginning build for #{compiler} #{p.descriptive_string}"
               p.post_results compiler, true
               begin

@@ -299,6 +299,9 @@ module Configuration
         compiler[:target_arch] = nil
         case compiler[:name]
         when /.*Visual Studio.*/i
+          if compiler[:version] != 16
+            raise "Decent CI currently only deployed with Visual Studio version 16 (2019)"
+          end
           generator = "Visual Studio 16 2019"
           # Visual Studio 2019+ generator behaves slightly different, need to add -A
           if compiler[:architecture] =~ /.*64.*/
