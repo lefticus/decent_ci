@@ -296,6 +296,7 @@ module Configuration
       end
 
       if compiler[:build_generator].nil? || compiler[:build_generator] == ""
+        compiler[:target_arch] = nil
         case compiler[:name]
         when /.*Visual Studio.*/i
           generator = "Visual Studio 16 2019"
