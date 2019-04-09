@@ -297,7 +297,7 @@ did_any_builds = false
 
                 # now build this branch
                 if File.directory?(p.get_src_dir)
-                  $logger.info "Removing pre-existing branch directory (#{p.get_build_dir})"
+                  $logger.info "Removing pre-existing branch directory (#{p.get_src_dir})"
                   FileUtils.rm_rf(p.get_src_dir)
                 end
                 p.do_package compiler, regression_base
