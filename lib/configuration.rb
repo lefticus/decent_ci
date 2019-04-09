@@ -298,13 +298,12 @@ module Configuration
       if compiler[:build_generator].nil? || compiler[:build_generator] == ""
         case compiler[:name]
         when /.*Visual Studio.*/i
-          if compiler[:version] == "16"
-            generator = "Visual Studio 16 2019"
+          generator = "Visual Studio 16 2019"
+          # Visual Studio 2019+ generator behaves slightly different, need to add -A
+          if compiler[:architecture] =~ /.*64.*/
+            compiler[:target_arch] = "x64"
           else
-            generator = "Visual Studio #{compiler[:version]}"
-            if compiler[:architecture] =~ /.*64.*/
-              generator = "#{generator} Win64"
-            end
+            compiler[:target_arch] = "Win32"
           end
           compiler[:build_generator] = generator
         else

@@ -47,7 +47,7 @@ module CMake
     env["GITHUB_TOKEN"] = ENV["GITHUB_TOKEN"]
 
     _, err, result = run_script(
-        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env)
+        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\" -A #{compiler[:target_arch]}"], env)
 
     cmake_result = process_cmake_results(compiler, src_dir, build_dir, err, result, false)
 
