@@ -144,7 +144,8 @@ module Configuration
                    "C:\\Program Files\\CMake 3.0\\bin",
                    "C:\\Program Files (x86)\\CMake 3.0\\bin",
                    "C:\\Program Files\\CMake 2.8\\bin",
-                   "C:\\Program Files (x86)\\CMake 2.8\\bin"]
+                   "C:\\Program Files (x86)\\CMake 2.8\\bin",
+                   "C:\\ProgramData\\chocolatey\\bin"]
 
     result_yaml = {
         :os => os_version,
@@ -297,9 +298,13 @@ module Configuration
       if compiler[:build_generator].nil? || compiler[:build_generator] == ""
         case compiler[:name]
         when /.*Visual Studio.*/i
-          generator = "Visual Studio #{compiler[:version]}"
-          if compiler[:architecture] =~ /.*64.*/
-            generator = "#{generator} Win64"
+          if compiler[:version] == "16"
+            generator = "Visual Studio 16 2019"
+          else
+            generator = "Visual Studio #{compiler[:version]}"
+            if compiler[:architecture] =~ /.*64.*/
+              generator = "#{generator} Win64"
+            end
           end
           compiler[:build_generator] = generator
         else

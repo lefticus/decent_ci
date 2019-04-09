@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8 
 
+require 'fileutils'
 require 'logger'
 require_relative 'lib/build'
 require_relative 'cleanup.rb'
@@ -282,12 +283,12 @@ did_any_builds = false
                   regression_base.set_test_run test_mode
                   if File.directory?(p.get_regression_dir)
                     $logger.info "Removing pre-existing regressions directory (#{p.get_regression_dir})"
-                    system("rm -rf #{p.get_regression_dir}")
+                    FileUtils.rm_rf(p.get_regression_dir)
                   end
                   p.clone_regression_repository
                   if File.directory?(regression_base.get_src_dir)
                     $logger.info "Removing pre-existing baseline directory (#{regression_base.get_build_dir})"
-                    system("rm -rf #{regression_base.get_src_dir}")
+                    FileUtils.rm_rf(regression_base.get_src_dir)
                   end
                   $logger.info "Beginning regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
                   regression_base.do_build compiler, nil
@@ -297,7 +298,7 @@ did_any_builds = false
                 # now build this branch
                 if File.directory?(p.get_src_dir)
                   $logger.info "Removing pre-existing branch directory (#{p.get_build_dir})"
-                  system("rm -rf #{p.get_src_dir}")
+                  FileUtils.rm_rf(p.get_src_dir)
                 end
                 p.do_package compiler, regression_base
                 p.do_test compiler, regression_base
