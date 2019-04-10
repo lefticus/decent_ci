@@ -1,5 +1,5 @@
 require 'minitest/autorun'
-require 'processor'
+require_relative '../lib/processor'
 
 class TestProcessor < Minitest::Test
   def test_gets_value
