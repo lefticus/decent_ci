@@ -8,3 +8,4 @@ decent_ci.log*
 clone_baseline
 clone_branch
 clone_regressions
+coverage
