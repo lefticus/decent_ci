@@ -3,6 +3,9 @@
 require 'simplecov'
 SimpleCov.start
 
+require 'coveralls'
+Coveralls.wear!('rails')
+
 require 'minitest/autorun'
 require 'minitest/reporters'
 
