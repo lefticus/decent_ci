@@ -9,6 +9,7 @@ gem 'octokit'
 
 # there are some gems we use for testing the codebase -- not needed for actual use of the library
 group :test do
+  gem 'rake'
   gem 'coveralls', require: false
   gem 'rspec'
   gem 'simplecov', require: false
