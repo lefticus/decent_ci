@@ -8,8 +8,9 @@ gem 'activesupport'
 gem 'octokit'
 
 # there are some gems we use for testing the codebase -- not needed for actual use of the library
-gem 'simplecov'
-gem 'coveralls', require: false
-gem 'rake', require: false
-gem 'minitest', require: false
-gem 'minitest-reporters', require: false
+group :test do
+  gem 'coveralls', require: false
+  gem 'rspec'
+  gem 'simplecov', require: false
+  gem 'simplecov-console', require: false
+end
