@@ -1,10 +1,10 @@
 # encoding: utf-8
 
-# Rakefile
 require 'rubygems'
 require 'rake'
 require 'rspec/core/rake_task'
 require 'coveralls/rake/task'
+
 desc 'Run RSpec'
 RSpec::Core::RakeTask.new do |t|
   t.verbose = false
