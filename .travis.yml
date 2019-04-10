@@ -1,0 +1,8 @@
+language: ruby
+rvm: 2.5
+cache: bundler
+matrix:
+  include:
+    - os: linux
+    - os: osx
+    - os: windows
