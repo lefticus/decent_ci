@@ -144,7 +144,8 @@ module Configuration
                    "C:\\Program Files\\CMake 3.0\\bin",
                    "C:\\Program Files (x86)\\CMake 3.0\\bin",
                    "C:\\Program Files\\CMake 2.8\\bin",
-                   "C:\\Program Files (x86)\\CMake 2.8\\bin"]
+                   "C:\\Program Files (x86)\\CMake 2.8\\bin",
+                   "C:\\ProgramData\\chocolatey\\bin"]
 
     result_yaml = {
         :os => os_version,
@@ -295,11 +296,18 @@ module Configuration
       end
 
       if compiler[:build_generator].nil? || compiler[:build_generator] == ""
+        compiler[:target_arch] = nil
         case compiler[:name]
         when /.*Visual Studio.*/i
-          generator = "Visual Studio #{compiler[:version]}"
+          if compiler[:version] != 16
+            raise "Decent CI currently only deployed with Visual Studio version 16 (2019)"
+          end
+          generator = "Visual Studio 16 2019"
+          # Visual Studio 2019+ generator behaves slightly different, need to add -A
           if compiler[:architecture] =~ /.*64.*/
-            generator = "#{generator} Win64"
+            compiler[:target_arch] = "x64"
+          else
+            compiler[:target_arch] = "Win32"
           end
           compiler[:build_generator] = generator
         else
