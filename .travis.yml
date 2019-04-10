@@ -1,8 +1,12 @@
 language: ruby
-rvm: 2.4
+rvm: 2.4.1
 cache: bundler
 matrix:
   include:
     - os: linux
     - os: osx
     # - os: windows  --  windows doesn't have language: ruby support yet
+scripts:
+  - bundle exec rspec spec
+after_script:
+  - bundle exec rake coveralls:push
