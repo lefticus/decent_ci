@@ -11,4 +11,4 @@ matrix:
 scripts:
   - bundle exec rspec spec
 after_script:
-  - rake coveralls:push
+  - bundle exec rake coveralls:push
