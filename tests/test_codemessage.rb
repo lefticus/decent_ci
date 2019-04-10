@@ -1,7 +1,7 @@
-require 'minitest'
+require 'test/unit'
 require_relative '../lib/codemessage'
 
-class TestCodeMessage < Minitest::Test
+class TestCodeMessage < Test::Unit::TestCase
   def test_warning_construction
     c = CodeMessage.new("filename", 1, 1, "warning", "message")
     assert c.is_warning
@@ -34,4 +34,3 @@ class TestCodeMessage < Minitest::Test
     assert((c_base <=> c_equal) == 0)
   end
 end
-

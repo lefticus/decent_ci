@@ -1,7 +1,7 @@
-require 'minitest'
+require 'test/unit'
 require_relative '../lib/processor'
 
-class TestProcessor < Minitest::Test
+class TestProcessor < Test::Unit::TestCase
   def test_gets_value
     processor_count.to_i  # should not throw
   end
