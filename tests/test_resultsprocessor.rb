@@ -1,4 +1,4 @@
-require 'minitest/autorun'
+require 'minitest'
 require_relative '../lib/resultsprocessor'
 
 class TestResultsProcessor < Minitest::Test

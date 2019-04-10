@@ -1,4 +1,4 @@
-require 'minitest/autorun'
+require 'minitest'
 require_relative '../lib/codemessage'
 
 class TestCodeMessage < Minitest::Test
@@ -26,12 +26,12 @@ class TestCodeMessage < Minitest::Test
     c_type = CodeMessage.new("filename", 1, 1, "error", "message")
     c_mess = CodeMessage.new("filename", 1, 1, "warning", "message2")
     c_equal = CodeMessage.new("filename", 1, 1, "warning", "message")
-    assert (c_base <=> c_file) <=> 0
-    assert (c_base <=> c_line) <=> 0
-    assert (c_base <=> c_colu) <=> 0
-    assert (c_base <=> c_type) <=> 0
-    assert (c_base <=> c_mess) <=> 0
-    assert (c_base <=> c_equal) == 0
+    assert((c_base <=> c_file) <=> 0)
+    assert((c_base <=> c_line) <=> 0)
+    assert((c_base <=> c_colu) <=> 0)
+    assert((c_base <=> c_type) <=> 0)
+    assert((c_base <=> c_mess) <=> 0)
+    assert((c_base <=> c_equal) == 0)
   end
 end
 
