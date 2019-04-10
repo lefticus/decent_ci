@@ -40,7 +40,7 @@ class CodeMessage
     (self <=> other) == 0
   end
 
-  def <=> (other)
+  def <=>(other)
     f = @filename <=> other.filename
     l = @linenumber.to_i <=> other.linenumber.to_i
     c = @colnumber.to_i <=> other.colnumber.to_i

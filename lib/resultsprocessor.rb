@@ -1,5 +1,6 @@
 # encoding: UTF-8 
 #
+require 'codemessage'
 
 # Implementation for parsing of build messages
 module ResultsProcessor

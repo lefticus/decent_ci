@@ -3,10 +3,9 @@
 require 'fileutils'
 require_relative 'testresult.rb'
 
-# contains functions necessary for working with the 'cmake' engine
+# contains functions necessary for working with the 'custom_check' scripts
 module CustomCheck
   def custom_check(compiler, src_dir, build_dir)
-
     test_results = []
     compiler[:commands].each {|command|
       compiler_flags = "#{build_dir}"
@@ -19,7 +18,6 @@ module CustomCheck
         test_results.push(TestResult.new(command, 'failed', 0, 'Could not run file, check permissions, executable bit, etc.', [], ''))
         return test_results
       end
-
       # expected fields to be read: "tool", "file", "line", "column" (optional), "message_type", "message", "id" (optional)
       if process_custom_check_results(compiler, src_dir, build_dir, out, err, result)
         test_results.push(TestResult.new(command, 'passed', 0, '', [], ''))
@@ -27,7 +25,6 @@ module CustomCheck
         test_results.push(TestResult.new(command, 'failed', 0, '', [], ''))
       end
     }
-
     test_results
   end
 end
