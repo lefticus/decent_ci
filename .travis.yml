@@ -5,4 +5,4 @@ matrix:
   include:
     - os: linux
     - os: osx
-    - os: windows
+    # - os: windows  --  windows doesn't have language: ruby support yet
