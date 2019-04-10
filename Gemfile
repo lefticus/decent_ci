@@ -10,4 +10,4 @@ gem 'octokit'
 # there are some gems we use for testing the codebase -- not needed for general use
 gem 'coveralls', require: false
 gem 'rake', require: false
-gem 'test-unit', require: false
+gem 'minitest', require: false

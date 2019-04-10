@@ -1,13 +1,7 @@
-require 'test/unit'
+require 'minitest/autorun'
 
-class TC_MyTest < Test::Unit::TestCase
-  # def setup
-  # end
-
-  # def teardown
-  # end
-
-  def test_fail
-    assert(true, 'Assertion was false.')
+class MagicBallTest < Minitest::Test
+  def test_ask_returns_an_answer
+    assert true
   end
 end
