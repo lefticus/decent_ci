@@ -2,14 +2,6 @@ require 'rspec'
 require_relative '../lib/codemessage'
 
 describe 'CodeMessage Testing' do
-  before do
-    # Do nothing
-  end
-
-  after do
-    # Do nothing
-  end
-
   context 'when constructing code messages' do
     it 'should properly check warning type' do
       c = CodeMessage.new("filename", 1, 1, "warning", "message")
@@ -40,7 +32,17 @@ describe 'CodeMessage Testing' do
       expect(c_base <=> c_colu).not_to be_equal(0)
       expect(c_base <=> c_type).not_to be_equal(0)
       expect(c_base <=> c_mess).not_to be_equal(0)
-      expect(c_base <=> c_equal).to be_equal(0)
+      expect(c_base.eql? c_equal).to be_truthy
+    end
+  end
+  context 'when inspecting code messages' do
+    it 'should return a hash with at least a few specific keys' do
+      c = CodeMessage.new("filename", 1, 1, "warning", "message")
+      inspection = c.inspect
+      expect(inspection).to be_an_instance_of(Hash)
+      expect(inspection).to have_key("filename")
+      expect(inspection).to have_key("linenumber")
+      expect(c.hash).to be_instance_of(Integer)
     end
   end
 end

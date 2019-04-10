@@ -6,8 +6,6 @@ matrix:
     - os: linux
     - os: osx
     # - os: windows  --  windows doesn't have language: ruby support yet
-#before_install:
-#  - gem install bundler
 scripts:
   - bundle exec rspec spec
 after_script:
