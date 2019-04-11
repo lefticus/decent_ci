@@ -1,6 +1,6 @@
 # encoding: UTF-8 
 #
-require 'codemessage'
+require_relative 'codemessage'
 
 # Implementation for parsing of build messages
 module ResultsProcessor
@@ -46,6 +46,7 @@ module ResultsProcessor
   end
 
   def parse_custom_check_line(compiler, src_path, build_path, line)
+
     # JSON formatted output is expected here
     begin
       json = JSON.parse(line)
@@ -57,21 +58,35 @@ module ResultsProcessor
       return CodeMessage.new('DecentCI::resultsprocessor::parse_custom_check_line', __LINE__, 0, "error", "Output of custom_check script was not formatted properly, it was an array; should be individual line-by-line JSON objects")
     end
 
-    # expected fields to be read: "tool", "file", "line", "column" (optional), "messagetype", "message", "id" (optional)
-    if !json["filename"].nil?
-      message = json["message"]
-      unless json["id"].nil?
-        message = "(#{json["id"]}) #{message}"
+    # a quick helper function to read the varying keys in the hash
+    def get_string_maybe(hash, key, default_value="")
+      returner = default_value
+      unless hash[key].nil?
+        returner = hash[key]
       end
-
-      unless json["tool"].nil?
-        message = "[#{json["tool"]}] #{message}"
-      end
-
-      CodeMessage.new(relative_path(json["filename"], src_path, build_path, compiler), json["line"], (json["column"].nil? ? 0 : json["column"]), json["messagetype"], message)
-    else
-      nil
+      returner
     end
+
+    # read each string, giving a good default value
+    tool = get_string_maybe(json, "tool", "nil")
+    file = get_string_maybe(json, "file", "(Unknown file)")
+    line_num = get_string_maybe(json, "line", 0)
+    column = get_string_maybe(json, "column", 0)
+    messagetype = get_string_maybe(json, "messagetype", "error")
+    message = get_string_maybe(json, "message", "(No message)")
+    id = get_string_maybe(json, "id", nil)
+
+    # make the message nice based on what keys are there
+    unless id.nil?
+      message = "#{id} #{message}"
+    end
+    unless tool.nil?
+      message = "#{tool} #{message}"
+    end
+
+    # then just return a good codemessage
+    CodeMessage.new(relative_path(file, src_path, build_path, compiler), line_num, column, messagetype, message)
+
   end
 
   def parse_cppcheck_line(compiler, src_path, build_path, line)
