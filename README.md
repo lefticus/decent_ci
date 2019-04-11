@@ -3,6 +3,7 @@ decent_ci
 
 [![Build Status](https://travis-ci.org/Myoldmopar/decent_ci.svg?branch=master)](https://travis-ci.org/Myoldmopar/decent_ci)
 [![Coverage Status](https://coveralls.io/repos/github/Myoldmopar/decent_ci/badge.svg?branch=AddTesting2)](https://coveralls.io/github/Myoldmopar/decent_ci?branch=AddTesting2)
+[![Maintainability](https://api.codeclimate.com/v1/badges/2ec29367c38e431d4b8a/maintainability)](https://codeclimate.com/github/Myoldmopar/decent_ci/maintainability)
 
 Forked from https://github.com/lefticus/decent_ci, tailored to [EnergyPlus ](https://github.com/NREL/EnergyPlus) specific needs.  If you are using this fork of it for anything other than EnergyPlus, please be aware we are not guaranteeing anything stable here.
 
