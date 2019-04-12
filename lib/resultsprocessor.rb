@@ -22,19 +22,19 @@ module ResultsProcessor
     if RbConfig::CONFIG['target_os'].match?(/mingw|mswin/)
       require 'win32api'
 
-      get_short_win32_filename = ->(long_name) {
+      get_short_win32_filename = lambda do |long_name|
         max_path = 1024
         short_name = ' ' * max_path
         lfn_size = Win32API.new('kernel32', 'GetShortPathName', %w[P P L], 'L').call(long_name, short_name, max_path)
         (1..max_path).include?(lfn_size) ? short_name[0..lfn_size - 1] : long_name # rubocop:disable Performance/RangeInclude
-      }
+      end
 
-      get_long_win32_filename = ->(short_name) {
+      get_long_win32_filename = lambda do |short_name|
         max_path = 1024
         long_name = ' ' * max_path
         lfn_size = Win32API.new('kernel32', 'GetLongPathName', %w[P P L], 'L').call(short_name, long_name, max_path)
         (1..max_path).include?(lfn_size) ? long_name[0..lfn_size - 1] : short_name # rubocop:disable Performance/RangeInclude
-      }
+      end
 
       get_long_win32_filename.call(get_short_win32_filename.call(name))
     else
@@ -61,11 +61,11 @@ module ResultsProcessor
     end
 
     # a quick helper function to read the varying keys in the hash
-    get_string_maybe = ->(hash, key, default_value = '') {
+    get_string_maybe = lambda do |hash, key, default_value = ''|
       returner = default_value
       returner = hash[key] unless hash[key].nil?
       returner
-    }
+    end
 
     # read each string, giving a good default value
     tool = get_string_maybe.call(json, 'tool', nil)

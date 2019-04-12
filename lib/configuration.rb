@@ -23,18 +23,18 @@ module Configuration
   end
 
   def load_configuration(location, ref, is_release)
-    load_yaml = ->(name, location, ref) {
-      if !location.nil? && !name.nil?
+    load_yaml = lambda do |name, this_location, this_ref|
+      if !this_location.nil? && !name.nil?
         begin
-          content = @client.content(location, :path => name, :ref => ref)
+          content = @client.content(this_location, :path => name, :ref => this_ref)
           contents = content.content
           return_value = YAML.load(Base64.decode64(contents.to_s))
         rescue SyntaxError => e
-          raise "#{e.message} while parsing #{name}@#{ref}"
+          raise "#{e.message} while parsing #{name}@#{this_ref}"
         rescue => e
-          $logger.info("Unable to load yaml file from repository: #{location}/#{name}@#{ref} error: #{e}")
+          $logger.info("Unable to load yaml file from repository: #{this_location}/#{name}@#{this_ref} error: #{e}")
 
-          path = File.expand_path(name, location)
+          path = File.expand_path(name, this_location)
           $logger.info("Attempting to load yaml config file: #{path}")
           if File.exist?(path)
             return_value = YAML.load_file(path)
@@ -47,9 +47,9 @@ module Configuration
         return_value = nil
       end
       return_value
-    }
+    end
 
-    symbolize = ->(obj) {
+    symbolize = lambda do |obj|
       if obj.is_a? Hash
         return obj.reduce({}) do |memo, (k, v)|
           memo.tap { |m| m[k.to_sym] = symbolize(v) }
@@ -61,7 +61,7 @@ module Configuration
         end
       end
       obj
-    }
+    end
 
     if RUBY_PLATFORM.match?(/darwin/i)
       os_distribution = nil

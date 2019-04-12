@@ -549,7 +549,7 @@ class PotentialBuild
     functions = {}
     props = {}
 
-    get_name = ->(files, id, name) {
+    get_name = lambda do |files, id, name|
       if name.nil? || name == ''
         return_value = files[id]
       elsif id.nil?
@@ -559,7 +559,7 @@ class PotentialBuild
         return_value = name
       end
       return_value
-    }
+    end
 
     object_file = nil
     source_file = nil
