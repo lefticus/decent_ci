@@ -112,10 +112,6 @@ describe 'ResultsProcessor Testing' do
     end
   end
 
-  context 'when calling process_cmake_results' do
-
-  end
-
   context 'when calling parse_generic_line' do
     it 'should properly parse a few variations' do
       message = 'Something:32: Hey there'
@@ -216,22 +212,179 @@ describe 'ResultsProcessor Testing' do
   end
 
   context 'when calling parse_python_or_latex_line' do
-
+    it 'should properly parse python error messages' do
+      message = "# TypeError: cannot concatenate \'str\' and \'int\' objects"
+      response = parse_python_or_latex_line('/src/path/', '/build/path', message)
+      expect(response.error?).to be_truthy
+    end
+    it 'should properly parse latex error messages' do
+      message = '! LaTeX Error: Environment itemize undefined.'
+      response = parse_python_or_latex_line('/src/path/', '/build/path', message)
+      expect(response.error?).to be_truthy
+    end
   end
 
   context 'when calling process_python_results' do
-
+    it 'should handle no data' do
+      @build_results = SortedSet.new
+      process_python_results('/src/dir', '/build/dir', '','', 0)
+      expect(@build_results.length).to eql 0
+    end
+    it 'should handle invalid lines by ignoring them' do
+      @build_results = SortedSet.new
+      stdout = "# TypeError: cannot concatenate \'str\' and \'int\' objects\nOH HAI"
+      process_python_results('/src/dir', '/build/dir', stdout, '',0)
+      expect(@build_results.length).to eql 1
+    end
+    it 'should handle blank lines by ignoring them' do
+      @build_results = SortedSet.new
+      stdout = "# TypeError: cannot concatenate \'str\' and \'int\' objects\n\n# TypeError: cannot whatever \'str\' and \'int\' objects"
+      process_python_results('/src/dir', '/build/dir', stdout, '', 0)
+      expect(@build_results.length).to eql 2
+    end
+    it 'should read from stdout and stderr' do
+      @build_results = SortedSet.new
+      stdout = "# TypeError: cannot concatenate \'str\' and \'int\' objects"
+      stderr = "# TypeError: cannot IMNOTSURE \'str\' and \'int\' objects"
+      process_python_results('/src/dir', '/build/dir', stdout, stderr,0)
+      expect(@build_results.length).to eql 2
+    end
   end
 
   context 'when calling parse_package_names' do
-
+    it 'should ignore empty lines' do
+      message = ''
+      response = parse_package_names(message)
+      expect(response.length).to eql 0
+    end
+    it 'should get a valid package name from one line' do
+      message = 'CPack: - package: abd generated.'
+      response = parse_package_names(message)
+      expect(response.length).to eql 1
+    end
+    it 'should get multiple valid package names' do
+      message = "CPack: - package: abd generated.\nCPack: - package: zyx generated."
+      response = parse_package_names(message)
+      expect(response.length).to eql 2
+    end
   end
 
   context 'when calling process_lcov_results' do
-
+    it 'should properly parse an lcov response' do
+      message = "Overall coverage rate:\n lines......: 67.9% (6 of 10 lines)\n functions..: 83.8% (12 of 36 functions)"
+      response = process_lcov_results(message)
+      expect(response.length).to eql 4
+      expect(response[0]).to eql 10  # total lines
+      expect(response[1]).to eql 6  # covered lines
+      expect(response[2]).to eql 36  # total functions
+      expect(response[3]).to eql 12  # covered functions
+    end
   end
 
-  context 'when calling process_ctest_results' do
+  context 'when calling process_cmake_results' do
+    it 'should handle no data' do
+      @build_results = SortedSet.new
+      process_cmake_results('/src/dir', '/build/dir', '',0, false)
+      expect(@build_results.length).to eql 0
+    end
+    it 'should match on a few different formats' do
+      @build_results = SortedSet.new
+      stderr = 'CPack Error: Hey there'
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+      @build_results = SortedSet.new
+      stderr = 'CMake Error: Hey there'
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+      @build_results = SortedSet.new
+      stderr = 'ERROR: Hey there'
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+      @build_results = SortedSet.new
+      stderr = 'WARNING: Hey there'
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+      @build_results = SortedSet.new
+      stderr = 'CMake Error at CMakeLists.txt:33 (d):'
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+      @build_results = SortedSet.new
+      stderr = 'main.f90:32:'
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+      @build_results = SortedSet.new
+      stderr = 'main.cc:32:'
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+    end
+    it 'should ignore blank lines' do
+      @build_results = SortedSet.new
+      stderr = "CPack Error: Hey there\n\nCPack Error: Hey there-ish"
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 2
+    end
+    it 'should handle odd long cmake messages' do
+      @build_results = SortedSet.new
+      stderr = "CMake Error at CMakeLists.txt:33 (d):\nI am on a second line"
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+    end
+    it 'should handle another odd long cmake message' do
+      @build_results = SortedSet.new
+      stderr = "CMake Error at CMakeLists.txt:33 (d):\n "
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+    end
+    it 'should keep context between two lines' do
+      @build_results = SortedSet.new
+      stderr = "CMake Error: Hey there\nI am on a second line"
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, false)
+      expect(@build_results.length).to eql 1
+      @build_results.each do |br|
+        expect(br.message).to include 'there'
+        expect(br.message).to include 'second'
+      end
+    end
+    it 'should assign errors to package during packaging' do
+      @package_results = SortedSet.new
+      stderr = 'CPack Error: Hey there'
+      process_cmake_results('/src/dir', '/build/dir', stderr,0, true)
+      expect(@package_results.length).to eql 1
+    end
+  end
 
+  # I'm not actually sure if we even use a Test.xml file but I'll test it anyway
+  context 'when calling process_ctest_results' do
+    it 'should process a Test.xml file with a run' do
+      temp_dir = Dir.mktmpdir
+      temp_file = File.join(temp_dir, "Test.xml")
+      xml_content = <<-XML
+<Site><Testing><Test>
+ <Status>OK</Status>
+ <Results>
+  <Measurement><Value>[decent_ci:test_result:message] hello</Value></Measurement>
+  <NamedMeasurement type="array">
+   <Measurement><Name>Exit Code</Name><Value>23</Value></Measurement>
+   <Measurement><Name>Execution Time</Name><Value>32</Value></Measurement>
+  </NamedMeasurement>
+ </Results>
+</Test></Testing></Site>
+      XML
+      open(temp_file, 'w') { |f| f << xml_content }
+      results, messages = process_ctest_results("/src/dir", "/build/dir", temp_dir)
+      expect(results.length).to eql 1
+      expect(messages.length).to eql 1
+    end
+    it 'should process a Test.xml file with just a notrun' do
+      temp_dir = Dir.mktmpdir
+      temp_file = File.join(temp_dir, "Test.xml")
+      open(temp_file, 'w') { |f| f << "<Site><Testing><Test><Status>notrun</Status></Test></Testing></Site>" }
+      process_ctest_results("/src/dir", "/build/dir", temp_dir)
+    end
+    it 'should return gracefully for missing folder' do
+      results, messages = process_ctest_results("/src/dir", "/build/dir", "/folder/does/not/exist")
+      expect(results).to be_nil
+      expect(messages.length).to eql 0
+    end
   end
 end

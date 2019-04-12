@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'active_support/all'
+require 'find'
 require_relative 'codemessage'
 
 # Implementation for parsing of build messages
@@ -126,7 +128,7 @@ module ResultsProcessor
     result.zero?
   end
 
-  def process_cmake_results(src_dir, build_dir, stderr, result, is_package)
+  def process_cmake_results(src_dir, build_dir, stderr, cmake_exit_code, is_package)
     results = []
 
     file = nil
@@ -208,8 +210,8 @@ module ResultsProcessor
           end
         end
       else
-        msg << "\n" if msg != ''
-        msg << err
+        +msg << "\n" if msg != ''
+        +msg << err
       end
 
       previous_line = err.strip
@@ -227,7 +229,7 @@ module ResultsProcessor
       @build_results.merge(results)
     end
 
-    result.zero?
+    cmake_exit_code.zero?
   end
 
   def parse_generic_line(src_dir, build_dir, line)
@@ -250,14 +252,14 @@ module ResultsProcessor
     end
   end
 
-  def process_msvc_results(src_dir, build_dir, stdout, result)
+  def process_msvc_results(src_dir, build_dir, stdout, msvc_exit_code)
     results = []
     stdout.encode('UTF-8', :invalid => :replace).split("\n").each do |err|
       msg = parse_msvc_line(src_dir, build_dir, err)
       results << msg unless msg.nil?
     end
     @build_results.merge(results)
-    result.zero?
+    msvc_exit_code.zero?
   end
 
   def parse_gcc_line(src_path, build_path, line)
@@ -274,7 +276,7 @@ module ResultsProcessor
     end
   end
 
-  def process_gcc_results(src_path, build_path, stderr, result)
+  def process_gcc_results(src_path, build_path, stderr, gcc_exit_code)
     results = []
     linker_msg = nil
 
@@ -301,7 +303,7 @@ module ResultsProcessor
 
     @build_results.merge(results)
 
-    result.zero?
+    gcc_exit_code.zero?
   end
 
   def parse_error_messages(src_dir, build_dir, output)
@@ -318,7 +320,7 @@ module ResultsProcessor
   def parse_python_or_latex_line(src_dir, build_dir, line)
     line_number = nil
     # Since we are just doing line-by-line parsing, it really limits what we can get, but we'll try our best anyway
-    if 'LaTeX Error'.include?(line)
+    if line.include? 'LaTeX Error'
       # Example LaTeX Error (third line):
       # LaTeX Font Info: Checking defaults for U/cmr/m/n on input line 3.
       # LaTeX Font Info: ... okay on input line 3.
@@ -348,7 +350,7 @@ module ResultsProcessor
     nil
   end
 
-  def process_python_results(src_dir, build_dir, stdout, stderr, result)
+  def process_python_results(src_dir, build_dir, stdout, stderr, python_exit_code)
     results = []
     stdout.encode('UTF-8', :invalid => :replace).split("\n").each do |err|
       msg = parse_python_or_latex_line(src_dir, build_dir, err)
@@ -363,7 +365,7 @@ module ResultsProcessor
     end
     $logger.debug("stderr results: #{results}")
     @build_results.merge(results)
-    result.zero?
+    python_exit_code.zero?
   end
 
   def parse_package_names(output)
