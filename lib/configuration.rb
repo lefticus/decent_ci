@@ -23,7 +23,7 @@ module Configuration
   end
 
   def load_configuration(location, ref, is_release)
-    load_yaml = lambda(name, location, ref) {
+    load_yaml = ->(name, location, ref) {
       if !location.nil? && !name.nil?
         begin
           content = @client.content(location, :path => name, :ref => ref)
@@ -49,7 +49,7 @@ module Configuration
       return_value
     }
 
-    symbolize = lambda(obj) {
+    symbolize = ->(obj) {
       if obj.is_a? Hash
         return obj.reduce({}) do |memo, (k, v)|
           memo.tap { |m| m[k.to_sym] = symbolize(v) }

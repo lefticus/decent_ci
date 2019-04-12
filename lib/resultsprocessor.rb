@@ -22,14 +22,14 @@ module ResultsProcessor
     if RbConfig::CONFIG['target_os'].match?(/mingw|mswin/)
       require 'win32api'
 
-      get_short_win32_filename = lambda(long_name) {
+      get_short_win32_filename = ->(long_name) {
         max_path = 1024
         short_name = ' ' * max_path
         lfn_size = Win32API.new('kernel32', 'GetShortPathName', %w[P P L], 'L').call(long_name, short_name, max_path)
         (1..max_path).include?(lfn_size) ? short_name[0..lfn_size - 1] : long_name # rubocop:disable Performance/RangeInclude
       }
 
-      get_long_win32_filename = lambda(short_name) {
+      get_long_win32_filename = ->(short_name) {
         max_path = 1024
         long_name = ' ' * max_path
         lfn_size = Win32API.new('kernel32', 'GetLongPathName', %w[P P L], 'L').call(short_name, long_name, max_path)
@@ -61,7 +61,7 @@ module ResultsProcessor
     end
 
     # a quick helper function to read the varying keys in the hash
-    get_string_maybe = lambda(hash, key, default_value = '') {
+    get_string_maybe = ->(hash, key, default_value = '') {
       returner = default_value
       returner = hash[key] unless hash[key].nil?
       returner

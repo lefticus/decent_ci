@@ -6,29 +6,29 @@ describe 'ResultsProcessor Testing' do
   context 'when calling parse_custom_check_line' do
     it 'should be ok with no keys at all' do
       message = parse_custom_check_line('/src/path', '/build/path', "{}")
-      expect(message.is_error).to be_truthy
+      expect(message.error?).to be_truthy
       expect(message.message).to be_truthy
       expect(message.linenumber).to eql 0
       expect(message.colnumber).to eql 0
     end
     it 'should be add an ID and tool to the message' do
       message = parse_custom_check_line('/src/path', '/build/path', %Q({"tool": "mytool", "id": "this_id"}))
-      expect(message.is_error).to be_truthy
+      expect(message.error?).to be_truthy
       expect(message.message).to be_truthy
       expect(message.message).to include "mytool"
       expect(message.message).to include "this_id"
     end
     it 'should return an error' do
       message = parse_custom_check_line('/src/path', '/build/path', 'MyErrorMessage')
-      expect(message.is_error).to be_truthy
+      expect(message.error?).to be_truthy
     end
     it 'should return an error for non-json message' do
       message = parse_custom_check_line('/src/path', '/build/path', 'MyErrorMessage')
-      expect(message.is_error).to be_truthy
+      expect(message.error?).to be_truthy
     end
     it 'should return an error for json-array message' do
       message = parse_custom_check_line('/src/path', '/build/path', "[{\"key\": 1}]")
-      expect(message.is_error).to be_truthy
+      expect(message.error?).to be_truthy
     end
   end
   context 'when calling process_custom_check_results' do
