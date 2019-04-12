@@ -11,7 +11,9 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
         SimpleCov::Formatter::HTMLFormatter
     ]
 )
-SimpleCov.start
+SimpleCov.start do
+  add_filter "lib/processor.rb"
+end
 
 # load all the source files here to make sure we count everything in coverage calcs
 # if Dir.exists?('lib')

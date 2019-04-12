@@ -20,6 +20,7 @@ module ResultsProcessor
 
   def recover_file_case(name)
     if RbConfig::CONFIG['target_os'].match?(/mingw|mswin/)
+      # :nocov: we don't test on windows currently
       require 'win32api'
 
       get_short_win32_filename = lambda do |long_name|
@@ -37,6 +38,7 @@ module ResultsProcessor
       end
 
       get_long_win32_filename.call(get_short_win32_filename.call(name))
+      # :nocov:
     else
       name
     end
@@ -86,14 +88,7 @@ module ResultsProcessor
 
   def parse_cppcheck_line(src_path, build_path, line)
     /\[(?<filename>.*)\]:(?<line_number>[0-9]+):(?<message_type>\S+):(?<message>.*)/ =~ line
-    return CodeMessage.new(relative_path(filename, src_path, build_path), line_number, 0, message_type, message) if !filename.nil? && !message_type.nil?
-
-    nil
-  end
-
-  def parse_regression_line(line)
-    /(?<name>\S+);(?<status>\S+);(?<time>\S+);(?<message>.*)/ =~ line
-    return TestResult.new("regression.#{name}", status, time, message, nil, status) if !name.nil? && !status.nil?
+    return CodeMessage.new(relative_path(filename, src_path, build_path), line_number, 0, message_type, message) unless filename.nil? || filename == '' || message_type.nil?
 
     nil
   end
@@ -121,6 +116,8 @@ module ResultsProcessor
   def process_cppcheck_results(src_dir, build_dir, stderr, result)
     results = []
     stderr.encode('UTF-8', :invalid => :replace).split("\n").each do |line|
+      next if line.strip == ''
+
       $logger.debug("Parsing cppcheck line: #{line}")
       msg = parse_cppcheck_line(src_dir, build_dir, line)
       results << msg unless msg.nil?
@@ -344,11 +341,11 @@ module ResultsProcessor
 
     $logger.debug("Parsing line for python/LaTeX errors: #{line}: #{filename} #{line_number} #{message}")
 
-    if !filename.nil? && !line_number.nil?
-      CodeMessage.new(relative_path(filename.strip, src_dir, build_dir), line_number, 0, 'error', 'error')
-    elsif !message.nil?
-      return CodeMessage.new(relative_path(compiler_string, src_dir, build_dir), 0, 0, 'error', message)
-    end
+    return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir), line_number, 0, 'error', 'error') if !filename.nil? && !line_number.nil?
+
+    return CodeMessage.new(relative_path(compiler_string, src_dir, build_dir), 0, 0, 'error', message) unless message.nil?
+
+    nil
   end
 
   def process_python_results(src_dir, build_dir, stdout, stderr, result)

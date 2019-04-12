@@ -22,6 +22,7 @@ require_relative 'cppcheck.rb'
 require_relative 'custom_check.rb'
 require_relative 'github.rb'
 require_relative 'lcov.rb'
+require_relative 'runners.rb'
 
 ## Contains the logic flow for executing builds and parsing results
 class PotentialBuild
@@ -31,6 +32,7 @@ class PotentialBuild
   include Cppcheck
   include Lcov
   include CustomCheck
+  include Runners
 
   attr_reader :tag_name
   attr_reader :commit_sha
@@ -125,101 +127,6 @@ class PotentialBuild
     end
   end
 
-  # originally from https://gist.github.com/lpar/1032297
-  # runs a specified shell command in a separate thread.
-  # If it exceeds the given timeout in seconds, kills it.
-  # Returns any output produced by the command (stdout or stderr) as a String.
-  # Uses Kernel.select to wait up to the tick length (in seconds) between
-  # checks on the command's status
-  #
-  # If you've got a cleaner way of doing this, I'd be interested to see it.
-  # If you think you can do it with Ruby's Timeout module, think again.
-  def run_with_timeout(env, command, timeout = 60 * 60 * 4, tick = 2)
-    out = ''
-    err = ''
-    begin
-      # Start task in another thread, which spawns a process
-      stdin, stdout, stderr, thread = Open3.popen3(env, command)
-      # Get the pid of the spawned process
-      pid = thread[:pid]
-      start = Time.now
-
-      while (Time.now - start) < timeout && thread.alive?
-        # Wait up to `tick` seconds for output/error data
-        rs, = Kernel.select([stdout, stderr], nil, nil, tick)
-        # Try to read the data
-        begin
-          rs&.each do |r|
-            if r == stdout
-              out << stdout.read_nonblock(4096)
-            elsif r == stderr
-              err << stderr.read_nonblock(4096)
-            end
-          end
-        rescue IO::WaitReadable # rubocop:disable Lint/HandleExceptions
-          # A read would block, so loop around for another select
-        rescue EOFError
-          # Command has completed, not really an error...
-          break
-        end
-      end
-      # Give Ruby time to clean up the other thread
-      sleep 1
-
-      if thread.alive?
-        # We need to kill the process, because killing the thread leaves
-        # the process alive but detached, annoyingly enough.
-        Process.kill('TERM', pid)
-      end
-    ensure
-      stdin&.close
-      stdout&.close
-      stderr&.close
-    end
-    [out.force_encoding('UTF-8'), err.force_encoding('UTF-8'), thread.value]
-  end
-
-  def run_script(commands, env = {})
-    all_out = ''
-    all_err = ''
-    all_result = 0
-
-    commands.each do |cmd|
-      if @config.os == 'Windows'
-        $logger.warn 'Unable to set timeout for process execution on windows'
-        stdout, stderr, result = Open3.capture3(env, cmd)
-      else
-        # allow up to 6 hours
-        stdout, stderr, result = run_with_timeout(env, cmd, 60 * 60 * 6)
-      end
-
-      stdout.encode('UTF-8', :invalid => :replace).split("\n").each do |l|
-        $logger.debug("cmd: #{cmd}: stdout: #{l}")
-      end
-
-      stderr.encode('UTF-8', :invalid => :replace).split("\n").each do |l|
-        $logger.info("cmd: #{cmd}: stderr: #{l}")
-      end
-
-      if cmd != commands.last && result != 0
-        $logger.error("Error running script command: #{stderr}")
-        raise stderr
-      end
-
-      all_out += stdout
-      all_err += stderr
-
-      if result&.exitstatus
-        all_result += result.exitstatus
-      else
-        # any old failure result will do
-        all_result = 1
-      end
-    end
-
-    [all_out, all_err, all_result]
-  end
-
   def device_tag(compiler)
     build_type_tag = ''
     build_type_tag = "-#{compiler[:build_tag]}" unless compiler[:build_tag].nil?
@@ -257,6 +164,7 @@ class PotentialBuild
 
     if @config.pull_id.nil?
       _, _, result = run_script(
+        @config,
         [
           "cd #{src_dir} && git init",
           "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} \"#{@refspec}\""
@@ -264,9 +172,10 @@ class PotentialBuild
       )
 
       success = !@commit_sha.nil? && @commit_sha != '' && result.zero?
-      _, _, result = run_script(["cd #{src_dir} && git checkout #{@commit_sha}"]) if success
+      _, _, result = run_script(@config, ["cd #{src_dir} && git checkout #{@commit_sha}"]) if success
     else
       _, _, result = run_script(
+        @config,
         [
           "cd #{src_dir} && git init",
           "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} refs/pull/#{@config.pull_id}/head",
@@ -296,12 +205,13 @@ class PotentialBuild
     return unless needs_coverage(compiler)
 
     build_dir = this_build_dir
-    @coverage_total_lines, @coverage_lines, @coverage_total_functions, @coverage_functions = lcov compiler, build_dir
+    @coverage_total_lines, @coverage_lines, @coverage_total_functions, @coverage_functions = lcov @config, compiler, build_dir
     return if compiler[:coverage_s3_bucket].nil?
 
     s3_script = File.dirname(File.dirname(__FILE__)) + '/send_to_s3.py'
 
     out, = run_script(
+      @config,
       [
         "#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html coverage"
       ]
@@ -320,6 +230,7 @@ class PotentialBuild
     s3_script = File.dirname(File.dirname(__FILE__)) + '/send_to_s3.py'
 
     out, = run_script(
+      @config,
       [
         "#{s3_script} #{compiler[:s3_upload_bucket]} #{get_full_build_name(compiler)} #{build_dir}/#{compiler[:s3_upload]} assets"
       ]
@@ -434,14 +345,14 @@ class PotentialBuild
 
     if compiler[:name] == 'custom_check'
       start_time = Time.now
-      @test_results = custom_check compiler, src_dir, build_dir
+      @test_results = custom_check @config, compiler, src_dir, build_dir
 
       @build_time = 0 if @build_time.nil?
       # handle the case where build is called more than once
       @build_time += (Time.now - start_time)
     elsif compiler[:name] == 'cppcheck'
       start_time = Time.now
-      cppcheck compiler, src_dir, build_dir
+      cppcheck @config, compiler, src_dir, build_dir
       @build_time = 0 if @build_time.nil?
       # handle the case where build is called more than once
       @build_time += (Time.now - start_time)
@@ -502,6 +413,7 @@ class PotentialBuild
       return
     end
     run_script(
+      @config,
       [
         "cd #{regression_dir} && git init",
         "cd #{regression_dir} && git fetch https://#{@config.token}@github.com/#{@config.regression_repository} #{refspec}",
