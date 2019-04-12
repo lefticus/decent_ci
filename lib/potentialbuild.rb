@@ -37,7 +37,7 @@ class PotentialBuild
   attr_reader :branch_name
   attr_reader :repository
 
-  def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets,
+  def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, # rubocop:disable Metrics/ParameterLists
                  pull_id, pr_base_repository, pr_base_ref)
     @client = client
     @config = load_configuration(repository, (tag_name.nil? ? commit_sha : tag_name), !release_url.nil?)
@@ -914,7 +914,7 @@ class PotentialBuild
 
     build_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Build Badge](http://img.shields.io/badge/build%20status-#{build_string}-#{build_color}.png)</a>"
 
-    coverage_failed = false
+    cov_failed = false
     coverage_badge = ''
 
     if compiler[:coverage_enabled]
@@ -925,21 +925,21 @@ class PotentialBuild
                          end
 
       if coverage_percent >= compiler[:coverage_pass_limit]
-        coverage_color = 'green'
+        cov_color = 'green'
       elsif coverage_percent >= compiler[:coverage_warn_limit]
-        coverage_color = 'yellow'
+        cov_color = 'yellow'
       else
-        coverage_color = 'red'
-        coverage_failed = true
+        cov_color = 'red'
+        cov_failed = true
       end
-      coverage_string = "#{coverage_percent.round(2)}%25"
+      cov_str = "#{coverage_percent.round(2)}%25"
 
-      coverage_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Coverage Badge](http://img.shields.io/badge/coverage%20status-#{coverage_string}-#{coverage_color}.png)</a>"
+      coverage_badge = "<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>![Coverage Badge](http://img.shields.io/badge/coverage%20status-#{cov_str}-#{cov_color}.png)</a>"
     end
 
     github_status = if pending
                       'pending'
-                    elsif build_failed || test_failed || coverage_failed || !@failure.nil?
+                    elsif build_failed || test_failed || cov_failed || !@failure.nil?
                       'failure'
                     else
                       'success'
@@ -951,7 +951,7 @@ class PotentialBuild
                               'Build Failed'
                             elsif test_failed
                               "Tests Failed (#{test_results_passed} of #{test_results_total} tests passed, #{test_results_warning} test warnings)"
-                            elsif coverage_failed
+                            elsif cov_failed
                               'Coverage Too Low'
                             else
                               "OK (#{test_results_passed} of #{test_results_total} tests passed, #{test_results_warning} test warnings)"
@@ -1052,11 +1052,21 @@ class PotentialBuild
       if !@commit_sha.nil? && @config.post_results_status
         if !@pull_request_base_repository.nil?
           github_query(@client) do
-            @client.create_status(@pull_request_base_repository, @commit_sha, github_status, :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message)
+            @client.create_status(
+              @pull_request_base_repository,
+              @commit_sha,
+              github_status,
+              :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message
+            )
           end
         else
           github_query(@client) do
-            @client.create_status(@config.repository, @commit_sha, github_status, :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message)
+            @client.create_status(
+              @config.repository,
+              @commit_sha,
+              github_status,
+              :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message
+            )
           end
         end
       end

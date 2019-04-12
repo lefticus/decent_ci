@@ -1,32 +1,44 @@
 AllCops:
   TargetRubyVersion: 2.4
 
-Metrics/LineLength:
-  Max: 250
+# *** Permanent Settings *** #
 
+# This could be adjusted but does not bother me
+Metrics/LineLength:
+  Max: 200
+
+# This is the one allowed global :-)
 Style/GlobalVars:
   AllowedVariables:
     - "$logger"
 
+# This could be adjusted but does not bother me
+# There is actually one exception to this, PotentialBuild, that would be crazy to refactor away
 Metrics/ParameterLists:
-  Max: 12
+  Max: 7
+
+# I don't really care which style we use here but we'll always be consistent within each Hash
+Style/HashSyntax:
+  EnforcedStyle: no_mixed_keys
 
 # our heredocs are carefully crafted and need to have no whitespace indentation
 Layout/IndentHeredoc:
   Enabled: false
 
-# Ignored just temporarily
-Style/HashSyntax:
-  Enabled: false
-
-Style/RescueStandardError:
-  Enabled: false
-
-# I need to learn a little more about this
+# This requires a semantic change and I'm not doing that anytime soon
 Security/YAMLLoad:
   Enabled: false
 
-# I also need to learn more about this
+# ************************** #
+
+
+# *** Temporary Settings *** #
+
+# This is just going to take a while
+Style/RescueStandardError:
+  Enabled: false
+
+# I need to learn more about this before enabling it
 Style/EachWithObject:
   Enabled: false
 
@@ -54,3 +66,5 @@ Metrics/ModuleLength:
 
 Metrics/ClassLength:
   Enabled: false
+
+# ************************** #
