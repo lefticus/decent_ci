@@ -4,7 +4,12 @@ cache: bundler
 matrix:
   include:
     - os: linux
+      name: Linux Unit Tests
+    - os: linux
+      name: Rubocop
+      script: bundle exec rubocop lib
     - os: osx
+      name: Mac OSX Unit Tests
     # - os: windows  --  windows doesn't have language: ruby support yet
 scripts:
   - bundle exec rspec spec

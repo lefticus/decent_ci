@@ -1,4 +1,4 @@
-# encoding: UTF-8 
+# frozen_string_literal: true
 
 require 'octokit'
 require 'json'
@@ -14,6 +14,9 @@ require 'base64'
 
 # Parsed test results for reporting back
 class TestResult
+  attr_reader :name
+  attr_reader :failure_type
+
   def initialize(name, status, time, output, parsed_errors, failure_type)
     @name = name
     @status = status
@@ -24,39 +27,30 @@ class TestResult
   end
 
   def passed
-    @status == "passed" || @status == "warning"
+    @status == 'passed' || @status == 'warning'
   end
 
   def warning
-    @status == "warning"
-  end
-
-  def failure_type
-    @failure_type
-  end
-
-  def name
-    @name
+    @status == 'warning'
   end
 
   def inspect
     parsed_errors_array = []
 
-    unless @parsed_errors.nil?
-      @parsed_errors.each {|e|
-        parsed_errors_array << e.inspect
-      }
-    end
+    @parsed_errors&.each { |e| parsed_errors_array << e.inspect }
 
-    {:name => @name,
-            :status => @status,
-            :time => @time,
-            :output => @output,
-            :parsed_errors => parsed_errors_array,
-            :failure_type => @failure_type}
+    {
+      :name => @name,
+      :status => @status,
+      :time => @time,
+      :output => @output,
+      :parsed_errors => parsed_errors_array,
+      :failure_type => @failure_type
+    }
   end
 end
 
+# Captures a generic test message
 class TestMessage
   attr_reader :name
   attr_reader :message
@@ -67,8 +61,6 @@ class TestMessage
   end
 
   def inspect
-    {:name => @name, :message => @message}
+    { :name => @name, :message => @message }
   end
 end
-
-

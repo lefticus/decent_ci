@@ -1,4 +1,5 @@
 require 'coveralls'
+require 'logger'
 require 'simplecov'
 require 'simplecov-console'
 
@@ -17,3 +18,7 @@ SimpleCov.start
 #     Dir["lib/**/*.rb"].each {|file| load(file); }
 # end
 # actually this messes with the coverage calcs, so just not doing it now
+
+# set up a logger global variable for unit testing, but set it to only show fatals
+$logger = Logger.new "decent_ci_testing.log", 1
+$logger.level = Logger::FATAL

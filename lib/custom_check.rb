@@ -1,4 +1,4 @@
-# encoding: UTF-8 
+# frozen_string_literal: true
 
 require 'fileutils'
 require_relative 'testresult.rb'
@@ -7,11 +7,9 @@ require_relative 'testresult.rb'
 module CustomCheck
   def custom_check(compiler, src_dir, build_dir)
     test_results = []
-    compiler[:commands].each {|command|
-      compiler_flags = "#{build_dir}"
-      unless File.directory?(build_dir)
-        FileUtils.mkdir_p(build_dir)
-      end
+    compiler[:commands].each do |command|
+      compiler_flags = build_dir.to_s
+      FileUtils.mkdir_p(build_dir) unless File.directory?(build_dir)
       begin
         out, err, result = run_script(["cd #{src_dir} && #{command} #{compiler_flags}"])
       rescue
@@ -19,13 +17,12 @@ module CustomCheck
         return test_results
       end
       # expected fields to be read: "tool", "file", "line", "column" (optional), "message_type", "message", "id" (optional)
-      if process_custom_check_results(compiler, src_dir, build_dir, out, err, result)
+      if process_custom_check_results(src_dir, build_dir, out, err, result)
         test_results.push(TestResult.new(command, 'passed', 0, '', [], ''))
       else
         test_results.push(TestResult.new(command, 'failed', 0, '', [], ''))
       end
-    }
+    end
     test_results
   end
 end
-

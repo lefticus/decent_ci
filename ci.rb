@@ -210,7 +210,7 @@ did_any_builds = false
     }
 
     if did_daily_task
-      b.get_pull_request_details.each {|d|
+      b.pull_request_details.each {|d|
 
         $logger.debug "PullRequestDetail: #{d}"
 
@@ -259,7 +259,7 @@ did_any_builds = false
             end
           end
 
-          if compiler[:release_only] && !p.is_release
+          if compiler[:release_only] && !p.release?
             $logger.info "#{p.device_id compiler} is a release_only configuration and #{p.descriptive_string} is not a release build, skipping"
             next
           end
@@ -268,7 +268,7 @@ did_any_builds = false
 
             # reset potential build for the next build attempt
             p.next_build
-            p.set_test_run test_mode
+            p.apply_test_run test_mode
 
             if p.needs_run compiler
               did_any_builds = true
@@ -281,15 +281,15 @@ did_any_builds = false
                 regression_base = b.get_regression_base p
                 if p.needs_regression_test(compiler) && regression_base
                   regression_base.set_as_baseline
-                  regression_base.set_test_run test_mode
-                  if File.directory?(p.get_regression_dir)
-                    $logger.info "Removing pre-existing regressions directory (#{p.get_regression_dir})"
-                    FileUtils.rm_rf(p.get_regression_dir)
+                  regression_base.apply_test_run test_mode
+                  if File.directory?(p.this_regression_dir)
+                    $logger.info "Removing pre-existing regressions directory (#{p.this_regression_dir})"
+                    FileUtils.rm_rf(p.this_regression_dir)
                   end
                   p.clone_regression_repository
-                  if File.directory?(regression_base.get_src_dir)
-                    $logger.info "Removing pre-existing baseline directory (#{regression_base.get_build_dir})"
-                    FileUtils.rm_rf(regression_base.get_src_dir)
+                  if File.directory?(regression_base.this_src_dir)
+                    $logger.info "Removing pre-existing baseline directory (#{regression_base.this_src_dir})"
+                    FileUtils.rm_rf(regression_base.this_src_dir)
                   end
                   $logger.info "Beginning regression baseline (#{regression_base.descriptive_string}) build for #{compiler} #{p.descriptive_string}"
                   regression_base.do_build compiler, nil
@@ -297,9 +297,9 @@ did_any_builds = false
                 end
 
                 # now build this branch
-                if File.directory?(p.get_src_dir)
-                  $logger.info "Removing pre-existing branch directory (#{p.get_src_dir})"
-                  FileUtils.rm_rf(p.get_src_dir)
+                if File.directory?(p.this_src_dir)
+                  $logger.info "Removing pre-existing branch directory (#{p.this_src_dir})"
+                  FileUtils.rm_rf(p.this_src_dir)
                 end
                 p.do_package compiler, regression_base
                 p.do_test compiler, regression_base
