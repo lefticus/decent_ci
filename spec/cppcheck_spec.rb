@@ -14,7 +14,7 @@ describe 'CppCheck Testing' do
       expect(cppcheck({}, {}, "/src/dir", "/build/dir")).to be_truthy
     end
     it 'should generate a good command line' do
-      compiler = { :num_parallel_builds => 2, :compiler_extra_flags => "hello", :bin => "/usr/bin/cppcheck" }
+      compiler = { :num_parallel_builds => 2, :compiler_extra_flags => "hello", :cppcheck_bin => "/usr/bin/cppcheck" }
       command_line = generate_command_line(compiler, "/src/dir")
       expect(command_line).to include 'cppcheck'
     end
