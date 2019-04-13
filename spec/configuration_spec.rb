@@ -56,65 +56,65 @@ describe 'Configuration Testing' do
   end
   context 'when calling setup_compiler_architecture' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_architecture({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_architecture({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_architecture({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_version' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_version({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_version({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_version({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_description' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_description({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_description({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_description({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_package_generator' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_package_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_package_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_package_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_package_extension' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_package_extension({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_package_extension({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_package_extension({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_package_mimetype' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_package_mimetype({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_package_mimetype({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_package_mimetype({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_extra_flags' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_extra_flags({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_extra_flags({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_extra_flags({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_num_processors' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_num_processors({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_num_processors({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_num_processors({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_cppcheck_bin' do
     it 'should return the correct SEFLKJ' do
-      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
-      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+      # expect(setup_compiler_cppcheck_bin({:ATTR => 'Already here'})).to eql 'Already here'
+      # expect(setup_compiler_cppcheck_bin({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      # expect(setup_compiler_cppcheck_bin({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
     end
   end
   context 'when calling setup_compiler_build_generator' do
