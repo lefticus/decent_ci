@@ -22,4 +22,20 @@ describe 'Configuration Testing' do
       expect(binary_path).to include dir2
     end
   end
+  context 'when calling setup_compiler_target_arch' do
+    it 'should return the right architecture' do
+      expect(setup_compiler_target_arch({:name => 'Visual Studio 2065', :architecture => 'WoW64'})).to eql 'x64'
+      expect(setup_compiler_target_arch({:name => 'Visual Studio 2062', :architecture => 'Y63'})).to eql 'Win32'
+      expect(setup_compiler_target_arch({:name => 'Visual Studio 2062'})).to eql 'Win32'  # default architecture
+      expect(setup_compiler_target_arch({:name => 'Audial Studio 2443', :architecture => 'ABC'})).to be_nil
+      expect(setup_compiler_target_arch({:name => 'Audial Studio 2443'})).to be_nil
+    end
+  end
+  context 'when calling setup_compiler_build_generator' do
+    it 'should return the correct build generator' do
+      expect(setup_compiler_build_generator({:build_generator => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:name => 'Visual Studio Hello'})).to include 'Visual Studio'
+      expect(setup_compiler_build_generator({:name => 'gccc'})).to include 'Unix'
+    end
+  end
 end

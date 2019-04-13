@@ -60,6 +60,26 @@ module Configuration
     obj
   end
 
+  def establish_windows_characteristics
+    os_version = 'Windows'
+    ver_string = `cmd /c ver`.strip
+    /.* \[Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\..*\]/ =~ ver_string
+    os_release = nil
+    if ver_major.to_i == 6
+      if ver_minor.to_i == 1
+        os_release = '7'
+      elsif ver_minor.to_i == 2
+        os_release = '8'
+      elsif ver_minor.to_i == 3
+        os_release = '8.1'
+      end
+    elsif ver_major.to_i == 10
+      os_release = '10'
+    end
+    os_release = "Unknown-#{ver_major}.#{ver_minor}" if os_release.nil?
+    [nil, os_version, os_release]
+  end
+
   def establish_os_characteristics
     if RUBY_PLATFORM.match?(/darwin/i)
       os_distribution = nil
@@ -73,23 +93,7 @@ module Configuration
       os_version = 'Linux'
       os_release = "#{`lsb_release -is`.strip}-#{`lsb_release -rs`.strip}"
     else
-      os_distribution = nil
-      os_version = 'Windows'
-      ver_string = `cmd /c ver`.strip
-      /.* \[Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\..*\]/ =~ ver_string
-      os_release = nil
-      if ver_major.to_i == 6
-        if ver_minor.to_i == 1
-          os_release = '7'
-        elsif ver_minor.to_i == 2
-          os_release = '8'
-        elsif ver_minor.to_i == 3
-          os_release = '8.1'
-        end
-      elsif ver_major.to_i == 10
-        os_release = '10'
-      end
-      os_release = "Unknown-#{ver_major}.#{ver_minor}" if os_release.nil?
+      os_distribution, os_version, os_release = establish_windows_characteristics
     end
     [os_distribution, os_version, os_release]
   end
@@ -126,16 +130,11 @@ module Configuration
     }
   end
 
-  def find_valid_yaml_files(yaml_name, yaml_os_name, yaml_os_dist_name, yaml_os_release_name)
+  def find_valid_yaml_files(all_yaml_names, fileset)
     valid_yaml_configs = []
-    valid_yaml_configs << load_yaml(yaml_name, location, ref) if fileset.include?(yaml_name)
-    $logger.debug("Base yaml loaded: #{base_yaml}") unless base_yaml.nil?
-    valid_yaml_configs << load_yaml(yaml_os_name, location, ref) if fileset.include?(yaml_os_name)
-    $logger.debug("os yaml loaded: #{os_yaml}") unless os_yaml.nil?
-    valid_yaml_configs << load_yaml(yaml_os_dist_name, location, ref) if fileset.include?(yaml_os_dist_name)
-    $logger.debug("os distribution yaml loaded: #{os_distribution_yaml}") unless os_distribution_yaml.nil?
-    valid_yaml_configs << load_yaml(yaml_os_release_name, location, ref) if fileset.include?(yaml_os_release_name)
-    $logger.debug("os distribution release yaml loaded: #{os_distribution_release_yaml}") unless os_distribution_release_yaml.nil?
+    all_yaml_names.each do |yaml|
+      valid_yaml_configs << load_yaml(yaml, location, ref) if fileset.include?(yaml)
+    end
     valid_yaml_configs
   end
 
@@ -177,18 +176,18 @@ module Configuration
   def setup_compiler_package_generator(compiler)
     return compiler[:build_package_generator] unless compiler[:build_package_generator].nil? || compiler[:build_package_generator] == ''
 
+    generator = nil
     case configuration.os
     when 'Windows'
-      return 'NSIS'
+      generator = 'NSIS'
     when 'Linux'
-      return 'DEB' if configuration.os_release =~ /.*ubuntu.*/i || configuration.os_release =~ /.*deb.*/i || configuration.os_release =~ /.*mint.*/i
-
-      return 'RPM'
+      generator = 'DEB'
     when 'MacOS'
-      return 'IFW'
+      generator 'IFW'
     else
       raise 'Unknown operating system found, only supporting Windows, Linux, and MacOS'
     end
+    generator
   end
 
   def setup_compiler_package_extension(compiler)
@@ -196,17 +195,18 @@ module Configuration
 
     case compiler[:build_package_generator]
     when /.*NSIS.*/
-      return 'exe'
+      extension = 'exe'
     when /.*IFW.*/
-      return 'dmg'
+      extension = 'dmg'
     when /.*STGZ.*/
-      return 'sh'
+      extension = 'sh'
     when /T.*/
       /T(?<tar_type>[A-Z]+)/ =~ compiler[:build_package_generator]
-      return "tar.#{tar_type.downcase}"
+      extension = "tar.#{tar_type.downcase}"
     else
-      return compiler[:build_package_generator].downcase
+      extension = compiler[:build_package_generator].downcase
     end
+    extension
   end
 
   def setup_compiler_package_mimetype(compiler)
@@ -240,13 +240,11 @@ module Configuration
     return compiler[:cppcheck_bin] unless compiler[:cppcheck_bin].nil? || compiler[:cppcheck_bin] == ''
 
     potential_name = which("cppcheck-#{compiler[:version]}")
-    compiler[:cppcheck_bin] = if !potential_name.nil?
-                                potential_name
-                              else
-                                which('cppcheck')
-                              end
+    potential_name = which('cppcheck') if potential_name.nil?
 
     raise "Unable to find binary for: #{compiler[:name]} version #{compiler[:version]}" if compiler[:cppcheck_bin].nil? || (`#{compiler[:cppcheck_bin]} --version` !~ /.*#{compiler[:version]}/)
+
+    potential_name
   end
 
   def setup_compiler_build_generator(compiler)
@@ -260,14 +258,73 @@ module Configuration
   end
 
   def setup_compiler_target_arch(compiler)
-    response = nil
     if compiler[:name].match?(/.*Visual Studio.*/i)
       # Visual Studio 2019+ generator behaves slightly different, need to add -A
-      response = 'x64' if compiler[:architecture].match?(/.*64.*/)
+      return 'x64' if !compiler[:architecture].nil? && compiler[:architecture].match?(/.*64.*/)
 
-      response = 'Win32'
+      return 'Win32'
     end
-    response
+    nil
+  end
+
+  def setup_single_compiler(compiler, is_release)
+    compiler[:architecture] = setup_compiler_architecture(compiler)
+    compiler[:version] = setup_compiler_version(compiler)
+
+    if compiler[:name] != 'custom_check' && compiler[:name] != 'cppcheck' && compiler[:name] != 'Visual Studio' && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
+      case compiler[:name]
+      when 'clang'
+        potential_name = which("clang-#{compiler[:version]}")
+        if !potential_name.nil?
+          compiler[:cc_bin] = potential_name
+          compiler[:cxx_bin] = which("clang++-#{compiler[:version]}")
+        else
+          compiler[:cc_bin] = which('clang')
+          compiler[:cxx_bin] = which('clang++')
+        end
+      when 'gcc'
+        potential_name = which("gcc-#{compiler[:version]}")
+        if !potential_name.nil?
+          compiler[:cc_bin] = potential_name
+          compiler[:cxx_bin] = which("g++-#{compiler[:version]}")
+        else
+          compiler[:cc_bin] = which('gcc')
+          compiler[:cxx_bin] = which('g++')
+        end
+      else
+        raise 'Invalid compiler specified, must be one of clang, gcc, custom_check, cppcheck, or a variation on "Visual Studio VV YYYY"'
+      end
+
+      if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil? || (`#{compiler[:cc_bin]} --version` !~ /.*#{compiler[:version]}/) || (`#{compiler[:cxx_bin]} --version` !~ /.*#{compiler[:version]}/)
+        raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
+      end
+    end
+
+    compiler[:analyze_only] = false if compiler[:analyze_only].nil?
+    compiler[:release_only] = false if compiler[:release_only].nil?
+    compiler[:cppcheck_bin] = setup_compiler_cppcheck_bin(compiler) if compiler[:name] == 'cppcheck'
+    compiler[:analyze_only] = true if compiler[:name] == 'custom_check' || compiler[:name] == 'cppcheck'
+    compiler[:skip_packaging] = (compiler[:skip_packaging] =~ /true/i) || compiler[:skip_packaging] if compiler[:skip_packaging].nil?
+    compiler[:description] = setup_compiler_description(compiler)
+    compiler[:build_package_generator] = setup_compiler_package_generator(compiler)
+    compiler[:build_type] = 'Release' if compiler[:build_type].nil? || compiler[:build_type] == ''
+    compiler[:build_generator] = setup_compiler_build_generator(compiler)
+    compiler[:target_arch] = setup_compiler_target_arch(compiler)
+    compiler[:package_extension] = setup_compiler_package_extension(compiler)
+    compiler[:package_mimetype] = setup_compiler_package_mimetype(compiler)
+    compiler[:skip_regression] = false if compiler[:skip_regression].nil?
+    compiler[:collect_performance_results] = false if compiler[:collect_performance_results].nil?
+    compiler[:ctest_filter] = '' if compiler[:ctest_filter].nil?
+    compiler[:coverage_base_dir] = '' if compiler[:coverage_base_dir].nil?
+    compiler[:coverage_enabled] = false if compiler[:coverage_enabled].nil?
+    compiler[:coverage_pass_limit] = 90 if compiler[:coverage_pass_limit].nil?
+    compiler[:coverage_warn_limit] = 75 if compiler[:coverage_warn_limit].nil?
+    compiler[:cmake_extra_flags] = setup_compiler_extra_flags(compiler, is_release)
+    compiler[:num_parallel_builds] = setup_compiler_num_processors(compiler)
+
+    raise 'Decent CI currently only deployed with Visual Studio version 16 (2019)' if compiler[:name] =~ /.*Visual Studio.*/i && compiler[:version] != 16
+
+    compiler
   end
 
   def load_configuration(location, ref, is_release)
@@ -281,8 +338,8 @@ module Configuration
 
     # then try to form up a final merged configuration of all the yaml files found and symbolize it, raise if no compilers found
     os_distribution, os_version, os_release = establish_os_characteristics
-    yaml_name, yaml_os_name, yaml_os_release_name, yaml_os_distribution_name = get_all_yaml_names(os_version, os_release, os_distribution)
-    valid_yamls = find_valid_yaml_files(yaml_name, yaml_os_name, yaml_os_distribution_name, yaml_os_release_name)
+    yaml_names = get_all_yaml_names(os_version, os_release, os_distribution)
+    valid_yamls = find_valid_yaml_files(yaml_names, fileset)
     result_yaml = establish_base_configuration(os_version, os_release)
     valid_yamls.each do |yaml|
       result_yaml.merge!(yaml)
@@ -297,82 +354,7 @@ module Configuration
     configuration = OpenStruct.new(result_yaml)
     configuration.compilers.each do |compiler|
       $logger.debug("Working on compiler: #{compiler[:name]}")
-
-      compiler[:architecture] = setup_compiler_architecture(compiler)
-      compiler[:version] = setup_compiler_version(compiler)
-
-      if compiler[:name] != 'custom_check' && compiler[:name] != 'cppcheck' && compiler[:name] != 'Visual Studio' && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
-        case compiler[:name]
-        when 'clang'
-          potential_name = which("clang-#{compiler[:version]}")
-          if !potential_name.nil?
-            compiler[:cc_bin] = potential_name
-            compiler[:cxx_bin] = which("clang++-#{compiler[:version]}")
-          else
-            compiler[:cc_bin] = which('clang')
-            compiler[:cxx_bin] = which('clang++')
-          end
-        when 'gcc'
-          potential_name = which("gcc-#{compiler[:version]}")
-          if !potential_name.nil?
-            compiler[:cc_bin] = potential_name
-            compiler[:cxx_bin] = which("g++-#{compiler[:version]}")
-          else
-            compiler[:cc_bin] = which('gcc')
-            compiler[:cxx_bin] = which('g++')
-          end
-        else
-          raise 'Invalid compiler specified, must be one of clang, gcc, custom_check, cppcheck, or a variation on "Visual Studio VV YYYY"'
-        end
-
-        if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil? || (`#{compiler[:cc_bin]} --version` !~ /.*#{compiler[:version]}/) || (`#{compiler[:cxx_bin]} --version` !~ /.*#{compiler[:version]}/)
-          raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
-        end
-      end
-
-      compiler[:analyze_only] = false if compiler[:analyze_only].nil?
-
-      compiler[:release_only] = false if compiler[:release_only].nil?
-
-      compiler[:cppcheck_bin] = setup_compiler_cppcheck_bin(compiler) if compiler[:name] == 'cppcheck'
-
-      compiler[:analyze_only] = true if compiler[:name] == 'custom_check' || compiler[:name] == 'cppcheck'
-
-      compiler[:skip_packaging] = (compiler[:skip_packaging] =~ /true/i) || compiler[:skip_packaging] if compiler[:skip_packaging].nil?
-
-      compiler[:description] = setup_compiler_description(compiler)
-
-      compiler[:build_package_generator] = setup_compiler_package_generator(compiler)
-
-      compiler[:build_type] = 'Release' if compiler[:build_type].nil? || compiler[:build_type] == ''
-
-      compiler[:build_generator] = setup_compiler_build_generator(compiler)
-
-      compiler[:target_arch] = setup_compiler_target_arch(compiler)
-
-      raise 'Decent CI currently only deployed with Visual Studio version 16 (2019)' if compiler[:name] =~ /.*Visual Studio.*/i && compiler[:version] != 16
-
-      compiler[:package_extension] = setup_compiler_package_extension(compiler)
-
-      compiler[:package_mimetype] = setup_compiler_package_mimetype(compiler)
-
-      compiler[:skip_regression] = false if compiler[:skip_regression].nil?
-
-      compiler[:collect_performance_results] = false if compiler[:collect_performance_results].nil?
-
-      compiler[:ctest_filter] = '' if compiler[:ctest_filter].nil?
-
-      compiler[:coverage_base_dir] = '' if compiler[:coverage_base_dir].nil?
-
-      compiler[:coverage_enabled] = false if compiler[:coverage_enabled].nil?
-
-      compiler[:coverage_pass_limit] = 90 if compiler[:coverage_pass_limit].nil?
-
-      compiler[:coverage_warn_limit] = 75 if compiler[:coverage_warn_limit].nil?
-
-      compiler[:cmake_extra_flags] = setup_compiler_extra_flags(compiler, is_release)
-
-      compiler[:num_parallel_builds] = setup_compiler_num_processors(compiler)
+      setup_single_compiler(compiler, is_release)
     end
 
     configuration.tests_dir = '' if configuration.tests_dir.nil?
