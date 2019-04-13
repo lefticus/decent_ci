@@ -22,6 +22,108 @@ describe 'Configuration Testing' do
       expect(binary_path).to include dir2
     end
   end
+  context 'when calling load_yaml' do
+    it 'should return the correct SEFLKJ' do
+    end
+  end
+  context 'when calling symbolize' do
+    it 'should return the correct SEFLKJ' do
+    end
+  end
+  context 'when calling find_windows_6_release' do
+    it 'should return the correct SEFLKJ' do
+    end
+  end
+  context 'when calling establish_windows_characteristics' do
+    it 'should return the correct SEFLKJ' do
+    end
+  end
+  context 'when calling establish_os_characteristics' do
+    it 'should return the correct SEFLKJ' do
+    end
+  end
+  context 'when calling get_all_yaml_names' do
+    it 'should return the correct SEFLKJ' do
+    end
+  end
+  context 'when calling establish_base_configuration' do
+    it 'should return the correct SEFLKJ' do
+    end
+  end
+  context 'when calling find_valid_yaml_files' do
+    it 'should return the correct SEFLKJ' do
+    end
+  end
+  context 'when calling setup_compiler_architecture' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_version' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_description' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_package_generator' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_package_extension' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_package_mimetype' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_extra_flags' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_num_processors' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_cppcheck_bin' do
+    it 'should return the correct SEFLKJ' do
+      expect(setup_compiler_build_generator({:ATTR => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'ONETHING'})).to include 'SOMETHING'
+      expect(setup_compiler_build_generator({:OTHERATTR => 'SECONDTHING'})).to include 'SOMETHINGELSE'
+    end
+  end
+  context 'when calling setup_compiler_build_generator' do
+    it 'should return the correct build generator' do
+      expect(setup_compiler_build_generator({:build_generator => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_build_generator({:name => 'Visual Studio Hello'})).to include 'Visual Studio'
+      expect(setup_compiler_build_generator({:name => 'gccc'})).to include 'Unix'
+    end
+  end
   context 'when calling setup_compiler_target_arch' do
     it 'should return the right architecture' do
       expect(setup_compiler_target_arch({:name => 'Visual Studio 2065', :architecture => 'WoW64'})).to eql 'x64'
@@ -31,11 +133,16 @@ describe 'Configuration Testing' do
       expect(setup_compiler_target_arch({:name => 'Audial Studio 2443'})).to be_nil
     end
   end
-  context 'when calling setup_compiler_build_generator' do
-    it 'should return the correct build generator' do
-      expect(setup_compiler_build_generator({:build_generator => 'Already here'})).to eql 'Already here'
-      expect(setup_compiler_build_generator({:name => 'Visual Studio Hello'})).to include 'Visual Studio'
-      expect(setup_compiler_build_generator({:name => 'gccc'})).to include 'Unix'
+  context 'when calling setup_gcc_style_cc_and_cxx' do
+    it 'should return the right SEFLKJEFLKJEF' do
+    end
+  end
+  context 'when calling setup_single_compiler' do
+    it 'should properly setup all attributes of a single compiler' do
+    end
+  end
+  context 'when calling load_configuration' do
+    it 'should properly set up all compilers and other settings of all configurations' do
     end
   end
 end

@@ -60,19 +60,23 @@ module Configuration
     obj
   end
 
+  def find_windows_6_release(ver_minor)
+    if ver_minor.to_i == 1
+      '7'
+    elsif ver_minor.to_i == 2
+      '8'
+    elsif ver_minor.to_i == 3
+      '8.1'
+    end
+  end
+
   def establish_windows_characteristics
     os_version = 'Windows'
     ver_string = `cmd /c ver`.strip
     /.* \[Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\..*\]/ =~ ver_string
     os_release = nil
     if ver_major.to_i == 6
-      if ver_minor.to_i == 1
-        os_release = '7'
-      elsif ver_minor.to_i == 2
-        os_release = '8'
-      elsif ver_minor.to_i == 3
-        os_release = '8.1'
-      end
+      os_release = find_windows_6_release(ver_minor)
     elsif ver_major.to_i == 10
       os_release = '10'
     end
@@ -267,39 +271,37 @@ module Configuration
     nil
   end
 
+  def setup_gcc_style_cc_and_cxx(compiler)
+    return [nil, nil] unless ['clang', 'gcc'].include? compiler[:name]
+
+    if compiler[:name] == 'clang'
+      cc = 'clang'
+      cxx = 'clang++'
+    else  # gcc
+      cc = 'gcc'
+      cxx = 'g++'
+    end
+
+    potential_name = which("#{cc}-#{compiler[:version]}")
+    if !potential_name.nil?
+      cc_bin = potential_name
+      cxx_bin = which("#{cxx}-#{compiler[:version]}")
+    else
+      cc_bin = which("#{cc}")
+      cxx_bin = which("#{cxx}")
+    end
+
+    if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil? || (`#{compiler[:cc_bin]} --version` !~ /.*#{compiler[:version]}/) || (`#{compiler[:cxx_bin]} --version` !~ /.*#{compiler[:version]}/)
+      raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
+    end
+
+    [cc_bin, cxx_bin]
+  end
+
   def setup_single_compiler(compiler, is_release)
     compiler[:architecture] = setup_compiler_architecture(compiler)
     compiler[:version] = setup_compiler_version(compiler)
-
-    if compiler[:name] != 'custom_check' && compiler[:name] != 'cppcheck' && compiler[:name] != 'Visual Studio' && (compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?)
-      case compiler[:name]
-      when 'clang'
-        potential_name = which("clang-#{compiler[:version]}")
-        if !potential_name.nil?
-          compiler[:cc_bin] = potential_name
-          compiler[:cxx_bin] = which("clang++-#{compiler[:version]}")
-        else
-          compiler[:cc_bin] = which('clang')
-          compiler[:cxx_bin] = which('clang++')
-        end
-      when 'gcc'
-        potential_name = which("gcc-#{compiler[:version]}")
-        if !potential_name.nil?
-          compiler[:cc_bin] = potential_name
-          compiler[:cxx_bin] = which("g++-#{compiler[:version]}")
-        else
-          compiler[:cc_bin] = which('gcc')
-          compiler[:cxx_bin] = which('g++')
-        end
-      else
-        raise 'Invalid compiler specified, must be one of clang, gcc, custom_check, cppcheck, or a variation on "Visual Studio VV YYYY"'
-      end
-
-      if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil? || (`#{compiler[:cc_bin]} --version` !~ /.*#{compiler[:version]}/) || (`#{compiler[:cxx_bin]} --version` !~ /.*#{compiler[:version]}/)
-        raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
-      end
-    end
-
+    compiler[:cc_bin], compiler[:cxx_bin] = setup_gcc_style_cc_and_cxx(compiler)
     compiler[:analyze_only] = false if compiler[:analyze_only].nil?
     compiler[:release_only] = false if compiler[:release_only].nil?
     compiler[:cppcheck_bin] = setup_compiler_cppcheck_bin(compiler) if compiler[:name] == 'cppcheck'
