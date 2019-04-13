@@ -149,21 +149,21 @@ describe 'Configuration Testing' do
   end
   context 'when calling setup_compiler_cppcheck_bin' do
     it 'should return if already specified' do
-      expect(setup_compiler_cppcheck_bin({:cppcheck_bin => 'Already here'})).to eql 'Already here'
+      expect(setup_compiler_cppcheck_bin({:cppcheck_bin => 'Already here'}, nil)).to eql 'Already here'
     end
     it 'should fail if a version is not specified' do
-      expect(setup_compiler_cppcheck_bin({})).to be_nil
+      expect{ setup_compiler_cppcheck_bin({}, nil) }.to raise_error RuntimeError
     end
     it 'should find the cppcheck binary by name' do
       dir1 = Dir.mktmpdir
-      binary_name = "cppcheck"
+      binary_name = "cppcheck-1"
       binary_extension = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';')[0] : ''
       binary_file_name = "#{binary_name}#{binary_extension}"
       cc_binary = File.join(dir1, binary_file_name)
       open(cc_binary, 'w') { |f| f << "#!/bin/bash\necho 1" }
       File.chmod(0777, cc_binary)
       ENV['PATH'] = dir1
-      expect(setup_compiler_cppcheck_bin({:version => 1})).to include cc_binary
+      expect(setup_compiler_cppcheck_bin({}, 1)).to include cc_binary
     end
   end
   context 'when calling setup_compiler_build_generator' do

@@ -244,15 +244,16 @@ module Configuration
     num_processors
   end
 
-  def setup_compiler_cppcheck_bin(compiler)
+  def setup_compiler_cppcheck_bin(compiler, version)
     return compiler[:cppcheck_bin] unless compiler[:cppcheck_bin].nil? || compiler[:cppcheck_bin] == ''
 
-    return nil if compiler[:version].nil?
-
-    potential_name = which("cppcheck-#{compiler[:version]}")
-    potential_name = which('cppcheck') if potential_name.nil?
-
-    raise "Unable to find binary for: cppcheck version #{compiler[:version]}" if potential_name.nil? || (`#{potential_name} --version` !~ /.*#{compiler[:version]}/)
+    if version.nil?
+      potential_name = which('cppcheck')
+      raise 'Unable to find a cppcheck binary (version agnostic)' if potential_name.nil?
+    else
+      potential_name = which("cppcheck-#{version}")
+      raise "Unable to find binary for: cppcheck version #{version}" if potential_name.nil? || (`#{potential_name} --version` !~ /.*#{version}/)
+    end
 
     potential_name
   end
@@ -312,7 +313,7 @@ module Configuration
     compiler[:cc_bin], compiler[:cxx_bin] = setup_gcc_style_cc_and_cxx(compiler)
     compiler[:analyze_only] = false if compiler[:analyze_only].nil?
     compiler[:release_only] = false if compiler[:release_only].nil?
-    compiler[:cppcheck_bin] = setup_compiler_cppcheck_bin(compiler) if compiler[:name] == 'cppcheck'
+    compiler[:cppcheck_bin] = setup_compiler_cppcheck_bin(compiler, compiler[:version]) if compiler[:name] == 'cppcheck'
     compiler[:analyze_only] = true if compiler[:name] == 'custom_check' || compiler[:name] == 'cppcheck'
     compiler[:skip_packaging] = (compiler[:skip_packaging] =~ /true/i) || compiler[:skip_packaging] if compiler[:skip_packaging].nil?
     compiler[:description] = setup_compiler_description(compiler)
