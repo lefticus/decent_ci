@@ -70,6 +70,7 @@ module Configuration
     end
   end
 
+  # :nocov: Not doing any testing on Windows right now
   def establish_windows_characteristics
     os_version = 'Windows'
     ver_string = `cmd /c ver`.strip
@@ -83,13 +84,14 @@ module Configuration
     os_release = "Unknown-#{ver_major}.#{ver_minor}" if os_release.nil?
     [nil, os_version, os_release]
   end
+  # :nocov:
 
   def establish_os_characteristics
     if RUBY_PLATFORM.match?(/darwin/i)
       os_distribution = nil
       os_version = 'MacOS'
       ver_string = `uname -v`.strip
-      /.* Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\.(?<ver_patch>[0-9]+).*:.*/ =~ ver_string # rubocop:disable Lint/UselessAssignment
+      /.* Version (?<ver_major>[0-9]+)\.([0-9]+)\.([0-9]+).*:.*/ =~ ver_string
       # the darwin version number - 4 = the point release of macosx
       os_release = "10.#{ver_major.to_i - 4}"
     elsif RUBY_PLATFORM.match?(/linux/i)
@@ -164,7 +166,8 @@ module Configuration
     when 'gcc'
       return `gcc -dumpversion`
     when 'cppcheck'
-      /.*Cppcheck (?<version>([0-9]+\.?)+).*/ =~ `cppcheck --version`
+      cppcheck_bin = which('cppcheck')
+      /.*Cppcheck (?<version>([0-9]+\.?)+).*/ =~ `#{cppcheck_bin} --version`
       return version
     else
       raise 'Invalid compiler specified, must be one of clang, gcc, custom_check, cppcheck, or a variation on "Visual Studio VV YYYY"'
@@ -172,32 +175,33 @@ module Configuration
   end
 
   def setup_compiler_description(compiler)
+    raise 'Compiler name not specified, must at least specify name' if compiler[:name].nil?
+
     description = compiler[:name].gsub(/\s+/, '')
     description = "#{description}-#{compiler[:version]}" if !compiler[:version].nil? && compiler[:version] != ''
     description
   end
 
-  def setup_compiler_package_generator(compiler)
+  def setup_compiler_package_generator(compiler, os_name)
     return compiler[:build_package_generator] unless compiler[:build_package_generator].nil? || compiler[:build_package_generator] == ''
 
-    generator = nil
-    case configuration.os
+    case os_name
     when 'Windows'
       generator = 'NSIS'
     when 'Linux'
       generator = 'DEB'
     when 'MacOS'
-      generator 'IFW'
+      generator = 'IFW'
     else
       raise 'Unknown operating system found, only supporting Windows, Linux, and MacOS'
     end
     generator
   end
 
-  def setup_compiler_package_extension(compiler)
+  def setup_compiler_package_extension(compiler, package_generator)
     return compiler[:package_extension] unless compiler[:package_extension].nil? || compiler[:package_extension] == ''
 
-    case compiler[:build_package_generator]
+    case package_generator
     when /.*NSIS.*/
       extension = 'exe'
     when /.*IFW.*/
@@ -205,10 +209,10 @@ module Configuration
     when /.*STGZ.*/
       extension = 'sh'
     when /T.*/
-      /T(?<tar_type>[A-Z]+)/ =~ compiler[:build_package_generator]
-      extension = "tar.#{tar_type.downcase}"
+      /T(?<tar_type>[A-Z]+)/ =~ package_generator
+      extension = "tar.#{tar_type.downcase}"  # TGZ, e.g.
     else
-      extension = compiler[:build_package_generator].downcase
+      extension = package_generator.downcase  # ZIP, e.g.
     end
     extension
   end
@@ -243,10 +247,12 @@ module Configuration
   def setup_compiler_cppcheck_bin(compiler)
     return compiler[:cppcheck_bin] unless compiler[:cppcheck_bin].nil? || compiler[:cppcheck_bin] == ''
 
+    return nil if compiler[:version].nil?
+
     potential_name = which("cppcheck-#{compiler[:version]}")
     potential_name = which('cppcheck') if potential_name.nil?
 
-    raise "Unable to find binary for: #{compiler[:name]} version #{compiler[:version]}" if compiler[:cppcheck_bin].nil? || (`#{compiler[:cppcheck_bin]} --version` !~ /.*#{compiler[:version]}/)
+    raise "Unable to find binary for: cppcheck version #{compiler[:version]}" if potential_name.nil? || (`#{potential_name} --version` !~ /.*#{compiler[:version]}/)
 
     potential_name
   end
@@ -272,7 +278,9 @@ module Configuration
   end
 
   def setup_gcc_style_cc_and_cxx(compiler)
-    return [nil, nil] unless %w[clang gcc].include? compiler[:name]
+    return [compiler[:cc_bin], compiler[:cxx_bin]] unless compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?
+
+    return [nil, nil] if compiler[:name].nil? || compiler[:version].nil? || !%w[clang gcc].include?(compiler[:name])
 
     if compiler[:name] == 'clang'
       cc = 'clang'
@@ -291,14 +299,14 @@ module Configuration
       cxx_bin = which(cxx)
     end
 
-    if compiler[:cc_bin].nil? || compiler[:cxx_bin].nil? || (`#{compiler[:cc_bin]} --version` !~ /.*#{compiler[:version]}/) || (`#{compiler[:cxx_bin]} --version` !~ /.*#{compiler[:version]}/)
+    if cc_bin.nil? || cxx_bin.nil? || (`#{cc_bin} --version` !~ /.*#{compiler[:version]}/) || (`#{cxx_bin} --version` !~ /.*#{compiler[:version]}/)
       raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
     end
 
     [cc_bin, cxx_bin]
   end
 
-  def setup_single_compiler(compiler, is_release)
+  def setup_single_compiler(compiler, is_release, os_version)
     compiler[:architecture] = setup_compiler_architecture(compiler)
     compiler[:version] = setup_compiler_version(compiler)
     compiler[:cc_bin], compiler[:cxx_bin] = setup_gcc_style_cc_and_cxx(compiler)
@@ -308,11 +316,11 @@ module Configuration
     compiler[:analyze_only] = true if compiler[:name] == 'custom_check' || compiler[:name] == 'cppcheck'
     compiler[:skip_packaging] = (compiler[:skip_packaging] =~ /true/i) || compiler[:skip_packaging] if compiler[:skip_packaging].nil?
     compiler[:description] = setup_compiler_description(compiler)
-    compiler[:build_package_generator] = setup_compiler_package_generator(compiler)
+    compiler[:build_package_generator] = setup_compiler_package_generator(compiler, os_version)
     compiler[:build_type] = 'Release' if compiler[:build_type].nil? || compiler[:build_type] == ''
     compiler[:build_generator] = setup_compiler_build_generator(compiler)
     compiler[:target_arch] = setup_compiler_target_arch(compiler)
-    compiler[:package_extension] = setup_compiler_package_extension(compiler)
+    compiler[:package_extension] = setup_compiler_package_extension(compiler, compiler[:build_package_generator])
     compiler[:package_mimetype] = setup_compiler_package_mimetype(compiler)
     compiler[:skip_regression] = false if compiler[:skip_regression].nil?
     compiler[:collect_performance_results] = false if compiler[:collect_performance_results].nil?
@@ -356,7 +364,7 @@ module Configuration
     configuration = OpenStruct.new(result_yaml)
     configuration.compilers.each do |compiler|
       $logger.debug("Working on compiler: #{compiler[:name]}")
-      setup_single_compiler(compiler, is_release)
+      setup_single_compiler(compiler, is_release, configuration[:os])
     end
 
     configuration.tests_dir = '' if configuration.tests_dir.nil?
