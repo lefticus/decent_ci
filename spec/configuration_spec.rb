@@ -17,19 +17,29 @@ describe 'Configuration Testing' do
       open(temp_file, 'w') { |f| f << "HAI" }
       File.chmod(0777, temp_file)
       # set up the PATH to hold all three dirs, it should only find the second
+      cur_path = ENV['PATH']
       ENV['PATH'] = [dir1, dir2, dir3].join(File::PATH_SEPARATOR)
       binary_path = which(binary_file_name)
       expect(binary_path).to include dir2
+      ENV['PATH'] = cur_path
     end
   end
-  context 'when calling load_yaml' do
-    it 'should return the correct SEFLKJ' do
-    end
-  end
-  context 'when calling symbolize' do
-    it 'should return the correct SEFLKJ' do
-    end
-  end
+  # context 'when calling load_yaml' do
+  #   let(:repos)   { [{ name: 'bar'}] }
+  #   let(:client)  { instance_double(Octokit::Client, repos) }
+  #   it 'should return the correct SEFLKJ' do
+  #     before do
+  #       allow(Octokit::Client).to_receive(:new).and_return(client)
+  #     end
+  #   end
+  # end
+  # context 'when calling symbolize' do
+  #   it 'should return the correct SEFLKJ' do
+  #     filled_compiler = setup_single_compiler({"name" => "gcc"}, false, 'Linux')
+  #     symbolized = symbolize(filled_compiler)
+  #     i = 1
+  #   end
+  # end
   context 'when calling find_windows_6_release' do
     it 'should return a valid number' do
       expect(find_windows_6_release(0)).to be_nil
@@ -40,11 +50,21 @@ describe 'Configuration Testing' do
     end
   end
   context 'when calling establish_os_characteristics' do
-    it 'should return the correct SEFLKJ' do
+    it 'should return the a few OS parameters' do
+      # the responses here will differ based on where we are testing it
+      # we should really just make sure it runs without throwing and returns a list
+      expect(establish_os_characteristics).to be_instance_of Array
     end
   end
   context 'when calling get_all_yaml_names' do
-    it 'should return the correct SEFLKJ' do
+    it 'should return the a list of string file names' do
+      response = get_all_yaml_names('Linux', '10', 'Distro')
+      expect(response).to be_instance_of Array
+      response.each do |filename|
+        expect(filename).to be_instance_of String
+      end
+      response2 = get_all_yaml_names('Linux', '10', nil)
+      expect(response2.select { |filename| filename.nil? }.length == 1).to be_truthy
     end
   end
   context 'when calling establish_base_configuration' do
@@ -74,6 +94,7 @@ describe 'Configuration Testing' do
     end
     it 'should find valid versions for gcc, clang, and cppcheck' do
       dir1 = Dir.mktmpdir
+      cur_path = ENV['PATH']
       ENV['PATH'] = dir1
       binary_name = "cppcheck"
       binary_extension = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';')[0] : ''
@@ -96,6 +117,7 @@ describe 'Configuration Testing' do
       expect(setup_compiler_version({:name => 'cppcheck'})).to eql '1'
       expect(setup_compiler_version({:name => 'gcc'})).to eql '2'
       expect(setup_compiler_version({:name => 'clang'})).to eql '3'
+      ENV['PATH'] = cur_path
     end
   end
   context 'when calling setup_compiler_description' do
@@ -162,8 +184,10 @@ describe 'Configuration Testing' do
       cc_binary = File.join(dir1, binary_file_name)
       open(cc_binary, 'w') { |f| f << "#!/bin/bash\necho 1" }
       File.chmod(0777, cc_binary)
+      cur_path = ENV['PATH']
       ENV['PATH'] = dir1
       expect(setup_compiler_cppcheck_bin({}, 1)).to include cc_binary
+      ENV['PATH'] = cur_path
     end
   end
   context 'when calling setup_compiler_build_generator' do
@@ -208,10 +232,12 @@ describe 'Configuration Testing' do
       cxx_binary = File.join(dir1, binary_file_name)
       open(cxx_binary, 'w') { |f| f << "#!/bin/bash\necho 1" }
       File.chmod(0777, cxx_binary)
+      cur_path = ENV['PATH']
       ENV['PATH'] = dir1
       cc, cxx = setup_gcc_style_cc_and_cxx({:name => 'gcc', :version => "1"})
       expect(cc).to eql cc_binary
       expect(cxx).to eql cxx_binary
+      ENV['PATH'] = cur_path
     end
     it 'should find gcc stuff on path with version number' do
       dir1 = Dir.mktmpdir
@@ -227,10 +253,12 @@ describe 'Configuration Testing' do
       cxx_binary = File.join(dir1, binary_file_name)
       open(cxx_binary, 'w') { |f| f << "#!/bin/bash\necho 1" }
       File.chmod(0777, cxx_binary)
+      cur_path = ENV['PATH']
       ENV['PATH'] = dir1
       cc, cxx = setup_gcc_style_cc_and_cxx({:name => 'gcc', :version => "1"})
       expect(cc).to eql cc_binary
       expect(cxx).to eql cxx_binary
+      ENV['PATH'] = cur_path
     end
     it 'should raise for invalid gcc version' do
       dir1 = Dir.mktmpdir
@@ -246,8 +274,10 @@ describe 'Configuration Testing' do
       cxx_binary = File.join(dir1, binary_file_name)
       open(cxx_binary, 'w') { |f| f << "#!/bin/bash\necho 1" }
       File.chmod(0777, cxx_binary)
+      cur_path = ENV['PATH']
       ENV['PATH'] = dir1
       expect{ setup_gcc_style_cc_and_cxx({:name => 'gcc', :version => "2"}) }.to raise_error(RuntimeError)
+      ENV['PATH'] = cur_path
     end
     it 'should find clang stuff on path with version number' do
       dir1 = Dir.mktmpdir
@@ -263,14 +293,49 @@ describe 'Configuration Testing' do
       cxx_binary = File.join(dir1, binary_file_name)
       open(cxx_binary, 'w') { |f| f << "#!/bin/bash\necho 1" }
       File.chmod(0777, cxx_binary)
+      cur_path = ENV['PATH']
       ENV['PATH'] = dir1
       cc, cxx = setup_gcc_style_cc_and_cxx({:name => 'clang', :version => "1"})
       expect(cc).to eql cc_binary
       expect(cxx).to eql cxx_binary
+      ENV['PATH'] = cur_path
     end
   end
   context 'when calling setup_single_compiler' do
+    before do
+      dir1 = Dir.mktmpdir
+      binary_name = "gcc"
+      binary_extension = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';')[0] : ''
+      binary_file_name = "#{binary_name}#{binary_extension}"
+      cc_binary = File.join(dir1, binary_file_name)
+      open(cc_binary, 'w') { |f| f << "#!/bin/bash\necho 1" }
+      File.chmod(0777, cc_binary)
+      binary_name = "g++"
+      binary_extension = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';')[0] : ''
+      binary_file_name = "#{binary_name}#{binary_extension}"
+      cxx_binary = File.join(dir1, binary_file_name)
+      open(cxx_binary, 'w') { |f| f << "#!/bin/bash\necho 1" }
+      File.chmod(0777, cxx_binary)
+      @cur_path = ENV['PATH']
+      ENV['PATH'] = dir1
+    end
+    after do
+      ENV['PATH'] = @cur_path
+    end
     it 'should properly setup all attributes of a single compiler' do
+
+    end
+    it 'should accept a compiler with the minimal fields' do
+      filled_compiler = setup_single_compiler({:name => "gcc"}, false, 'Linux')
+      expect(filled_compiler).to include :cc_bin
+      expect(filled_compiler).to include :cxx_bin
+      expect(filled_compiler).to include :version
+      expect(filled_compiler).to include :build_type
+      expect(filled_compiler).to include :build_package_generator
+      i = 1
+    end
+    it 'should throw for missing required fields' do
+
     end
   end
   context 'when calling load_configuration' do

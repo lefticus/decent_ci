@@ -46,19 +46,19 @@ module Configuration
     return_value
   end
 
-  def symbolize(obj)
-    if obj.is_a? Hash
-      return obj.reduce({}) do |memo, (k, v)|
-        memo.tap { |m| m[k.to_sym] = symbolize(v) }
-      end
-    elsif obj.is_a? Array
-      return obj.reduce([]) do |memo, v|
-        memo << symbolize(v)
-        memo
-      end
-    end
-    obj
-  end
+  # def symbolize(obj)
+  #   if obj.is_a? Hash
+  #     return obj.reduce({}) do |memo, (k, v)|
+  #       memo.tap { |m| m[k.to_sym] = symbolize(v) }
+  #     end
+  #   elsif obj.is_a? Array
+  #     return obj.reduce([]) do |memo, v|
+  #       memo << symbolize(v)
+  #       memo
+  #     end
+  #   end
+  #   obj
+  # end
 
   def find_windows_6_release(ver_minor)
     if ver_minor.to_i == 1
@@ -99,7 +99,9 @@ module Configuration
       os_version = 'Linux'
       os_release = "#{`lsb_release -is`.strip}-#{`lsb_release -rs`.strip}"
     else
+      # :nocov: Not testing on windows right now
       os_distribution, os_version, os_release = establish_windows_characteristics
+      # :nocov:
     end
     [os_distribution, os_version, os_release]
   end
@@ -355,7 +357,7 @@ module Configuration
     valid_yamls.each do |yaml|
       result_yaml.merge!(yaml)
     end
-    result_yaml = symbolize(result_yaml)
+    # result_yaml = symbolize(result_yaml) # TODO: I really don't think we need to symbolize it but verify
     $logger.debug("Final merged configuration: #{result_yaml}")
     raise 'No compilers defined' if configuration.compilers.nil?
 

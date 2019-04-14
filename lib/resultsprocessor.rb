@@ -20,23 +20,26 @@ module ResultsProcessor
     end
   end
 
+  def get_win32_filename(function, name)
+    # :nocov: we don't test on windows currently
+    max_path = 1024
+    short_name = ' ' * max_path
+    lfn_size = Win32API.new('kernel32', function, %w[P P L], 'L').call(name, short_name, max_path)
+    (1..max_path).include?(lfn_size) ? short_name[0..lfn_size - 1] : name # rubocop:disable Performance/RangeInclude
+    # :nocov:
+  end
+
   def recover_file_case(name)
     if RbConfig::CONFIG['target_os'].match?(/mingw|mswin/)
       # :nocov: we don't test on windows currently
       require 'win32api'
 
-      get_short_win32_filename = lambda do |long_name|
-        max_path = 1024
-        short_name = ' ' * max_path
-        lfn_size = Win32API.new('kernel32', 'GetShortPathName', %w[P P L], 'L').call(long_name, short_name, max_path)
-        (1..max_path).include?(lfn_size) ? short_name[0..lfn_size - 1] : long_name # rubocop:disable Performance/RangeInclude
+      get_short_win32_filename = lambda do |name|
+        get_win32_filename('GetShortPathName', name)
       end
 
-      get_long_win32_filename = lambda do |short_name|
-        max_path = 1024
-        long_name = ' ' * max_path
-        lfn_size = Win32API.new('kernel32', 'GetLongPathName', %w[P P L], 'L').call(short_name, long_name, max_path)
-        (1..max_path).include?(lfn_size) ? long_name[0..lfn_size - 1] : short_name # rubocop:disable Performance/RangeInclude
+      get_long_win32_filename = lambda do |name|
+        get_win32_filename('GetLongPathName', name)
       end
 
       get_long_win32_filename.call(get_short_win32_filename.call(name))
@@ -97,19 +100,14 @@ module ResultsProcessor
 
   def process_custom_check_results(src_dir, build_dir, stdout, stderr, result)
     results = []
-    stdout.encode('UTF-8', :invalid => :replace).split("\n").each do |line|
-      next if line.strip == ''
+    [stdout, stderr].each do |output_stream|
+      output_stream.encode('UTF-8', :invalid => :replace).split("\n").each do |line|
+        next if line.strip == ''
 
-      $logger.debug("Parsing custom_check stdout line: #{line}")
-      msg = parse_custom_check_line(src_dir, build_dir, line)
-      results << msg
-    end
-    stderr.encode('UTF-8', :invalid => :replace).split("\n").each do |line|
-      next if line.strip == ''
-
-      $logger.debug("Parsing custom_check stderr line: #{line}")
-      msg = parse_custom_check_line(src_dir, build_dir, line)
-      results << msg
+        $logger.debug("Parsing custom_check line: #{line}")
+        msg = parse_custom_check_line(src_dir, build_dir, line)
+        results << msg
+      end
     end
     @build_results.merge(results)
     result.zero?
@@ -201,12 +199,8 @@ module ResultsProcessor
           if !filename.nil? && !line_number.nil? && (filename !~ /file included/i) && (filename !~ /^\s*from\s+/i)
             file = filename
             line = line_number
-            type = if err.include?('.f90')
-                     # this is a bad assumption, but right now fortran warnings are being taken as uncategorized build errors
-                     'warning'
-                   else
-                     'error'
-                   end
+            type = 'error'
+            type = 'warning' if err.include?('.f90') # this is a bad assumption, but right now fortran warnings are being taken as uncategorized build errors
           end
         end
       else

@@ -76,6 +76,7 @@ describe 'ResultsProcessor Testing' do
       expect(recover_file_case('mY nAmE iS mUd')).to eql 'mY nAmE iS mUd'
       expect(recover_file_case('BOY TWO')).to eql 'BOY TWO'
     end
+    # once we test on Windows, we should ONLY test recover_file_case on there, and eliminate the IF WINDOWS block
   end
 
   context 'when calling parse_cppcheck_line' do
