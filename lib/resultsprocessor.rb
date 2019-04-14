@@ -34,12 +34,12 @@ module ResultsProcessor
       # :nocov: we don't test on windows currently
       require 'win32api'
 
-      get_short_win32_filename = lambda do |name|
-        get_win32_filename('GetShortPathName', name)
+      get_short_win32_filename = lambda do |this_name|
+        get_win32_filename('GetShortPathName', this_name)
       end
 
-      get_long_win32_filename = lambda do |name|
-        get_win32_filename('GetLongPathName', name)
+      get_long_win32_filename = lambda do |this_name|
+        get_win32_filename('GetLongPathName', this_name)
       end
 
       get_long_win32_filename.call(get_short_win32_filename.call(name))
