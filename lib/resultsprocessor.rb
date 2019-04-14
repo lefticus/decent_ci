@@ -235,14 +235,17 @@ module ResultsProcessor
 
   def parse_msvc_line(src_dir, build_dir, line)
     /(?<filename>.+)\((?<line_number>[0-9]+)\): (?<message_type>.+?) (?<message_code>\S+): (?<message>.*) \[.*\]?/ =~ line
-    if !filename.nil? && !message_type.nil? && message_type != 'info' && message_type != 'note'
+    pattern_found = !filename.nil? && !message_type.nil?
+    message_is_error = !(%w[info note].include? message_type)
+    if pattern_found && message_is_error
       CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), line_number, 0, message_type, message_code + ' ' + message)
     else
       /(?<filename>.+) : (?<message_type>\S+) (?<message_code>\S+): (?<message>.*) \[.*\]?/ =~ line
-      pattern_2_found = !filename.nil? && !message_type.nil? && message_type != 'info' && message_type != 'note'
-      return CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), 0, 0, message_type, message_code + ' ' + message) if pattern_2_found
+      pattern_2_found = !filename.nil? && !message_type.nil?
+      message_2_is_error = !(%w[info note].include? message_type)
+      return nil unless pattern_2_found && message_2_is_error
 
-      nil
+      CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), 0, 0, message_type, message_code + ' ' + message)
     end
   end
 
