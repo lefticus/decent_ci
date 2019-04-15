@@ -260,7 +260,7 @@ module ResultsProcessor
   end
 
   def parse_gcc_line(src_path, build_path, line)
-    # 'Something.cc:32:4: multiple definition of variable' 
+    # 'Something.cc:32:4: multiple definition of variable'
     /(?<filename>.*):(?<line_number>[0-9]+):(?<column_number>[0-9]+): (?<message_type>.+?): (?<message>.*)/ =~ line
     pattern_found = !filename.nil? && !message_type.nil?
     message_is_error = !(%w[info note].include? message_type)
