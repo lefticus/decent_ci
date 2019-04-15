@@ -1,5 +1,14 @@
+require 'base64'
 require 'rspec'
 require_relative '../lib/configuration'
+require 'octokit'
+
+class YamlResponse
+  attr_reader :content
+  def initialize(yaml_data_string)
+    @content = yaml_data_string
+  end
+end
 
 describe 'Configuration Testing' do
   include Configuration
@@ -24,22 +33,39 @@ describe 'Configuration Testing' do
       ENV['PATH'] = cur_path
     end
   end
-  # context 'when calling load_yaml' do
-  #   let(:repos)   { [{ name: 'bar'}] }
-  #   let(:client)  { instance_double(Octokit::Client, repos) }
-  #   it 'should return the correct SEFLKJ' do
-  #     before do
-  #       allow(Octokit::Client).to_receive(:new).and_return(client)
-  #     end
-  #   end
-  # end
-  # context 'when calling symbolize' do
-  #   it 'should return the correct SEFLKJ' do
-  #     filled_compiler = setup_single_compiler({"name" => "gcc"}, false, 'Linux')
-  #     symbolized = symbolize(filled_compiler)
-  #     i = 1
-  #   end
-  # end
+  context 'when calling load_yaml' do
+    it 'should return the correct hash data' do
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return(YamlResponse.new(Base64.encode64('data: stuff')))
+      @client = Octokit::Client.new(:access_token => 'abc')
+      yaml_hash_data = load_yaml('CMakeLists.txt', 'NREL/EnergyPlus', 'develop')
+      expect(yaml_hash_data['data']).to eql 'stuff'
+    end
+    it 'should raise for bad yaml syntax' do
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return(YamlResponse.new(Base64.encode64("a: %1\"string\\\"")))
+      @client = Octokit::Client.new(:access_token => 'abc')
+      expect{ load_yaml('CMakeLists.txt', 'NREL/EnergyPlus', 'develop') }.to raise_error RuntimeError
+    end
+    it 'should find a local file at the path if remote is not found' do
+
+    end
+    it 'should return nil if the yaml simply is not found' do
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_raise("Hey")
+      @client = Octokit::Client.new(:access_token => 'abc')
+      yaml_hash_data = load_yaml('CMakeLists.txt', 'NREL/EnergyPlus', 'develop')
+      expect(yaml_hash_data).to be_nil
+    end
+  end
+  context 'when calling symbolize' do
+    it 'should return the correct symbolized hash' do
+      compiler = {'name' => '', 'key 1' => '', 'key a' => '', 'alpha beta gamma' => ''}
+      expect(compiler).to include 'name'
+      symbolized = symbolize(compiler)
+      expect(symbolized).to include :name
+      expect(symbolized).to include 'key 1'.intern
+      expect(symbolized).to include 'key a'.intern
+      expect(symbolized).to include 'alpha beta gamma'.intern
+    end
+  end
   context 'when calling find_windows_6_release' do
     it 'should return a valid number' do
       expect(find_windows_6_release(0)).to be_nil

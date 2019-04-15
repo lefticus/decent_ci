@@ -29,8 +29,12 @@ module Configuration
       content = @client.content(this_location, :path => name, :ref => this_ref)
       contents = content.content
       return_value = YAML.load(Base64.decode64(contents.to_s))
-    rescue SyntaxError => e
+    rescue Psych::SyntaxError => e
       raise "#{e.message} while parsing #{name}@#{this_ref}"
+    rescue SyntaxError => e
+      # :nocov: I don't think we can get to this, it's always a Psych::SyntaxError, but I'm not 100% sure, so leaving this
+      raise "#{e.message} while parsing #{name}@#{this_ref}"
+      # :nocov:
     rescue => e
       $logger.info("Unable to load yaml file from repository: #{this_location}/#{name}@#{this_ref} error: #{e}")
 
@@ -46,19 +50,12 @@ module Configuration
     return_value
   end
 
-  # def symbolize(obj)
-  #   if obj.is_a? Hash
-  #     return obj.reduce({}) do |memo, (k, v)|
-  #       memo.tap { |m| m[k.to_sym] = symbolize(v) }
-  #     end
-  #   elsif obj.is_a? Array
-  #     return obj.reduce([]) do |memo, v|
-  #       memo << symbolize(v)
-  #       memo
-  #     end
-  #   end
-  #   obj
-  # end
+  def symbolize(obj)
+    obj.inject({}) do |memo, (k, v)|
+      memo[k.to_sym] = v
+      memo
+    end
+  end
 
   def find_windows_6_release(ver_minor)
     if ver_minor.to_i == 1
@@ -138,6 +135,8 @@ module Configuration
     }
   end
 
+  # returns a list of yaml-based configuration data sets
+  # they may be nil values if the yaml config couldn't be found by name
   def find_valid_yaml_files(all_yaml_names, fileset)
     valid_yaml_configs = []
     all_yaml_names.each do |yaml|
@@ -357,9 +356,9 @@ module Configuration
     valid_yamls = find_valid_yaml_files(yaml_names, fileset)
     result_yaml = establish_base_configuration(os_version, os_release)
     valid_yamls.each do |yaml|
-      result_yaml.merge!(yaml)
+      result_yaml.merge!(yaml) unless yaml.nil?
     end
-    # result_yaml = symbolize(result_yaml) # TODO: I really don't think we need to symbolize it but verify
+    result_yaml = symbolize(result_yaml)
     $logger.debug("Final merged configuration: #{result_yaml}")
     raise 'No compilers defined' if configuration.compilers.nil?
 
