@@ -180,12 +180,12 @@ module Configuration
     raise 'Compiler name not specified, must at least specify name' if compiler[:name].nil?
 
     description = compiler[:name].gsub(/\s+/, '')
-    description = "#{description}-#{compiler[:version]}" if !compiler[:version].nil? && compiler[:version] != ''
+    description = "#{description}-#{compiler[:version]}" if !compiler[:version].nil?
     description
   end
 
   def setup_compiler_package_generator(compiler, os_name)
-    return compiler[:build_package_generator] unless compiler[:build_package_generator].nil? || compiler[:build_package_generator] == ''
+    return compiler[:build_package_generator] unless compiler[:build_package_generator].nil?
 
     case os_name
     when 'Windows'
@@ -201,7 +201,7 @@ module Configuration
   end
 
   def setup_compiler_package_extension(compiler, package_generator)
-    return compiler[:package_extension] unless compiler[:package_extension].nil? || compiler[:package_extension] == ''
+    return compiler[:package_extension] unless compiler[:package_extension].nil?
 
     case package_generator
     when /.*NSIS.*/
@@ -239,7 +239,7 @@ module Configuration
   end
 
   def setup_compiler_num_processors(compiler)
-    return compiler[:num_parallel_builds] unless compiler[:num_parallel_builds].nil? || compiler[:num_parallel_builds] == ''
+    return compiler[:num_parallel_builds] unless compiler[:num_parallel_builds].nil?
 
     num_processors = processor_count
     num_processors -= 1 if num_processors > 2
@@ -261,7 +261,7 @@ module Configuration
   end
 
   def setup_compiler_build_generator(compiler)
-    return compiler[:build_generator] unless compiler[:build_generator].nil? || compiler[:build_generator] == ''
+    return compiler[:build_generator] unless compiler[:build_generator].nil?
 
     if compiler[:name].match?(/.*Visual Studio.*/i)
       'Visual Studio 16 2019'

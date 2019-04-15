@@ -18,13 +18,13 @@ module Runners
       # Get the pid of the spawned process
       pid = thread[:pid]
       start = Time.now
-      out, err = _run_with_timeout_internal(pid, start, timeout, tick, stdout, stderr)
+      out, err = _run_with_timeout_internal(pid, start, timeout, thread, tick, stdout, stderr)
     ensure
       stdin&.close
       stdout&.close
       stderr&.close
     end
-    [out.force_encoding('UTF-8'), err.force_encoding('UTF-8'), thread.value]
+    [(+out).force_encoding('UTF-8'), (+err).force_encoding('UTF-8'), thread.value]
   end
 
   def _run_with_timeout_tick(stdout, stderr, tick, out, err)
@@ -49,7 +49,7 @@ module Runners
     [out, err, this_break]
   end
 
-  def _run_with_timeout_internal(pid, start, timeout, tick, stdout, stderr)
+  def _run_with_timeout_internal(pid, start, timeout, thread, tick, stdout, stderr)
     out = ''
     err = ''
     while (Time.now - start) < timeout && thread.alive?
@@ -68,7 +68,7 @@ module Runners
     [out, err]
   end
 
-  def _run_script(this_config, cmd, env, all_out, all_err, all_result)
+  def _run_script(this_config, cmd, env, all_out, all_err, all_result, last_command)
     if this_config.os == 'Windows'
       $logger.warn 'Unable to set timeout for process execution on windows'
       stdout, stderr, result = Open3.capture3(env, cmd)
@@ -85,7 +85,7 @@ module Runners
       $logger.info("cmd: #{cmd}: stderr: #{l}")
     end
 
-    if cmd != commands.last && result != 0
+    if last_command && result != 0
       $logger.error("Error running script command: #{stderr}")
       raise stderr
     end
@@ -109,7 +109,7 @@ module Runners
     all_result = 0
 
     commands.each do |cmd|
-      all_out, all_err, all_result = _run_script(this_config, cmd, env, all_out, all_err, all_result)
+      all_out, all_err, all_result = _run_script(this_config, cmd, env, all_out, all_err, all_result, cmd == commands.last)
     end
 
     [all_out, all_err, all_result]
