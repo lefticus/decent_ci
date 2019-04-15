@@ -247,14 +247,14 @@ module Configuration
   end
 
   def setup_compiler_cppcheck_bin(compiler, version)
-    return compiler[:cppcheck_bin] unless compiler[:cppcheck_bin].nil? || compiler[:cppcheck_bin] == ''
+    return compiler[:cppcheck_bin] unless compiler[:cppcheck_bin].nil?
 
     if version.nil?
       potential_name = which('cppcheck')
       raise 'Unable to find a cppcheck binary (version agnostic)' if potential_name.nil?
     else
       potential_name = which("cppcheck-#{version}")
-      raise "Unable to find binary for: cppcheck version #{version}" if potential_name.nil? || (`#{potential_name} --version` !~ /.*#{version}/)
+      raise "Unable to find binary for: cppcheck version #{version}" if potential_name.nil?
     end
 
     potential_name

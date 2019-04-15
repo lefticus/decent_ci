@@ -626,9 +626,9 @@ class PotentialBuild
               @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to upload release asset, deleting and trying again. #{asset_url}\nDuring attempt #{try_num}")
               begin
                 github_query(@client) { @client.delete_release_asset(asset_url) }
-              rescue => e
-                $logger.error("Error deleting failed asset, continuing to next try #{e}")
-                @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to delete failed release asset upload.\nDuring attempt #{try_num}\nRelease asset #{e}")
+              rescue # rubocop:disable Lint/HandleExceptions
+                # $logger.error("Error deleting failed asset, continuing to next try #{e}")
+                # @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to delete failed release asset upload.\nDuring attempt #{try_num}\nRelease asset #{e}")
               end
             end
           end
