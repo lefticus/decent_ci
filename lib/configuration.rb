@@ -50,9 +50,17 @@ module Configuration
   end
 
   def symbolize(obj)
-    obj.inject({}) do |memo, (k, v)|
-      memo[k.to_sym] = v
-      memo
+    if obj.is_a? Hash
+      obj.reduce({}) do |memo, (k, v)|
+        memo.tap { |m| m[k.to_sym] = symbolize(v) }
+      end
+    elsif obj.is_a? Array
+      obj.reduce([]) do |memo, v|
+        memo << symbolize(v)
+        memo
+      end
+    else
+      obj
     end
   end
 
@@ -360,25 +368,22 @@ module Configuration
     end
     result_yaml = symbolize(result_yaml)
     $logger.debug("Final merged configuration: #{result_yaml}")
+
+    # create a configuration struct from the yaml data and escape early if there aren't any compilers
+    configuration = OpenStruct.new(result_yaml)
     raise 'No compilers defined' if configuration.compilers.nil?
 
-    # go through the list of compilers specified and fill in reasonable defaults
-    # if there are not any specified already
-    # noinspection RubyScope
-    configuration = OpenStruct.new(result_yaml)
+    # loop over all compilers and fill in defaults and check for erroneous conditions
     configuration.compilers.each do |compiler|
       $logger.debug("Working on compiler: #{compiler[:name]}")
       setup_single_compiler(compiler, is_release, configuration[:os])
     end
 
+    # do final touchups on the configuration
     configuration.tests_dir = '' if configuration.tests_dir.nil?
-
     configuration.aging_pull_requests_notification = true if configuration.aging_pull_requests_notification.nil?
-
     configuration.aging_pull_requests_numdays = 7 if configuration.aging_pull_requests_numdays.nil?
-
     configuration.test_pass_limit = 99.9999 if configuration.test_pass_limit.nil?
-
     configuration.test_warn_limit = 90.00 if configuration.test_warn_limit.nil?
 
     configuration

@@ -1,0 +1,4 @@
+compilers:
+  - name: "gcc"
+    version: 1
+

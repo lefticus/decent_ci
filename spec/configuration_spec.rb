@@ -10,6 +10,13 @@ class YamlResponse
   end
 end
 
+class NamedDummy
+  attr_reader :name
+  def initialize(this_name)
+    @name = this_name
+  end
+end
+
 describe 'Configuration Testing' do
   include Configuration
   context 'when calling which function to find executable' do
@@ -396,7 +403,13 @@ describe 'Configuration Testing' do
     end
   end
   context 'when calling load_configuration' do
-    it 'should properly set up all compilers and other settings of all configurations' do
+    it 'should properly set up all compilers and other settings of all configurations', :focus do
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      @client = Octokit::Client.new(:access_token => 'abc')
+      configuration = load_configuration('spec/resources', 'abc', false)
+      expect(configuration.compilers.first[:name]).to eql 'gcc'
+    end
+    it 'should test lots more configuraitons' do
     end
   end
 end
