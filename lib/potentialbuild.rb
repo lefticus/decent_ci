@@ -564,6 +564,39 @@ class PotentialBuild
     @performance_results = results
   end
 
+  def try_to_repost_asset(response, asset_name)
+    asset_url = nil
+
+    if !response.nil? && response.state == 'new'
+      $logger.error("Error uploading asset #{response.url}")
+      asset_url = response.url
+    end
+
+    if asset_url.nil?
+      $logger.error('nil response, attempting to find release url')
+      assets = github_query(@client) { @client.release_assets(@release_url) }
+
+      assets.each do |a|
+        if a.name == asset_name
+          asset_url = a.url
+          break
+        end
+      end
+    end
+
+    if asset_url
+      $logger.error("Found release url in list of assets: #{asset_url}")
+      $logger.error("Deleting existing asset_url and trying again #{asset_url}")
+      @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to upload release asset, deleting and trying again. #{asset_url}\nDuring attempt #{try_num}")
+      begin
+        github_query(@client) { @client.delete_release_asset(asset_url) }
+      rescue
+        $logger.error("Error deleting failed asset, continuing to next try #{e}")
+        @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to delete failed release asset upload.\nDuring attempt #{try_num}\nRelease asset #{e}")
+      end
+    end
+  end
+
   def post_results(compiler, pending)
     @dateprefix = DateTime.now.utc.strftime('%F') if @dateprefix.nil?
 
@@ -601,36 +634,7 @@ class PotentialBuild
             succeeded = true
           else
             $logger.error('Asset upload appears to have failed, going to try and delete the failed bits.')
-            asset_url = nil
-
-            if !response.nil? && response.state == 'new'
-              $logger.error("Error uploading asset #{response.url}")
-              asset_url = response.url
-            end
-
-            if asset_url.nil?
-              $logger.error('nil response, attempting to find release url')
-              assets = github_query(@client) { @client.release_assets(@release_url) }
-
-              assets.each do |a|
-                if a.name == asset_name
-                  asset_url = a.url
-                  break
-                end
-              end
-            end
-
-            if asset_url
-              $logger.error("Found release url in list of assets: #{asset_url}")
-              $logger.error("Deleting existing asset_url and trying again #{asset_url}")
-              @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to upload release asset, deleting and trying again. #{asset_url}\nDuring attempt #{try_num}")
-              begin
-                github_query(@client) { @client.delete_release_asset(asset_url) }
-              rescue # rubocop:disable Lint/HandleExceptions
-                # $logger.error("Error deleting failed asset, continuing to next try #{e}")
-                # @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to delete failed release asset upload.\nDuring attempt #{try_num}\nRelease asset #{e}")
-              end
-            end
+            try_to_repost_asset(response, asset_name)
           end
 
           try_num += 1
