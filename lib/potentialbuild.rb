@@ -618,11 +618,10 @@ class PotentialBuild
                   break
                 end
               end
-
-              $logger.error("Found release url in list of assets: #{asset_url}") unless asset_url.nil?
             end
 
             if asset_url
+              $logger.error("Found release url in list of assets: #{asset_url}")
               $logger.error("Deleting existing asset_url and trying again #{asset_url}")
               @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to upload release asset, deleting and trying again. #{asset_url}\nDuring attempt #{try_num}")
               begin

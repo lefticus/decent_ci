@@ -104,7 +104,6 @@ module ResultsProcessor
       output_stream.encode('UTF-8', :invalid => :replace).split("\n").each do |line|
         next if line.strip == ''
 
-        $logger.debug("Parsing custom_check line: #{line}")
         msg = parse_custom_check_line(src_dir, build_dir, line)
         results << msg
       end
@@ -118,12 +117,17 @@ module ResultsProcessor
     stderr.encode('UTF-8', :invalid => :replace).split("\n").each do |line|
       next if line.strip == ''
 
-      $logger.debug("Parsing cppcheck line: #{line}")
       msg = parse_cppcheck_line(src_dir, build_dir, line)
       results << msg unless msg.nil?
     end
     @build_results.merge(results)
     result.zero?
+  end
+
+  def match_type_to_possible_fortran(err_line)
+    type = 'error'
+    type = 'warning' if err_line.include?('.f90') # this is a bad assumption, but right now fortran warnings are being taken as uncategorized build errors
+    type
   end
 
   def process_cmake_results(src_dir, build_dir, stderr, cmake_exit_code, is_package)
@@ -199,8 +203,7 @@ module ResultsProcessor
           if !filename.nil? && !line_number.nil? && (filename !~ /file included/i) && (filename !~ /^\s*from\s+/i)
             file = filename
             line = line_number
-            type = 'error'
-            type = 'warning' if err.include?('.f90') # this is a bad assumption, but right now fortran warnings are being taken as uncategorized build errors
+            type = match_type_to_possible_fortran(err)
           end
         end
       else
@@ -323,27 +326,16 @@ module ResultsProcessor
     line_number = nil
     # Since we are just doing line-by-line parsing, it really limits what we can get, but we'll try our best anyway
     if line.include? 'LaTeX Error'
-      # Example LaTeX Error (third line):
-      # LaTeX Font Info: Checking defaults for U/cmr/m/n on input line 3.
-      # LaTeX Font Info: ... okay on input line 3.
       # ! LaTeX Error: Environment itemize undefined.
-      # See the LaTeX manual or LaTeX Companion for explanation.
-      # Type H <return> for immediate help.
       /^.*Error: (?<message>.+)/ =~ line
       compiler_string = 'LaTeX'
     else
       # assume Python
-      # Example Python Error (last line)
-      # Traceback (most recent call last):
-      #   File "/tmp/python_error.py", line 1, in <module>
-      #     print('c' + 3)
       # TypeError: cannot concatenate 'str' and 'int' objects
       /File "(?<filename>.+)", line (?<line_number>[0-9]+),.*/ =~ line
       /^.*Error: (?<message>.+)/ =~ line
       compiler_string = 'Python'
     end
-
-    $logger.debug("Parsing line for python/LaTeX errors: #{line}: #{filename} #{line_number} #{message}")
 
     return CodeMessage.new(relative_path(filename.strip, src_dir, build_dir), line_number, 0, 'error', 'error') if !filename.nil? && !line_number.nil?
 
@@ -442,15 +434,12 @@ module ResultsProcessor
             value = nil
             errors = nil
 
-            unless m.nil?
+            unless m.nil? || m['Value'].nil?
               value = m['Value']
-              unless value.nil?
-                errors = parse_error_messages(src_dir, build_dir, value)
-
-                value.split("\n").each do |line|
-                  if /\[decent_ci:test_result:message\] (?<message>.+)/ =~ line
-                    messages << TestMessage.new(n['Name'], message)
-                  end
+              errors = parse_error_messages(src_dir, build_dir, value)
+              value.split("\n").each do |line|
+                if /\[decent_ci:test_result:message\] (?<message>.+)/ =~ line
+                  messages << TestMessage.new(n['Name'], message)
                 end
               end
             end
