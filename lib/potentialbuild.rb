@@ -584,16 +584,16 @@ class PotentialBuild
       end
     end
 
-    unless asset_url.nil?
-      $logger.error("Found release url in list of assets: #{asset_url}")
-      $logger.error("Deleting existing asset_url and trying again #{asset_url}")
-      @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to upload release asset, deleting and trying again. #{asset_url}\nDuring attempt #{try_num}")
-      begin
-        github_query(@client) { @client.delete_release_asset(asset_url) }
-      rescue
-        $logger.error("Error deleting failed asset, continuing to next try #{e}")
-        @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to delete failed release asset upload.\nDuring attempt #{try_num}\nRelease asset #{e}")
-      end
+    return if asset_url.nil?
+
+    $logger.error("Found release url in list of assets: #{asset_url}")
+    $logger.error("Deleting existing asset_url and trying again #{asset_url}")
+    @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to upload release asset, deleting and trying again. #{asset_url}\nDuring attempt #{try_num}")
+    begin
+      github_query(@client) { @client.delete_release_asset(asset_url) }
+    rescue
+      $logger.error("Error deleting failed asset, continuing to next try #{e}")
+      @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error attempting to delete failed release asset upload.\nDuring attempt #{try_num}\nRelease asset #{e}")
     end
   end
 
