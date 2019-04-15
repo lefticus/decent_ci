@@ -180,7 +180,7 @@ module Configuration
     raise 'Compiler name not specified, must at least specify name' if compiler[:name].nil?
 
     description = compiler[:name].gsub(/\s+/, '')
-    description = "#{description}-#{compiler[:version]}" if !compiler[:version].nil?
+    description = "#{description}-#{compiler[:version]}" unless compiler[:version].nil?
     description
   end
 

@@ -14,21 +14,52 @@ describe 'Runners Testing' do
     @config = DummyConfig.new('Linux')
   end
   context 'when running run_scripts' do
-    it 'should do a normal run for a simple script' do
-      out, err, results = run_scripts(@config, ['ls'])
-      i = 1
+    it 'should grab stdout for a simple script call' do
+      dir1 = Dir.mktmpdir
+      open(File.join(dir1, 'a'), 'w') { |f| f << "HAI" }
+      open(File.join(dir1, 'b'), 'w') { |f| f << "HAI" }
+      out, = run_scripts(@config, ["ls #{dir1}"])
+      expect(out).to eql "a\nb\n"
     end
-    it 'should return SOMETHING for successful but empty scripts' do
-        
+    it 'should return empty output for successful but empty scripts' do
+      dir1 = Dir.mktmpdir
+      out, = run_scripts(@config, ["ls #{dir1}"])
+      expect(out).to eql ''
     end
-    it 'should return SOMETHING for a script that fails' do
+    it 'should raise when any script fails' do
+      dir1 = Dir.mktmpdir
+      script_file = File.join(dir1, 'a')
+      open(script_file, 'w') { |f| f << "#!/bin/bash\necho Hello\necho something >&2\nexit 0" }
+      expect{ run_scripts(@config, ["ls #{dir1}", "ls #{dir1}asdf", "ls #{dir1}"]) }.to raise_error RuntimeError
     end
     it 'should capture stuff on stdout and stderr both' do
+      dir1 = Dir.mktmpdir
+      script_file = File.join(dir1, 'a')
+      open(script_file, 'w') { |f| f << "#!/bin/bash\necho Hello\necho something >&2\nexit 0" }
+      out, err, result = run_scripts(@config, ["bash #{script_file}"])
+      expect(out).to eql "Hello\n"
+      expect(err).to eql "something\n"
+      expect(result).to eql 0
     end
-    it 'should do multiple scripts properly' do
+    it 'should accumulate output of multiple scripts' do
+      dir1 = Dir.mktmpdir
+      script_file = File.join(dir1, 'a')
+      open(script_file, 'w') { |f| f << "#!/bin/bash\necho Hello\necho something >&2\nexit 0" }
+      out, err, result = run_scripts(@config, ["bash #{script_file}", "bash #{script_file}"])
+      expect(out).to eql "Hello\nHello\n"
+      expect(err).to eql "something\nsomething\n"
+      expect(result).to eql 0
     end
     it 'should timeout on supported platforms' do
 #        run_scripts(@config
+    end
+    it 'should handle long-ish running scripts nicely' do
+      dir1 = Dir.mktmpdir
+      script_file = File.join(dir1, 'a')
+      open(script_file, 'w') { |f| f << "#!/bin/bash\necho Hello\nsleep 2\necho World\nsleep 2\necho OK\nexit 0" }
+      out, err, result = run_scripts(@config, ["bash #{script_file}"])
+      expect(out).to include "Hello", "World", "OK"
+      expect(result).to eql 0
     end
   end
 end

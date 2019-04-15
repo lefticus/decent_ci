@@ -12,14 +12,13 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
     ]
 )
 SimpleCov.start do
-  add_filter "lib/processor.rb"
+  add_filter "lib/processor.rb"  # this function is heavily cross platform and distribution and we won't get good coverage
 end
 
-# load all the source files here to make sure we count everything in coverage calcs
-# if Dir.exists?('lib')
-#     Dir["lib/**/*.rb"].each {|file| load(file); }
+# use this to easily run a single test
+# RSpec.configure do |config|
+#   config.filter_run_when_matching :focus
 # end
-# actually this messes with the coverage calcs, so just not doing it now
 
 # set up a logger global variable for unit testing, but set it to only show fatals
 $logger = Logger.new "decent_ci_testing.log", 1
