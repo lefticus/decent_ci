@@ -28,9 +28,9 @@ module Runners
         begin
           rs&.each do |r|
             if r == stdout
-              out << stdout.read_nonblock(4096)
+              +out << stdout.read_nonblock(4096)
             elsif r == stderr
-              err << stderr.read_nonblock(4096)
+              +err << stderr.read_nonblock(4096)
             end
           end
         rescue IO::WaitReadable # rubocop:disable Lint/HandleExceptions
