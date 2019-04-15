@@ -260,16 +260,21 @@ module ResultsProcessor
   end
 
   def parse_gcc_line(src_path, build_path, line)
+    # 'Something.cc:32:4: multiple definition of variable' 
     /(?<filename>.*):(?<line_number>[0-9]+):(?<column_number>[0-9]+): (?<message_type>.+?): (?<message>.*)/ =~ line
-    if !filename.nil? && !message_type.nil? && message_type != 'info' && message_type != 'note'
+    pattern_found = !filename.nil? && !message_type.nil?
+    message_is_error = !(%w[info note].include? message_type)
+    if pattern_found && message_is_error
       CodeMessage.new(relative_path(filename, src_path, build_path), line_number, column_number, message_type, message)
     else
       /(?<filename>.*):(?<line_number>[0-9]+): (?<message>.*)/ =~ line
       # catch linker errors
-      linker_error = !filename.nil? && !message.nil? && (message =~ /.*multiple definition.*/ || message =~ /.*undefined.*/)
-      return CodeMessage.new(relative_path(filename, src_path, build_path), line_number, 0, 'error', message) if linker_error
+      pattern_found = !filename.nil? && !message.nil?
+      linker_error = false
+      linker_error = ['multiple definition', 'undefined'].any? { |word| message.include? word } unless message.nil?
+      return nil unless pattern_found && linker_error
 
-      nil
+      CodeMessage.new(relative_path(filename, src_path, build_path), line_number, 0, 'error', message)
     end
   end
 
