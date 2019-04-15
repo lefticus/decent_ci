@@ -23,9 +23,9 @@ module Lcov
   end
 
   def lcov(this_config, compiler, build_dir)
-    run_script(this_config, [generate_base_command_line(compiler, build_dir)])
-    run_script(this_config, [generate_filter_command_line(build_dir)])
-    out, = run_script(this_config, [generate_html_command_line(compiler, build_dir)])
+    run_scripts(this_config, [generate_base_command_line(compiler, build_dir)])
+    run_scripts(this_config, [generate_filter_command_line(build_dir)])
+    out, = run_scripts(this_config, [generate_html_command_line(compiler, build_dir)])
     process_lcov_results(out)
   end
 end

@@ -6,7 +6,7 @@ require_relative '../lib/resultsprocessor'
 describe 'LCov Testing' do
   include Lcov
   before do
-    allow_any_instance_of(Runners).to receive(:run_script).and_return(['a', 'b', 'c'])
+    allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['a', 'b', 'c'])
     allow_any_instance_of(ResultsProcessor).to receive(:process_lcov_results).and_return(true)
   end
   context 'when running lcov' do

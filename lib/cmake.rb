@@ -61,12 +61,12 @@ module CMake
     env['GITHUB_TOKEN'] = ENV['GITHUB_TOKEN']
 
     if compiler[:target_arch].nil?
-      _, err, result = run_script(
+      _, err, result = run_scripts(
         @config,
         ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env
       )
     else
-      _, err, result = run_script(
+      _, err, result = run_scripts(
         @config,
         ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\" -A #{compiler[:target_arch]}"], env
       )
@@ -82,7 +82,7 @@ module CMake
                        ''
                      end
 
-    out, err, result = run_script(
+    out, err, result = run_scripts(
       @config,
       ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --use-stderr -- #{build_switches}"], env
     )
@@ -112,7 +112,7 @@ module CMake
     if @config.os == 'Windows'
       File.open("#{build_dir}/extract_linker_path.cmake", 'w+') { |f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")') }
 
-      script_stdout, = run_script(@config, ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
+      script_stdout, = run_scripts(@config, ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
 
       /.*LINKER:(?<linker_path>.*)/ =~ script_stdout
       $logger.debug("Parsed linker path from cmake: #{linker_path}")
@@ -128,12 +128,12 @@ module CMake
     end
 
     if !compiler[:package_command].nil?
-      pack_stdout, pack_stderr, pack_result = run_script(
+      pack_stdout, pack_stderr, pack_result = run_scripts(
         @config,
         ["cd #{build_dir} && #{compiler[:package_command]} "], 'PATH' => new_path
       )
     else
-      pack_stdout, pack_stderr, pack_result = run_script(
+      pack_stdout, pack_stderr, pack_result = run_scripts(
         @config,
         ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], 'PATH' => new_path
       )
@@ -170,7 +170,7 @@ module CMake
     test_dirs.each do |test_dir|
       $logger.info("Running tests in dir: '#{test_dir}'")
       env = { 'PATH' => cmake_remove_git_from_path(ENV['PATH']) }
-      _, test_stderr, test_result = run_script(
+      _, test_stderr, test_result = run_scripts(
         @config,
         ["cd #{build_dir}/#{test_dir} && #{@config.ctest_bin} -j #{compiler[:num_parallel_builds]} --timeout 4200 --no-compress-output -D ExperimentalTest -C #{build_type} #{ctest_filter}"],
         env

@@ -12,7 +12,7 @@ module Cppcheck
   end
 
   def cppcheck(this_config, compiler, src_dir, build_dir)
-    _, err, result = run_script(this_config, [generate_command_line(compiler, src_dir)])
+    _, err, result = run_scripts(this_config, [generate_command_line(compiler, src_dir)])
     process_cppcheck_results(src_dir, build_dir, err, result)
   end
 end

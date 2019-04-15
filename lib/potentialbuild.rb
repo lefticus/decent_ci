@@ -163,7 +163,7 @@ class PotentialBuild
     FileUtils.mkdir_p src_dir
 
     if @config.pull_id.nil?
-      _, _, result = run_script(
+      _, _, result = run_scripts(
         @config,
         [
           "cd #{src_dir} && git init",
@@ -172,9 +172,9 @@ class PotentialBuild
       )
 
       success = !@commit_sha.nil? && @commit_sha != '' && result.zero?
-      _, _, result = run_script(@config, ["cd #{src_dir} && git checkout #{@commit_sha}"]) if success
+      _, _, result = run_scripts(@config, ["cd #{src_dir} && git checkout #{@commit_sha}"]) if success
     else
-      _, _, result = run_script(
+      _, _, result = run_scripts(
         @config,
         [
           "cd #{src_dir} && git init",
@@ -210,7 +210,7 @@ class PotentialBuild
 
     s3_script = File.dirname(File.dirname(__FILE__)) + '/send_to_s3.py'
 
-    out, = run_script(
+    out, = run_scripts(
       @config,
       [
         "#{s3_script} #{compiler[:coverage_s3_bucket]} #{get_full_build_name(compiler)} #{build_dir}/lcov-html coverage"
@@ -229,7 +229,7 @@ class PotentialBuild
 
     s3_script = File.dirname(File.dirname(__FILE__)) + '/send_to_s3.py'
 
-    out, = run_script(
+    out, = run_scripts(
       @config,
       [
         "#{s3_script} #{compiler[:s3_upload_bucket]} #{get_full_build_name(compiler)} #{build_dir}/#{compiler[:s3_upload]} assets"
@@ -412,7 +412,7 @@ class PotentialBuild
       $logger.debug('No regression repository checkout info!?!')
       return
     end
-    run_script(
+    run_scripts(
       @config,
       [
         "cd #{regression_dir} && git init",

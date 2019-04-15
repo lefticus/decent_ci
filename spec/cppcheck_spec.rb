@@ -6,7 +6,7 @@ require_relative '../lib/resultsprocessor'
 describe 'CppCheck Testing' do
   include Cppcheck
   before do
-    allow_any_instance_of(Runners).to receive(:run_script).and_return(['a', 'b', 'c'])
+    allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['a', 'b', 'c'])
     allow_any_instance_of(ResultsProcessor).to receive(:process_cppcheck_results).and_return(true)
   end
   context 'when running cppcheck' do

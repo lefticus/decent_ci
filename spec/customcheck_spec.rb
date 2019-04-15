@@ -7,7 +7,7 @@ describe 'CustomCheck Testing Successful Parsing' do
   include CustomCheck
   before do
     @dir = Dir.mktmpdir
-    allow_any_instance_of(Runners).to receive(:run_script).and_return(['a', 'b', 'c'])
+    allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['a', 'b', 'c'])
     allow_any_instance_of(ResultsProcessor).to receive(:process_custom_check_results).and_return(true)
   end
   context 'when running custom_check' do
@@ -24,7 +24,7 @@ describe 'CustomCheck Testing Failed Parsing' do
   include CustomCheck
   before do
     @dir = Dir.mktmpdir
-    allow_any_instance_of(Runners).to receive(:run_script).and_return(['a', 'b', 'c'])
+    allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['a', 'b', 'c'])
     allow_any_instance_of(ResultsProcessor).to receive(:process_custom_check_results).and_return(false)
   end
   context 'when running custom_check' do
@@ -41,7 +41,7 @@ describe 'CustomCheck Testing Runtime Exception' do
   include CustomCheck
   before do
     @dir = Dir.mktmpdir
-    allow_any_instance_of(Runners).to receive(:run_script).and_raise('ERROR')
+    allow_any_instance_of(Runners).to receive(:run_scripts).and_raise('ERROR')
   end
   it 'should return failure upon exception' do
     compiler = { :commands => ['a'] }

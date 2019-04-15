@@ -14,7 +14,7 @@ module CustomCheck
       compiler_flags = build_dir.to_s
       FileUtils.mkdir_p(build_dir) unless File.directory?(build_dir)
       begin
-        out, err, result = run_script(this_config, ["cd #{src_dir} && #{command} #{compiler_flags}"])
+        out, err, result = run_scripts(this_config, ["cd #{src_dir} && #{command} #{compiler_flags}"])
       rescue
         test_results.push(TestResult.new(command, 'failed', 0, 'Could not run file, check permissions, executable bit, etc.', [], ''))
         return test_results
