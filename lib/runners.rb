@@ -12,15 +12,13 @@ module Runners
   # If you've got a cleaner way of doing this, I'd be interested to see it.
   # If you think you can do it with Ruby's Timeout module, think again.
   def run_with_timeout(env, command, timeout = 60 * 60 * 4, tick = 2)
-    out = ''
-    err = ''
     begin
       # Start task in another thread, which spawns a process
       stdin, stdout, stderr, thread = Open3.popen3(env, command)
       # Get the pid of the spawned process
       pid = thread[:pid]
       start = Time.now
-      out, err = _run_with_timeout_internal(pid, start, timeout, tick, out, err)
+      out, err = _run_with_timeout_internal(pid, start, timeout, tick, stdout, stderr)
     ensure
       stdin&.close
       stdout&.close
@@ -29,25 +27,34 @@ module Runners
     [out.force_encoding('UTF-8'), err.force_encoding('UTF-8'), thread.value]
   end
 
-  def _run_with_timeout_internal(pid, start, timeout, tick, out, err)
-    while (Time.now - start) < timeout && thread.alive?
-      # Wait up to `tick` seconds for output/error data
-      rs, = Kernel.select([stdout, stderr], nil, nil, tick)
-      # Try to read the data
-      begin
-        rs&.each do |r|
-          if r == stdout
-            +out << stdout.read_nonblock(4096)
-          elsif r == stderr
-            +err << stderr.read_nonblock(4096)
-          end
+  def _run_with_timeout_tick(stdout, stderr, tick, out, err)
+    this_break = false
+    # Wait up to `tick` seconds for output/error data
+    rs, = Kernel.select([stdout, stderr], nil, nil, tick)
+    # Try to read the data
+    begin
+      rs&.each do |r|
+        if r == stdout
+          +out << stdout.read_nonblock(4096)
+        elsif r == stderr
+          +err << stderr.read_nonblock(4096)
         end
-      rescue IO::WaitReadable # rubocop:disable Lint/HandleExceptions
-        # A read would block, so loop around for another select
-      rescue EOFError
-        # Command has completed, not really an error...
-        break
       end
+    rescue IO::WaitReadable # rubocop:disable Lint/HandleExceptions
+      # A read would block, so loop around for another select
+    rescue EOFError
+      # Command has completed, not really an error...
+      this_break = true
+    end
+    [out, err, this_break]
+  end
+
+  def _run_with_timeout_internal(pid, start, timeout, tick, stdout, stderr)
+    out = ''
+    err = ''
+    while (Time.now - start) < timeout && thread.alive?
+      out, err, this_break = _run_with_timeout_tick(stdout, stderr, tick, out, err)
+      break if this_break
     end
 
     # Give Ruby time to clean up the other thread
