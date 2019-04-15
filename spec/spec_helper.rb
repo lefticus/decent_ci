@@ -16,9 +16,9 @@ SimpleCov.start do
 end
 
 # use this to easily run a single test
-# RSpec.configure do |config|
-#   config.filter_run_when_matching :focus
-# end
+RSpec.configure do |config|
+#  config.filter_run_when_matching :focus
+end
 
 # set up a logger global variable for unit testing, but set it to only show fatals
 $logger = Logger.new "decent_ci_testing.log", 1

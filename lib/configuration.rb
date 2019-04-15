@@ -37,7 +37,6 @@ module Configuration
       # :nocov:
     rescue => e
       $logger.info("Unable to load yaml file from repository: #{this_location}/#{name}@#{this_ref} error: #{e}")
-
       path = File.expand_path(name, this_location)
       $logger.info("Attempting to load yaml config file: #{path}")
       if File.exist?(path)
@@ -137,10 +136,11 @@ module Configuration
 
   # returns a list of yaml-based configuration data sets
   # they may be nil values if the yaml config couldn't be found by name
-  def find_valid_yaml_files(all_yaml_names, fileset)
+  def find_valid_yaml_files(all_yaml_names, location, ref, fileset)
     valid_yaml_configs = []
     all_yaml_names.each do |yaml|
-      valid_yaml_configs << load_yaml(yaml, location, ref) if fileset.include?(yaml)
+      attempted_yaml = load_yaml(yaml, location, ref)
+      valid_yaml_configs << attempted_yaml if fileset.include?(yaml)
     end
     valid_yaml_configs
   end
@@ -353,7 +353,7 @@ module Configuration
     # then try to form up a final merged configuration of all the yaml files found and symbolize it, raise if no compilers found
     os_distribution, os_version, os_release = establish_os_characteristics
     yaml_names = get_all_yaml_names(os_version, os_release, os_distribution)
-    valid_yamls = find_valid_yaml_files(yaml_names, fileset)
+    valid_yamls = find_valid_yaml_files(yaml_names, location, ref, fileset)
     result_yaml = establish_base_configuration(os_version, os_release)
     valid_yamls.each do |yaml|
       result_yaml.merge!(yaml) unless yaml.nil?

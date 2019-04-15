@@ -46,13 +46,44 @@ describe 'Configuration Testing' do
       expect{ load_yaml('CMakeLists.txt', 'NREL/EnergyPlus', 'develop') }.to raise_error RuntimeError
     end
     it 'should find a local file at the path if remote is not found' do
-
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_raise('Hey, try local')
+      @client = Octokit::Client.new(:access_token => 'abc')
+      yaml_hash_data = load_yaml('dummy.yaml', 'spec/resources', 'develop')
+      expect(yaml_hash_data['hello']).to eql 'world'
+      expect(yaml_hash_data['foo']).to eql 'bar'
     end
     it 'should return nil if the yaml simply is not found' do
       allow_any_instance_of(Octokit::Client).to receive(:content).and_raise("Hey")
       @client = Octokit::Client.new(:access_token => 'abc')
       yaml_hash_data = load_yaml('CMakeLists.txt', 'NREL/EnergyPlus', 'develop')
       expect(yaml_hash_data).to be_nil
+    end
+  end
+  context 'when calling find_valid_yaml_files' do
+    it 'should find a couple dummy yaml files locally' do
+      yaml_names = ['dummy.yaml', 'dummy2.yaml']
+      fileset = ['dummy.yaml', 'dummy2.yaml']
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_raise('Hey, try local')
+      @client = Octokit::Client.new(:access_token => 'abc')
+      all_yamls = find_valid_yaml_files(yaml_names, 'spec/resources', 'abc123', fileset)
+      expect(all_yamls.length).to eql 2
+    end
+    it 'should skip files not in the fileset' do
+      yaml_names = ['dummy.yaml', 'dummy2.yaml']
+      fileset = ['dummy2.yaml']
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_raise('Hey, try local')
+      @client = Octokit::Client.new(:access_token => 'abc')
+      all_yamls = find_valid_yaml_files(yaml_names, 'spec/resources', 'abc123', fileset)
+      expect(all_yamls.length).to eql 1
+    end
+    it 'should return nil for failed lookups that do exist in fileset' do
+      yaml_names = ['dummy.yaml', 'dummy2.yaml', 'dummy3.yaml']
+      fileset = ['dummy.yaml', 'dummy2.yaml', 'dummy3.yaml']
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_raise('Hey, try local')
+      @client = Octokit::Client.new(:access_token => 'abc')
+      all_yamls = find_valid_yaml_files(yaml_names, 'spec/resources', 'abc123', fileset)
+      expect(all_yamls.length).to eql 3
+      expect(all_yamls.count(nil)).to eql 1
     end
   end
   context 'when calling symbolize' do
