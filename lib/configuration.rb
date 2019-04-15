@@ -280,30 +280,49 @@ module Configuration
     nil
   end
 
+  def _setup_gcc_cc_and_cxx(compiler)
+    potential_name = which("gcc-#{compiler[:version]}")
+    if !potential_name.nil?
+      cc_bin = potential_name
+      cxx_bin = which("g++-#{compiler[:version]}")
+    else
+      cc_bin = which('gcc')
+      cxx_bin = which('g++')
+    end
+
+    if cc_bin.nil? || cxx_bin.nil? || (`#{cc_bin} --version` !~ /.*#{compiler[:version]}/) || (`#{cxx_bin} --version` !~ /.*#{compiler[:version]}/)
+      raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
+    end
+
+    [cc_bin, cxx_bin]
+  end
+
+  def _setup_clang_cc_and_cxx(compiler)
+    potential_name = which("clang-#{compiler[:version]}")
+    if !potential_name.nil?
+      cc_bin = potential_name
+      cxx_bin = which("clang++-#{compiler[:version]}")
+    else
+      cc_bin = which('clang')
+      cxx_bin = which('clang++')
+    end
+
+    if cc_bin.nil? || cxx_bin.nil? || (`#{cc_bin} --version` !~ /.*#{compiler[:version]}/) || (`#{cxx_bin} --version` !~ /.*#{compiler[:version]}/)
+      raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
+    end
+
+    [cc_bin, cxx_bin]
+  end
+
   def setup_gcc_style_cc_and_cxx(compiler)
     return [compiler[:cc_bin], compiler[:cxx_bin]] unless compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?
 
     return [nil, nil] if compiler[:name].nil? || compiler[:version].nil? || !%w[clang gcc].include?(compiler[:name])
 
     if compiler[:name] == 'clang'
-      cc = 'clang'
-      cxx = 'clang++'
+      cc_bin, cxx_bin = _setup_clang_cc_and_cxx(compiler)
     else # gcc
-      cc = 'gcc'
-      cxx = 'g++'
-    end
-
-    potential_name = which("#{cc}-#{compiler[:version]}")
-    if !potential_name.nil?
-      cc_bin = potential_name
-      cxx_bin = which("#{cxx}-#{compiler[:version]}")
-    else
-      cc_bin = which(cc)
-      cxx_bin = which(cxx)
-    end
-
-    if cc_bin.nil? || cxx_bin.nil? || (`#{cc_bin} --version` !~ /.*#{compiler[:version]}/) || (`#{cxx_bin} --version` !~ /.*#{compiler[:version]}/)
-      raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
+      cc_bin, cxx_bin = _setup_gcc_cc_and_cxx(compiler)
     end
 
     [cc_bin, cxx_bin]
