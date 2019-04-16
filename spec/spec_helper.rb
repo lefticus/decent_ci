@@ -17,7 +17,7 @@ end
 
 # use this to easily run a single test
 RSpec.configure do |config|
-  #config.filter_run_when_matching :focus
+#  config.filter_run_when_matching :focus
 end
 
 # set up a logger global variable for unit testing, but set it to only show fatals

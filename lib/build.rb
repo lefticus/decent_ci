@@ -31,7 +31,6 @@ class Build
     github_query(@client) { @user.login }
     @potential_builds = []
     @max_age = max_age
-
     github_check_rate_limit(@client.last_response.headers)
   end
 

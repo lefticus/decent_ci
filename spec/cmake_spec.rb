@@ -81,7 +81,7 @@ describe 'CMake Testing' do
       expect(response).to be_truthy
     end
   end
-  context 'when calling cmake_package', :focus do
+  context 'when calling cmake_package' do
     it 'should try to build a simple package' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
       allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
