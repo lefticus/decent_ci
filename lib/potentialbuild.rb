@@ -340,36 +340,24 @@ class PotentialBuild
   def do_build(compiler, regression_baseline, is_release = false)
     src_dir = this_src_dir
     build_dir = this_build_dir
-
+    start_time = Time.now
     checkout_succeeded = checkout src_dir
-
     if compiler[:name] == 'custom_check'
-      start_time = Time.now
       @test_results = custom_check @config, compiler, src_dir, build_dir
-
-      @build_time = 0 if @build_time.nil?
-      # handle the case where build is called more than once
-      @build_time += (Time.now - start_time)
     elsif compiler[:name] == 'cppcheck'
-      start_time = Time.now
       cppcheck @config, compiler, src_dir, build_dir
-      @build_time = 0 if @build_time.nil?
-      # handle the case where build is called more than once
-      @build_time += (Time.now - start_time)
     else
       case @config.engine
       when 'cmake'
-        start_time = Time.now
         this_device_id = device_id compiler
         args = CMakeBuildArgs.new(compiler[:build_type], this_device_id, running_extra_tests, is_release)
         cmake_build compiler, src_dir, build_dir, this_regression_dir, regression_baseline, args if checkout_succeeded
-        @build_time = 0 if @build_time.nil?
-        # handle the case where build is called more than once
-        @build_time += (Time.now - start_time)
       else
         raise 'Unknown Build Engine'
       end
     end
+    @build_time = 0 if @build_time.nil?
+    @build_time += (Time.now - start_time)
   end
 
   def do_test(compiler, regression_baseline)
