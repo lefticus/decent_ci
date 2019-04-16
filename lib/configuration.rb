@@ -2,8 +2,12 @@
 
 require_relative 'processor.rb'
 
-## tools for loading and parsing of yaml config files
-## and filling in the details
+# tools for loading and parsing of yaml config files
+# and filling in the details.  A minimal merged config
+# should at least define the compiler.  Individual setup*
+# functions in this module will raise Exceptions for
+# invalid conditions, while blanks will be applied if it
+# is a suitable default.
 module Configuration
   # Cross-platform way of finding an executable in the $PATH.
   #
@@ -154,7 +158,7 @@ module Configuration
   end
 
   def setup_compiler_architecture(compiler)
-    return compiler[:architecture] unless compiler[:architecture].nil? || compiler[:architecture] == ''
+    return compiler[:architecture] unless compiler[:architecture].nil?
 
     if compiler[:name] == 'Visual Studio'
       'i386'
@@ -164,7 +168,7 @@ module Configuration
   end
 
   def setup_compiler_version(compiler)
-    return compiler[:version] unless compiler[:version].nil? || compiler[:version] == ''
+    return compiler[:version] unless compiler[:version].nil?
 
     case compiler[:name]
     when 'Visual Studio'
