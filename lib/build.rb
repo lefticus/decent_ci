@@ -20,7 +20,7 @@ require_relative 'github.rb'
 # Top level class that loads the list of potential builds from github
 class Build
   attr_reader :client
-  attr_reader :potential_builds
+  attr_accessor :potential_builds
   attr_reader :pull_request_details
 
   def initialize(token, repository, max_age)

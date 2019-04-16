@@ -121,7 +121,14 @@ class DummyPR
   end
 end
 
+class DummyContentResponse
+  def content
+    DummyCommit1.new(1, 2)
+  end
+end
+
 class DummyClient2
+  attr_accessor :content_response
   def initialize
     t_base = Time.now
     t_base.utc
@@ -130,6 +137,7 @@ class DummyClient2
     @my_releases = [DummyRelease.new(t_too_old), DummyRelease.new(t_recent), DummyRelease.new(-1)]
     @my_branches = [DummyBranch.new(t_too_old, 'a'), DummyBranch.new(t_recent, 'b'), DummyBranch.new(-1, 'c'), DummyBranch.new(t_recent, 'd', true)]
     @my_prs = [DummyPR.new(1, true), DummyPR.new(2, false), DummyPR.new(3, true, true) ]
+    @content_response = DummyContentResponse.new
   end
   def last_response
     return DummyResponse.new
@@ -152,6 +160,9 @@ class DummyClient2
   def issue(repo_name, pr_number)
     @my_prs.select { |pr| pr.number == pr_number }.first
   end
+  def create_contents(repo_name, file_path, commit_msg, document)
+    @content_response
+  end
 end
 
 class DummyConfiguration
@@ -164,15 +175,38 @@ class DummyConfiguration
   def aging_pull_requests_numdays
     14
   end
-end
-
-class DummyPotentialBuild
-  def configuration
-    DummyConfiguration.new
+  def regression_baseline_branch
+    nil  # a different name here would allow a branch to target a different baseline
+  end
+  def regression_baseline_default
+    'develop'
+  end
+  def repository
+    'dummy'
+  end
+  def results_repository
+    'dummy2'
+  end
+  def results_path
+    'results_path'
   end
 end
 
-describe 'Build Testing', :focus do
+class DummyPotentialBuild
+  attr_reader :branch_name
+  attr_accessor :pr
+  def initialize(branch_name)
+    @branch_name = branch_name
+  end
+  def configuration
+    DummyConfiguration.new
+  end
+  def pull_request?
+    @pr
+  end
+end
+
+describe 'Build Testing' do
   context 'when calling query_releases' do
     it 'should include builds that are valid and new' do
       # default age is 30
@@ -198,11 +232,57 @@ describe 'Build Testing', :focus do
   context 'when calling query_pull_requests' do
     it 'should include PRs that are valid and new' do
       allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
-      allow(PotentialBuild).to receive(:new).and_return(DummyPotentialBuild.new)
+      allow(PotentialBuild).to receive(:new).and_return(DummyPotentialBuild.new('dummy'))
       b = Build.new('abcdef', 'spec/resources', 10)
       expect(b.client.pull_requests('', 1).length).to eql 3
       b.query_pull_requests
       expect(b.potential_builds.length).to eql 1 # only 1 is valid and from a remote repo
+    end
+  end
+  context 'when calling get_regression_base' do
+    it 'should return valid regression base' do
+      allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
+      b = Build.new('abc', 'spec/resources', 10)
+      b.potential_builds = [DummyPotentialBuild.new('develop')]
+      d = DummyPotentialBuild.new('branch')
+      response = b.get_regression_base(d)
+      expect(response).not_to be_nil
+    end
+    it 'should return nil if no valid regression base' do
+      allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
+      b = Build.new('abc', 'spec/resources', 10)
+      d = DummyPotentialBuild.new('branch')
+      response = b.get_regression_base(d)
+      expect(response).to be_nil
+    end
+  end
+  context 'when calling needs_daily_task' do
+    it 'should just do it' do
+      allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
+      b = Build.new('abc', 'spec/resources', 10)
+      expect(b.needs_daily_task('repo', 'results')).to be_truthy
+    end
+    it 'should fail gracefully when there is a problem' do
+      d = DummyClient2.new
+      d.content_response= nil
+      allow(Octokit::Client).to receive(:new).and_return(d)
+      b = Build.new('abc', 'spec/resources', 10)
+      expect(b.needs_daily_task('repo', 'results')).to be_falsey
+    end 
+  end
+  context 'when calling results_repositories' do
+    it 'should get all potential build results repos' do
+      d = DummyPotentialBuild.new('a')
+      d.pr = true
+      d2 = DummyPotentialBuild.new('b')
+      d.pr = false
+      d3 = DummyPotentialBuild.new('c')
+      d.pr = true
+      allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
+      b = Build.new('abc', 'spec/resources', 10)
+      b.potential_builds = [d, d2, d3]
+      expect(b.potential_builds.length).to eql 3
+      expect(b.results_repositories.length).to eql 1 # two are valid, but they are duplicate, so only one results
     end
   end
 end
