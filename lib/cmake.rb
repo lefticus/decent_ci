@@ -93,7 +93,9 @@ module CMake
     build_switches = if @config.os != 'Windows'
                        "-j#{compiler[:num_parallel_builds]}"
                      else
+                       # :nocov: Not covering windows
                        ''
+                       # :nocov:
                      end
 
     out, err, result = run_scripts(
@@ -112,9 +114,11 @@ module CMake
     # The point is to remove the git provided sh.exe from the path so that it does
     # not conflict with other operations
     if @config.os == 'Windows'
+      # :nocov: Not covering Windows
       paths = old_path.split(';')
       paths.delete_if { |p| p =~ /Git/ }
       return paths.join(';')
+      # :nocov:
     end
 
     old_path
