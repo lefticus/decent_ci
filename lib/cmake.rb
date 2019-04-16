@@ -128,6 +128,7 @@ module CMake
     new_path = ENV['PATH']
 
     if @config.os == 'Windows'
+      # :nocov: not covering windows
       File.open("#{build_dir}/extract_linker_path.cmake", 'w+') { |f| f.write('message(STATUS "LINKER:${CMAKE_LINKER}")') }
 
       script_stdout, = run_scripts(@config, ["cd #{build_dir} && #{@config.cmake_bin} -P extract_linker_path.cmake ."])
@@ -143,6 +144,7 @@ module CMake
 
       new_path = cmake_remove_git_from_path(new_path)
       $logger.info("New path set for executing cpack, to help with get_requirements: #{new_path}")
+      # :nocov:
     end
 
     if !compiler[:package_command].nil?
@@ -175,10 +177,10 @@ module CMake
     package_names[0]
   end
 
-  def cmake_test(compiler, src_dir, build_dir, build_type)
+  def cmake_test(compiler, src_dir, build_dir, build_type, running_extra_here)
     test_dirs = [@config.tests_dir]
 
-    if running_extra_tests
+    if running_extra_here
       test_dirs << @config.extra_tests_test_dir unless @config.extra_tests_test_dir.nil?
     end
 

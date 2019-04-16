@@ -372,7 +372,7 @@ class PotentialBuild
       when 'cmake'
         start_time = Time.now
         if !ENV['DECENT_CI_SKIP_TEST']
-          cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded
+          cmake_test compiler, src_dir, build_dir, compiler[:build_type], running_exta_tests if build_succeeded
         else
           $logger.debug('Skipping test, DECENT_CI_SKIP_TEST is set in the environment')
         end

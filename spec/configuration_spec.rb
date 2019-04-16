@@ -403,7 +403,7 @@ describe 'Configuration Testing' do
     end
   end
   context 'when calling load_configuration' do
-    it 'should properly set up all compilers and other settings of all configurations', :focus do
+    it 'should properly set up all compilers and other settings of all configurations' do
       allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
       @client = Octokit::Client.new(:access_token => 'abc')
       configuration = load_configuration('spec/resources', 'abc', false)
