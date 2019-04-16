@@ -246,7 +246,7 @@ class PotentialBuild
     src_dir = this_src_dir
     build_dir = this_build_dir
 
-    do_build compiler, regression_baseline, :release => true
+    do_build compiler, regression_baseline, true
 
     start_time = Time.now
     case @config.engine
@@ -337,7 +337,7 @@ class PotentialBuild
     File.join(Dir.pwd, 'clone_regressions')
   end
 
-  def do_build(compiler, regression_baseline, flags = { :release => false })
+  def do_build(compiler, regression_baseline, is_release = false)
     src_dir = this_src_dir
     build_dir = this_build_dir
 
@@ -360,7 +360,9 @@ class PotentialBuild
       case @config.engine
       when 'cmake'
         start_time = Time.now
-        cmake_build compiler, src_dir, build_dir, compiler[:build_type], this_regression_dir, regression_baseline, flags if checkout_succeeded
+        this_device_id = device_id compiler
+        args = CMakeBuildArgs.new(compiler[:build_type], this_device_id, running_extra_tests, is_release)
+        cmake_build compiler, src_dir, build_dir, this_regression_dir, regression_baseline, args if checkout_succeeded
         @build_time = 0 if @build_time.nil?
         # handle the case where build is called more than once
         @build_time += (Time.now - start_time)

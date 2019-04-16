@@ -2,23 +2,37 @@
 
 require_relative 'runners'
 
+# simple data class for passing args into cmake_build
+class CMakeBuildArgs
+  attr_reader :build_type
+  attr_reader :this_device_id
+  attr_reader :this_running_extra
+  attr_reader :is_release
+  def initialize(build_type, device_id, running_extra_tests, is_release = false)
+    @build_type = build_type
+    @this_device_id = device_id
+    @this_running_extra = running_extra_tests
+    @is_release = is_release
+  end
+end
+
 # contains functions necessary for working with the 'cmake' engine
 module CMake
   include Runners
 
-  def cmake_build(compiler, src_dir, build_dir, build_type, regression_dir, regression_baseline, flags)
+  def cmake_build(compiler, src_dir, build_dir, regression_dir, regression_baseline, cmake_build_args)
     FileUtils.mkdir_p build_dir
 
-    cmake_flags = "#{compiler[:cmake_extra_flags]} -DDEVICE_ID:STRING=\"#{device_id compiler}\""
+    cmake_flags = "#{compiler[:cmake_extra_flags]} -DDEVICE_ID:STRING=\"#{cmake_build_args.this_device_id}\""
 
     compiler_extra_flags = compiler[:compiler_extra_flags]
     compiler_extra_flags = '' if compiler_extra_flags.nil?
 
-    if running_extra_tests
+    if cmake_build_args.this_running_extra
       cmake_flags = cmake_flags + ' ' + @config.extra_tests_cmake_extra_flags unless @config.extra_tests_cmake_extra_flags.nil?
     end
 
-    if flags[:release]
+    if cmake_build_args.is_release
       extra_flags = compiler[:release_build_cmake_extra_flags]
       cmake_flags = cmake_flags + ' ' + extra_flags unless extra_flags.nil?
     end
@@ -63,12 +77,12 @@ module CMake
     if compiler[:target_arch].nil?
       _, err, result = run_scripts(
         @config,
-        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\""], env
+        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{cmake_build_args.build_type} -G \"#{compiler[:build_generator]}\""], env
       )
     else
       _, err, result = run_scripts(
         @config,
-        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{build_type} -G \"#{compiler[:build_generator]}\" -A #{compiler[:target_arch]}"], env
+        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{cmake_build_args.build_type} -G \"#{compiler[:build_generator]}\" -A #{compiler[:target_arch]}"], env
       )
     end
 
@@ -84,7 +98,7 @@ module CMake
 
     out, err, result = run_scripts(
       @config,
-      ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{build_type} --use-stderr -- #{build_switches}"], env
+      ["cd #{build_dir} && #{@config.cmake_bin} --build . --config #{cmake_build_args.build_type} --use-stderr -- #{build_switches}"], env
     )
 
     msvc_success = process_msvc_results(src_dir, build_dir, out, result)
