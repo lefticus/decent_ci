@@ -38,6 +38,7 @@ class PotentialBuild
   attr_reader :commit_sha
   attr_reader :branch_name
   attr_reader :repository
+  attr_accessor :test_run
 
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, # rubocop:disable Metrics/ParameterLists
                  pull_id, pr_base_repository, pr_base_ref)
@@ -98,10 +99,6 @@ class PotentialBuild
     @config.compilers
   end
 
-  def apply_test_run(new_test_run)
-    @test_run = new_test_run
-  end
-
   def descriptive_string
     "#{@commit_sha} #{@branch_name} #{@tag_name} #{@buildid}"
   end
@@ -112,10 +109,6 @@ class PotentialBuild
 
   def pull_request?
     !@pull_id.nil?
-  end
-
-  def pull_request_issue_id
-    @pull_id
   end
 
   def running_extra_tests
@@ -162,7 +155,7 @@ class PotentialBuild
     # TODO: update this to be a merge, not just a checkout of the pull request branch
     FileUtils.mkdir_p src_dir
 
-    if @config.pull_id.nil?
+    if @pull_id.nil?
       _, _, result = run_scripts(
         @config,
         [
@@ -191,18 +184,10 @@ class PotentialBuild
     @config
   end
 
-  def needs_coverage(compiler)
-    compiler[:coverage_enabled]
-  end
-
-  def needs_upload(compiler)
-    !compiler[:s3_upload].nil?
-  end
-
   def do_coverage(compiler)
-    $logger.info("Beginning coverage calculation phase #{release?} #{needs_release_package(compiler)}")
+    return unless compiler[:coverage_enabled]
 
-    return unless needs_coverage(compiler)
+    $logger.info("Beginning coverage calculation phase #{release?} #{needs_release_package(compiler)}")
 
     build_dir = this_build_dir
     @coverage_total_lines, @coverage_lines, @coverage_total_functions, @coverage_functions = lcov @config, compiler, build_dir
@@ -221,9 +206,9 @@ class PotentialBuild
   end
 
   def do_upload(compiler)
-    $logger.info("Beginning upload phase #{release?} #{needs_upload(compiler)}")
+    return if compiler[:s3_upload].nil?
 
-    return unless needs_upload(compiler)
+    $logger.info("Beginning upload phase #{release?} #{needs_upload(compiler)}")
 
     build_dir = this_build_dir
 
@@ -730,7 +715,7 @@ class PotentialBuild
       'commit_sha' => @commit_sha,
       'branch_name' => @branch_name,
       'test_run' => !@test_results.nil?,
-      'pull_request_issue_id' => pull_request_issue_id.to_s,
+      'pull_request_issue_id' => @pull_id.to_s,
       'pull_request_base_repository' => @pull_request_base_repository.to_s,
       'pull_request_base_ref' => @pull_request_base_ref.to_s,
       'device_id' => (device_id compiler).to_s,
@@ -949,8 +934,8 @@ class PotentialBuild
       if !pending && @config.post_results_comment
         if !@commit_sha.nil? && @repository == @config.repository
           github_query(@client) { @client.create_commit_comment(@config.repository, @commit_sha, github_document) }
-        elsif !pull_request_issue_id.nil?
-          github_query(@client) { @client.add_comment(@config.repository, pull_request_issue_id, github_document) }
+        elsif !@pull_id.nil?
+          github_query(@client) { @client.add_comment(@config.repository, @pull_id, github_document) }
         end
       end
 

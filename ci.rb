@@ -268,7 +268,7 @@ did_any_builds = false
 
             # reset potential build for the next build attempt
             p.next_build
-            p.apply_test_run test_mode
+            p.test_run = test_mode
 
             if p.needs_run compiler
               did_any_builds = true
@@ -281,7 +281,7 @@ did_any_builds = false
                 regression_base = b.get_regression_base p
                 if p.needs_regression_test(compiler) && regression_base
                   regression_base.set_as_baseline
-                  regression_base.apply_test_run test_mode
+                  regression_base.test_run = test_mode
                   if File.directory?(p.this_regression_dir)
                     $logger.info "Removing pre-existing regressions directory (#{p.this_regression_dir})"
                     FileUtils.rm_rf(p.this_regression_dir)
