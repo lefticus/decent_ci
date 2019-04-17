@@ -39,6 +39,7 @@ class PotentialBuild
   attr_reader :branch_name
   attr_reader :repository
   attr_accessor :test_run
+  attr_reader :coverage_url
 
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, # rubocop:disable Metrics/ParameterLists
                  pull_id, pr_base_repository, pr_base_ref)

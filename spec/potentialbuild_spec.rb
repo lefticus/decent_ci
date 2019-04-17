@@ -15,7 +15,7 @@ class PotentialBuildNamedDummy
   end
 end
 
-describe 'PotentialBuild Testing', :focus do
+describe 'PotentialBuild Testing' do
   include ResultsProcessor
   context 'when doing simple construction' do
     it 'should succeed at construction' do
@@ -66,6 +66,24 @@ describe 'PotentialBuild Testing', :focus do
       p = PotentialBuild.new(client, '', 'spec/resources', '', '', '', '', '', '', 1, '', '')
       src_dir = Dir.mktmpdir
       expect(p.checkout(src_dir)).to be_truthy
+    end
+  end
+  context 'when calling do_coverage', :focus do
+    before do
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([PotentialBuildNamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:repo).and_return(PotentialBuildDummyRepo.new)
+      client = Octokit::Client.new(:access_token => 'abc')
+      @p = PotentialBuild.new(client, '', 'spec/resources', '', '', '', '', '', '', 0, '', '')
+    end
+    it 'should quit gracefully if not doing coverage' do
+      @p.do_coverage({})
+      expect(@p.coverage_url).to be_nil
+    end
+    it 'should do coverage successfully' do
+      allow_any_instance_of(Lcov).to receive(:lcov).and_return([1, 2, 3, 4])
+      expect_any_instance_of(ResultsProcessor).to receive(:run_scripts).with(anything, instance_of(Array)).and_return(['out_url', 'stderr', 0])
+      @p.do_coverage({:coverage_enabled => true, :coverage_s3_bucket => 'bucket'})
+      expect(@p.coverage_url).to include 'out_url'
     end
   end
   context 'when calling small attribute functions' do
