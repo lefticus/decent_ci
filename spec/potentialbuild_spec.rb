@@ -8,11 +8,18 @@ class PotentialBuildDummyRepo
   end
 end
 
+class PotentialBuildNamedDummy
+  attr_reader :name
+  def initialize(this_name)
+    @name = this_name
+  end
+end
+
 describe 'PotentialBuild Testing', :focus do
   include ResultsProcessor
   context 'when doing simple construction' do
     it 'should succeed at construction' do
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([PotentialBuildNamedDummy.new('.decent_ci.yaml')])
       allow_any_instance_of(Octokit::Client).to receive(:repo).and_return(PotentialBuildDummyRepo.new)
       client = Octokit::Client.new(:access_token => 'abc')
       token = 'abc'
@@ -31,7 +38,7 @@ describe 'PotentialBuild Testing', :focus do
   end
   context 'when calling needs_release_package' do
     it 'should base it on the analyze only flag' do
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([PotentialBuildNamedDummy.new('.decent_ci.yaml')])
       allow_any_instance_of(Octokit::Client).to receive(:repo).and_return(PotentialBuildDummyRepo.new)
       client = Octokit::Client.new(:access_token => 'abc')
       p = PotentialBuild.new(client, '', 'spec/resources', '', '', '', '', '', '', 0, '', '')
@@ -45,12 +52,42 @@ describe 'PotentialBuild Testing', :focus do
       expect_any_instance_of(ResultsProcessor).to receive(:run_scripts).with(anything, instance_of(Array)).and_return(['stdout', 'stderr', 0])
     end
     it 'should succeed' do
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([PotentialBuildNamedDummy.new('.decent_ci.yaml')])
       allow_any_instance_of(Octokit::Client).to receive(:repo).and_return(PotentialBuildDummyRepo.new)
       client = Octokit::Client.new(:access_token => 'abc')
       p = PotentialBuild.new(client, '', 'spec/resources', '', '', '', '', '', '', 0, '', '')
       src_dir = Dir.mktmpdir
       expect(p.checkout(src_dir)).to be_truthy
+    end
+  end
+  context 'when calling small attribute functions' do
+    before do
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([PotentialBuildNamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:repo).and_return(PotentialBuildDummyRepo.new)
+      client = Octokit::Client.new(:access_token => 'abc')
+      @p = PotentialBuild.new(client, '', 'spec/resources', '', '', '', '', '', '', 0, '', '')
+    end
+    it 'get_src_dir should make a selection based on baseline mode' do
+      expect(@p.this_src_dir).to include 'branch'
+      @p.set_as_baseline
+      expect(@p.this_src_dir).to include 'baseline'
+    end
+    it 'device_tag should return a string with optional debug tag' do
+      expect(@p.device_tag({:build_tag => 'hello', :build_type => 'Release'})).not_to include 'Release'
+      expect(@p.device_tag({:build_tag => 'hello', :build_type => 'Debug'})).to include 'Debug'
+      expect(@p.device_tag({:build_tag => 'hello', :build_type => 'RelWithDebInfo'})).to include 'RelWithDebInfo'
+    end
+    it 'device_tag should return a string with optional debug tag' do
+      expect(@p.device_tag({:build_tag => 'hello', :build_type => 'Release'})).not_to include 'Release'
+      expect(@p.device_tag({:build_tag => 'hello', :build_type => 'Debug'})).to include 'Debug'
+      expect(@p.device_tag({:build_tag => 'hello', :build_type => 'RelWithDebInfo'})).to include 'RelWithDebInfo'
+    end
+    it 'descriptive_string should just return a string' do
+      expect(@p.descriptive_string).to be_instance_of String
+    end
+    it 'boolean flag functions should return booleans' do
+      expect(@p.release?).to be_in([true, false])
+      expect(@p.pull_request?).to be_in([true, false])
     end
   end
 end
