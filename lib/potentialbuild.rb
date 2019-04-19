@@ -39,7 +39,7 @@ class PotentialBuild
   attr_reader :branch_name
   attr_reader :repository
   attr_accessor :test_run
-  attr_reader :coverage_url
+  attr_accessor :failure
 
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, # rubocop:disable Metrics/ParameterLists
                  pull_id, pr_base_repository, pr_base_ref)
@@ -186,9 +186,9 @@ class PotentialBuild
   end
 
   def do_coverage(compiler)
-    return unless compiler[:coverage_enabled]
+    return nil unless compiler[:coverage_enabled]
 
-    $logger.info("Beginning coverage calculation phase #{release?} #{needs_release_package(compiler)}")
+    $logger.info("Beginning coverage calculation phase #{release?}")
 
     build_dir = this_build_dir
     @coverage_total_lines, @coverage_lines, @coverage_total_functions, @coverage_functions = lcov @config, compiler, build_dir
@@ -204,12 +204,13 @@ class PotentialBuild
     )
 
     @coverage_url = out
+    out
   end
 
   def do_upload(compiler)
-    return if compiler[:s3_upload].nil?
+    return nil if compiler[:s3_upload].nil?
 
-    $logger.info("Beginning upload phase #{release?} #{needs_upload(compiler)}")
+    $logger.info("Beginning upload phase #{release?} #{!compiler[:s3_upload].nil?}")
 
     build_dir = this_build_dir
 
@@ -223,33 +224,30 @@ class PotentialBuild
     )
 
     @asset_url = out
+    out
   end
 
   def do_package(compiler, regression_baseline)
-    return unless (ENV['DECENT_CI_ALL_RELEASE'] || (release? && needs_release_package(compiler))) && !compiler[:skip_packaging]
+    do_packaging = !compiler[:analyze_only]
+    return nil unless (ENV['DECENT_CI_ALL_RELEASE'] || (release? && do_packaging)) && !compiler[:skip_packaging]
 
-    $logger.info("Beginning packaging phase #{release?} #{needs_release_package(compiler)}")
+    $logger.info("Beginning packaging phase #{release?} #{do_packaging}")
     src_dir = this_src_dir
     build_dir = this_build_dir
 
     do_build compiler, regression_baseline, true
 
     start_time = Time.now
-    case @config.engine
-    when 'cmake'
-      begin
-        @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
-      rescue => e
-        $logger.error("Error creating package #{e}")
-        @package_time = Time.now - start_time
-        raise
-      end
-    else
+    begin
+      @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
+    rescue => e
+      $logger.error("Error creating package #{e}")
       @package_time = Time.now - start_time
-      raise 'Unknown Build Engine'
+      raise
     end
 
     @package_time = Time.now - start_time
+    @package_location
   end
 
   def needs_run(compiler)
@@ -316,7 +314,7 @@ class PotentialBuild
   end
 
   def this_build_dir
-    "#{this_src_dir}/build"
+    File.join(this_src_dir, 'build')
   end
 
   def this_regression_dir
@@ -333,14 +331,9 @@ class PotentialBuild
     elsif compiler[:name] == 'cppcheck'
       cppcheck @config, compiler, src_dir, build_dir
     else
-      case @config.engine
-      when 'cmake'
-        this_device_id = device_id compiler
-        args = CMakeBuildArgs.new(compiler[:build_type], this_device_id, running_extra_tests, is_release)
-        cmake_build compiler, src_dir, build_dir, this_regression_dir, regression_baseline, args if checkout_succeeded
-      else
-        raise 'Unknown Build Engine'
-      end
+      this_device_id = device_id compiler
+      args = CMakeBuildArgs.new(compiler[:build_type], this_device_id, running_extra_tests, is_release)
+      cmake_build compiler, src_dir, build_dir, this_regression_dir, regression_baseline, args if checkout_succeeded
     end
     @build_time = 0 if @build_time.nil?
     @build_time += (Time.now - start_time)
@@ -354,20 +347,15 @@ class PotentialBuild
 
     if compiler[:name] == 'cppcheck' || compiler[:name] == 'custom_check'
     else
-      case @config.engine
-      when 'cmake'
-        start_time = Time.now
-        if !ENV['DECENT_CI_SKIP_TEST']
-          cmake_test compiler, src_dir, build_dir, compiler[:build_type], running_exta_tests if build_succeeded
-        else
-          $logger.debug('Skipping test, DECENT_CI_SKIP_TEST is set in the environment')
-        end
-        @test_time = 0 if @test_time.nil?
-        # handle the case where test is called more than once
-        @test_time += (Time.now - start_time)
+      start_time = Time.now
+      if !ENV['DECENT_CI_SKIP_TEST']
+        cmake_test compiler, src_dir, build_dir, compiler[:build_type], running_extra_tests if build_succeeded
       else
-        raise 'Unknown Build Engine'
+        $logger.debug('Skipping test, DECENT_CI_SKIP_TEST is set in the environment')
       end
+      @test_time = 0 if @test_time.nil?
+      # handle the case where test is called more than once
+      @test_time += (Time.now - start_time)
     end
   end
 
@@ -396,16 +384,6 @@ class PotentialBuild
         "cd #{regression_dir} && git checkout FETCH_HEAD"
       ]
     )
-  end
-
-  def unhandled_failure(exc)
-    @failure = exc
-  end
-
-  def inspect
-    hash = {}
-    instance_variables.each { |var| hash[var.to_s.delete('@')] = instance_variable_get(var) }
-    hash
   end
 
   def next_build

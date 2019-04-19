@@ -308,7 +308,7 @@ did_any_builds = false
 
               rescue => e
                 $logger.error "Logging unhandled failure #{e} #{e.backtrace}"
-                p.unhandled_failure "#{e}\n#{e.backtrace}"
+                p.failure = "#{e}\n#{e.backtrace}"
               end
 
               if compiler[:collect_performance_results]
