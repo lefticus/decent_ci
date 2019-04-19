@@ -179,9 +179,8 @@ module Configuration
     when 'gcc'
       return `gcc -dumpversion`
     when 'cppcheck'
-      cppcheck_bin = which('cppcheck')
-      /.*Cppcheck (?<version>([0-9]+\.?)+).*/ =~ `#{cppcheck_bin} --version`
-      return version
+      # we can actually leave the version nil for cppcheck, it will allow a version-agnostic spec
+      return nil
     else
       raise 'Invalid compiler specified, must be one of clang, gcc, custom_check, cppcheck, or a variation on "Visual Studio VV YYYY"'
     end

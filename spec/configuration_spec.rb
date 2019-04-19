@@ -156,7 +156,7 @@ describe 'Configuration Testing' do
       expect{ setup_compiler_version({:name => 'Visual Studio'}) }.to raise_error(RuntimeError)  # VS requires version
       expect{ setup_compiler_version({:name => 'OtherCompiler'}) }.to raise_error(RuntimeError)  # unknown compiler
     end
-    it 'should find valid versions for gcc, clang, and cppcheck' do
+    it 'should find valid versions for gcc, clang, and handle cppcheck' do
       dir1 = Dir.mktmpdir
       cur_path = ENV['PATH']
       ENV['PATH'] = dir1
@@ -178,7 +178,7 @@ describe 'Configuration Testing' do
       cc_binary = File.join(dir1, binary_file_name)
       open(cc_binary, 'w') { |f| f << "#!/bin/bash\necho clang version 3" }
       File.chmod(0777, cc_binary)
-      expect(setup_compiler_version({:name => 'cppcheck'})).to eql '1'
+      expect(setup_compiler_version({:name => 'cppcheck'})).to be_nil
       expect(setup_compiler_version({:name => 'gcc'})).to eql '2'
       expect(setup_compiler_version({:name => 'clang'})).to eql '3'
       ENV['PATH'] = cur_path
