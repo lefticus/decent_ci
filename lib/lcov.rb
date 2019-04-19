@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'runners'
+require_relative 'runners'
 
 # contains functions necessary for working with the 'lcov' coverage generation tool
 module Lcov

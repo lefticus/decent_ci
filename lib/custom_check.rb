@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'fileutils'
+
 require_relative 'runners'
 require_relative 'testresult.rb'
 

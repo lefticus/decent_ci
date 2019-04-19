@@ -40,13 +40,13 @@ module Configuration
       raise "#{e.message} while parsing #{name}@#{this_ref}"
       # :nocov:
     rescue => e
-      $logger.info("Unable to load yaml file from repository: #{this_location}/#{name}@#{this_ref} error: #{e}")
+      $logger.debug("Unable to load yaml file from repository: #{this_location}/#{name}@#{this_ref} error: #{e}")
       path = File.expand_path(name, this_location)
-      $logger.info("Attempting to load yaml config file: #{path}")
+      $logger.debug("Attempting to load yaml config file: #{path}")
       if File.exist?(path)
         return_value = YAML.load_file(path)
       else
-        $logger.info("yaml file does not exist: #{path}")
+        $logger.debug("yaml file does not exist: #{path}")
         return_value = nil
       end
     end

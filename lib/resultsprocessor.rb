@@ -2,6 +2,7 @@
 
 require 'active_support/all'
 require 'find'
+
 require_relative 'codemessage'
 
 # Implementation for parsing of build messages
