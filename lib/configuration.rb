@@ -178,7 +178,7 @@ module Configuration
       return version
     when 'gcc'
       return `gcc -dumpversion`
-    when 'cppcheck'
+    when 'cppcheck', 'custom_check'
       # we can actually leave the version nil for cppcheck, it will allow a version-agnostic spec
       return nil
     else

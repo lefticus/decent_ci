@@ -41,6 +41,7 @@ class Build
       begin
         days = (DateTime.now - DateTime.parse(r.published_at.to_s)).round
         if days <= @max_age
+          $logger.info("Found a tag to add to potential_builds: #{r.tag_name}")
           @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
         else
           $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{r.tag_name}")
@@ -71,6 +72,7 @@ class Build
             $logger.debug("Login set to #{login}")
           end
 
+          $logger.info("Found a branch to add to potential_builds: #{b.name}")
           @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, login, nil, nil, nil, nil, nil)
         else
           $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{b.name}")
@@ -114,8 +116,9 @@ class Build
         aging_pull_requests_num_days = pb.configuration.aging_pull_requests_numdays
 
         if p.head.repo.full_name == p.base.repo.full_name
-          $logger.info('Skipping pull-request originating from head repo')
+          $logger.info("Skipping pull-request originating from head repo: #{p.number}")
         else
+          $logger.info("Found an external PR to add to potential_builds: #{p.number}")
           @potential_builds << pb
         end
       rescue => e
