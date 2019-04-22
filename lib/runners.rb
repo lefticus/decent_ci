@@ -19,8 +19,6 @@ module Runners
       all_result += result_this_command.exitstatus
     end
 
-    raise all_err if all_result.positive? # TODO: I don't think we should raise
-
     [all_out, all_err, all_result]
   end
 

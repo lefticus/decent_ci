@@ -196,6 +196,8 @@ class PotentialBuild
 
     s3_script = File.dirname(File.dirname(__FILE__)) + '/send_to_s3.py'
 
+    $logger.info('Beginning upload of coverage results to s3')
+
     out, = run_scripts(
       @config,
       [
@@ -215,6 +217,8 @@ class PotentialBuild
     build_dir = this_build_dir
 
     s3_script = File.dirname(File.dirname(__FILE__)) + '/send_to_s3.py'
+
+    $logger.info('Beginning upload of build assets to s3')
 
     out, = run_scripts(
       @config,

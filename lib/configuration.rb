@@ -384,7 +384,6 @@ module Configuration
     end
 
     # do final touchups on the configuration
-    configuration.tests_dir = '' if configuration.tests_dir.nil?
     configuration.aging_pull_requests_notification = true if configuration.aging_pull_requests_notification.nil?
     configuration.aging_pull_requests_numdays = 7 if configuration.aging_pull_requests_numdays.nil?
     configuration.test_pass_limit = 99.9999 if configuration.test_pass_limit.nil?

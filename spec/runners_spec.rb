@@ -26,11 +26,10 @@ describe 'Runners Testing' do
       out, = run_scripts(@config, ["ls #{dir1}"])
       expect(out).to eql ''
     end
-    it 'should raise when any script fails' do
+    it 'should return a non-zero result when any script fails' do
       dir1 = Dir.mktmpdir
-      script_file = File.join(dir1, 'a')
-      open(script_file, 'w') { |f| f << "#!/bin/bash\necho Hello\necho something >&2\nexit 0" }
-      expect{ run_scripts(@config, ["ls #{dir1}", "ls #{dir1}asdf", "ls #{dir1}"]) }.to raise_error RuntimeError
+      _, _, result = run_scripts(@config, ["ls #{dir1}", "ls #{dir1}asdf", "ls #{dir1}"])
+      expect(result).to eql 2  # an ls to an invalid directory returns 2
     end
     it 'should capture stuff on stdout and stderr both' do
       dir1 = Dir.mktmpdir

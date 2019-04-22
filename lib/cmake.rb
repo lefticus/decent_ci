@@ -180,7 +180,7 @@ module CMake
   end
 
   def cmake_test(compiler, src_dir, build_dir, build_type, running_extra_here)
-    test_dirs = [@config.tests_dir]
+    test_dirs = [''] # always start with the root build directory
 
     if running_extra_here
       test_dirs << @config.extra_tests_test_dir unless @config.extra_tests_test_dir.nil?
