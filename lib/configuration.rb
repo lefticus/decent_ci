@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'decent_exceptions'
 require_relative 'processor.rb'
 
 # tools for loading and parsing of yaml config files
@@ -287,7 +288,7 @@ module Configuration
 
       return 'Win32'
     end
-    nil
+    compiler[:architecture_description] = compiler[:architecture]
   end
 
   def _setup_cc_and_cxx(compiler, cc_name, cxx_name)
@@ -301,7 +302,7 @@ module Configuration
     end
 
     if cc_bin.nil? || cxx_bin.nil? || (`#{cc_bin} --version` !~ /.*#{compiler[:version]}/) || (`#{cxx_bin} --version` !~ /.*#{compiler[:version]}/)
-      raise "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
+      raise CannotMatchCompiler, "Unable to find appropriate compiler for: #{compiler[:name]} version #{compiler[:version]}"
     end
 
     [cc_bin, cxx_bin]
@@ -359,7 +360,7 @@ module Configuration
       fileset << path.name if path.name =~ /\.decent_ci.*/
     end
     $logger.debug("For ref #{ref} .decent_ci files located: #{fileset.to_a}")
-    raise 'No .decent_ci input files' if fileset.empty?
+    raise NoDecentCIFiles, 'No .decent_ci input files' if fileset.empty?
 
     # then try to form up a final merged configuration of all the yaml files found and symbolize it, raise if no compilers found
     os_distribution, os_version, os_release = establish_os_characteristics

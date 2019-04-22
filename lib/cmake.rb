@@ -74,15 +74,17 @@ module CMake
 
     env['GITHUB_TOKEN'] = ENV['GITHUB_TOKEN']
 
-    if compiler[:target_arch].nil?
-      _, err, result = run_scripts(
-        @config,
-        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{cmake_build_args.build_type} -G \"#{compiler[:build_generator]}\""], env
-      )
-    else
+    if compiler[:name] == 'Visual Studio'
+      # :nocov: Not testing windows right now
       _, err, result = run_scripts(
         @config,
         ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{cmake_build_args.build_type} -G \"#{compiler[:build_generator]}\" -A #{compiler[:target_arch]}"], env
+      )
+      # :nocov:
+    else
+      _, err, result = run_scripts(
+        @config,
+        ["cd #{build_dir} && #{@config.cmake_bin} ../ #{cmake_flags}  -DCMAKE_BUILD_TYPE:STRING=#{cmake_build_args.build_type} -G \"#{compiler[:build_generator]}\""], env
       )
     end
 

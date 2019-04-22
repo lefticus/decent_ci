@@ -1,9 +1,14 @@
 require 'octokit'
 require 'rspec'
+
+require_relative '../lib/decent_exceptions'
 require_relative '../lib/potentialbuild'
 require_relative '../lib/build'
 
 class DummyResponse
+  # def headers
+  #   {'a' => true}
+  # end
 end
 
 class DummyUser
@@ -17,12 +22,18 @@ class DummyUser
 end
 
 class DummyRelease
-  attr_reader :published_at
-  def initialize(published_date)
-    @published_at = published_date
+  def initialize(published_date, should_throw = false)
+    @this_published_at = published_date
+    @should_throw = should_throw
   end
   def author
     DummyUser.new(-1)
+  end
+  def published_at
+    if @should_throw
+      raise CannotMatchCompiler, 'hey'
+    end
+    @this_published_at
   end
   def tag_name
     'tag'
@@ -62,11 +73,18 @@ class DummyCommit1
 end
 
 class DummyBranch
-  attr_reader :commit
   attr_reader :name
-  def initialize(published_date, name, use_committer_login = false)
+  def initialize(published_date, name, use_committer_login = false, should_throw = false)
     @name = name
-    @commit = DummyCommit1.new(published_date, use_committer_login)
+    @published_date = published_date
+    @use_committer_login = use_committer_login
+    @should_throw = should_throw
+  end
+  def commit
+    if @should_throw
+      raise CannotMatchCompiler, "Again!"
+    end
+    DummyCommit1.new(@published_date, @use_committer_login)
   end
 end
 
@@ -79,8 +97,9 @@ end
 
 class DummyPRHead
   attr_reader :full_name
-  def initialize(repo_name)
+  def initialize(repo_name, should_throw)
     @full_name = repo_name
+    @should_throw = should_throw
   end
   def repo
     DummyRepo.new(@full_name)
@@ -89,6 +108,9 @@ class DummyPRHead
     DummyUser.new(-1)
   end
   def sha
+    if @should_throw
+      raise CannotMatchCompiler, 'World'
+    end
     'abdc'
   end
   def ref
@@ -103,20 +125,20 @@ class DummyPR
   attr_reader :updated_at
   attr_reader :head
   attr_reader :base
-  def initialize(pr_number, external, bad_base = false)
+  def initialize(pr_number, external, bad_base = false, should_throw = false)
     @number = pr_number
     @assignee = nil
     @user = DummyUser.new(-1)
     @updated_at = 0
     if external
-      @head = DummyPRHead.new('external')
+      @head = DummyPRHead.new('external', should_throw)
     else
-      @head = DummyPRHead.new('origin')
+      @head = DummyPRHead.new('origin', should_throw)
     end
     if bad_base
       @base = nil
     else
-      @base = DummyPRHead.new('origin')
+      @base = DummyPRHead.new('origin', should_throw)
     end
   end
 end
@@ -134,9 +156,25 @@ class DummyClient2
     t_base.utc
     t_too_old = t_base - 60*60*24*40
     t_recent = t_base - 60*60*24*2
-    @my_releases = [DummyRelease.new(t_too_old), DummyRelease.new(t_recent), DummyRelease.new(-1)]
-    @my_branches = [DummyBranch.new(t_too_old, 'a'), DummyBranch.new(t_recent, 'b'), DummyBranch.new(-1, 'c'), DummyBranch.new(t_recent, 'd', true)]
-    @my_prs = [DummyPR.new(1, true), DummyPR.new(2, false), DummyPR.new(3, true, true) ]
+    @my_releases = [
+      DummyRelease.new(t_too_old),
+      DummyRelease.new(t_recent),
+      DummyRelease.new(-1),
+      DummyRelease.new(t_recent, true)
+    ]
+    @my_branches = [
+      DummyBranch.new(t_too_old, 'a'),
+      DummyBranch.new(t_recent, 'b'),
+      DummyBranch.new(-1, 'c'),
+      DummyBranch.new(t_recent, 'd', true),
+      DummyBranch.new(t_recent, 'e', false, true)
+    ]
+    @my_prs = [
+      DummyPR.new(1, true, false),
+      DummyPR.new(2, false, false),
+      DummyPR.new(3, true, true),
+      DummyPR.new(4, true, false, true)
+    ]
     @content_response = DummyContentResponse.new
   end
   def last_response
@@ -214,7 +252,7 @@ describe 'Build Testing' do
       allow(Octokit::Client).to receive(:new).and_return(c)
       allow(PotentialBuild).to receive(:new).and_return(true)
       b = Build.new('abcdef', 'spec/resources', 10)
-      expect(b.client.releases('').length).to eql 3 # should have three total releases
+      expect(b.client.releases('').length).to eql 4 # should have three total releases
       b.query_releases
       expect(b.potential_builds.length).to eql 1 # but only one is valid and new enough to build
     end
@@ -224,7 +262,7 @@ describe 'Build Testing' do
       allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
       allow(PotentialBuild).to receive(:new).and_return(true)
       b = Build.new('abcdef', 'spec/resources', 10)
-      expect(b.client.branches('', 1).length).to eql 4 # should have four total total branches
+      expect(b.client.branches('', 1).length).to eql 5 # should have four total total branches
       b.query_branches
       expect(b.potential_builds.length).to eql 2 # but only two are valid and new enough to build
     end
@@ -234,7 +272,7 @@ describe 'Build Testing' do
       allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
       allow(PotentialBuild).to receive(:new).and_return(DummyPotentialBuild.new('dummy'))
       b = Build.new('abcdef', 'spec/resources', 10)
-      expect(b.client.pull_requests('', 1).length).to eql 3
+      expect(b.client.pull_requests('', 1).length).to eql 4
       b.query_pull_requests
       expect(b.potential_builds.length).to eql 1 # only 1 is valid and from a remote repo
     end

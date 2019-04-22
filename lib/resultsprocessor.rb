@@ -4,6 +4,7 @@ require 'active_support/all'
 require 'find'
 
 require_relative 'codemessage'
+require_relative 'testresult'
 
 # Implementation for parsing of build messages
 module ResultsProcessor
@@ -450,14 +451,14 @@ module ResultsProcessor
             unless nm.nil?
               failure_type = ''
               nm.each do |measurement|
-                next if measurement['Name'] != 'Exit Code'
+                next if measurement['name'] != 'Exit Code'
 
                 ft = measurement['Value']
                 failure_type = ft unless ft.nil?
               end
 
               nm.each do |measurement|
-                next if measurement['Name'] != 'Execution Time'
+                next if measurement['name'] != 'Execution Time'
 
                 status_string = n['Status']
                 status_string = 'warning' if !value.nil? && value =~ /\[decent_ci:test_result:warn\]/ && status_string == 'passed'

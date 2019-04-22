@@ -237,8 +237,11 @@ describe 'Configuration Testing' do
     it 'should return if already specified' do
       expect(setup_compiler_cppcheck_bin({:cppcheck_bin => 'Already here'}, nil)).to eql 'Already here'
     end
-    it 'should fail if a version is not specified' do
+    it 'should fail if a version cannot be found' do
+      cur_path = ENV['PATH']
+      ENV['PATH'] = ''
       expect{ setup_compiler_cppcheck_bin({}, nil) }.to raise_error RuntimeError
+      ENV['PATH'] = cur_path
     end
     it 'should find the cppcheck binary by name' do
       dir1 = Dir.mktmpdir
@@ -266,7 +269,7 @@ describe 'Configuration Testing' do
       expect(setup_compiler_target_arch({:name => 'Visual Studio 2065', :architecture => 'WoW64'})).to eql 'x64'
       expect(setup_compiler_target_arch({:name => 'Visual Studio 2062', :architecture => 'Y63'})).to eql 'Win32'
       expect(setup_compiler_target_arch({:name => 'Visual Studio 2062'})).to eql 'Win32'  # default architecture
-      expect(setup_compiler_target_arch({:name => 'Audial Studio 2443', :architecture => 'ABC'})).to be_nil
+      expect(setup_compiler_target_arch({:name => 'Audial Studio 2443', :architecture => 'ABC'})).to eql 'ABC'  # return the architecture string if necessary
       expect(setup_compiler_target_arch({:name => 'Audial Studio 2443'})).to be_nil
     end
   end
@@ -340,7 +343,7 @@ describe 'Configuration Testing' do
       File.chmod(0777, cxx_binary)
       cur_path = ENV['PATH']
       ENV['PATH'] = dir1
-      expect{ setup_gcc_style_cc_and_cxx({:name => 'gcc', :version => "2"}) }.to raise_error(RuntimeError)
+      expect{ setup_gcc_style_cc_and_cxx({:name => 'gcc', :version => "2"}) }.to raise_error(CannotMatchCompiler)
       ENV['PATH'] = cur_path
     end
     it 'should find clang stuff on path with version number' do

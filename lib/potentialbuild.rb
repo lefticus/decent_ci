@@ -697,7 +697,7 @@ class PotentialBuild
       'pull_request_issue_id' => @pull_id.to_s,
       'pull_request_base_repository' => @pull_request_base_repository.to_s,
       'pull_request_base_ref' => @pull_request_base_ref.to_s,
-      'device_id' => (device_id compiler).to_s,
+      'device_id' => device_id(compiler),
       'pending' => pending,
       'analyze_only' => compiler[:analyze_only],
       'build_time' => @build_time,

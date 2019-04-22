@@ -365,8 +365,8 @@ describe 'ResultsProcessor Testing' do
  <Results>
   <Measurement><Value>[decent_ci:test_result:message] hello</Value></Measurement>
   <NamedMeasurement type="array">
-   <Measurement><Name>Exit Code</Name><Value>23</Value></Measurement>
-   <Measurement><Name>Execution Time</Name><Value>32</Value></Measurement>
+   <Measurement><name>Exit Code</name><Value>23</Value></Measurement>
+   <Measurement><name>Execution Time</name><Value>32</Value></Measurement>
   </NamedMeasurement>
  </Results>
 </Test></Testing></Site>
@@ -385,6 +385,16 @@ describe 'ResultsProcessor Testing' do
     it 'should return gracefully for missing folder' do
       results, messages = process_ctest_results("/src/dir", "/build/dir", "/folder/does/not/exist")
       expect(results).to be_nil
+      expect(messages.length).to eql 0
+    end
+    it 'should process a full successful, no regression, test results file' do
+      results, messages = process_ctest_results('', '', 'spec/resources/BaselineNoRegressions')
+      expect(results.length).to eql 1370
+      expect(messages.length).to eql 0
+    end
+    it 'should process a full successful, with regression, test results file' do
+      results, messages = process_ctest_results('', '', 'spec/resources/BranchWithRegressions')
+      expect(results.length).to eql 1646
       expect(messages.length).to eql 0
     end
   end

@@ -13,6 +13,7 @@ require 'yaml'
 require 'base64'
 
 require_relative 'codemessage.rb'
+require_relative 'decent_exceptions'
 require_relative 'testresult.rb'
 require_relative 'potentialbuild.rb'
 require_relative 'github.rb'
@@ -41,13 +42,15 @@ class Build
       begin
         days = (DateTime.now - DateTime.parse(r.published_at.to_s)).round
         if days <= @max_age
-          $logger.info("Found a tag to add to potential_builds: #{r.tag_name}")
           @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
+          $logger.info("Found a tag to add to potential_builds: #{r.tag_name}")
         else
-          $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{r.tag_name}")
+          $logger.info("Skipping potential tag (#{r.tag_name}), it hasn't been updated in #{days} days")
         end
+      rescue DecentCIKnownError => e
+        $logger.info("Skipping potential tag (#{r.tag_name}): #{e}")
       rescue => e
-        $logger.info("Skipping potential build: #{e} #{e.backtrace} #{r.tag_name}")
+        $logger.info("Skipping potential tag (#{r.tag_name}): #{e} #{e.backtrace}")
       end
     end
   end
@@ -72,13 +75,15 @@ class Build
             $logger.debug("Login set to #{login}")
           end
 
-          $logger.info("Found a branch to add to potential_builds: #{b.name}")
           @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, login, nil, nil, nil, nil, nil)
+          $logger.info("Found a branch to add to potential_builds: #{b.name}")
         else
-          $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{b.name}")
+          $logger.info("Skipping potential build (#{b.name}), it hasn't been updated in #{days} days")
         end
+      rescue DecentCIKnownError => e
+        $logger.info("Skipping potential branch (#{b.name}): #{e}")
       rescue => e
-        $logger.info("Skipping potential build: #{e} #{e.backtrace} #{b.name}")
+        $logger.info("Skipping potential branch (#{b.name}): #{e} #{e.backtrace}")
       end
     end
   end
@@ -121,8 +126,10 @@ class Build
           $logger.info("Found an external PR to add to potential_builds: #{p.number}")
           @potential_builds << pb
         end
+      rescue DecentCIKnownError => e
+        $logger.info("Skipping potential PR (#{p.number}): #{e}")
       rescue => e
-        $logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
+        $logger.info("Skipping potential PR (#{p.number}): #{e} #{e.backtrace}")
       end
 
       @pull_request_details << {

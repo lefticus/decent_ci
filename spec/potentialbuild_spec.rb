@@ -37,7 +37,7 @@ describe 'PotentialBuild Testing' do
       pull_id = 32
       pr_base_repo = nil
       pr_base_ref = nil
-      p = PotentialBuild.new(client, token, repo, tag_name, commit_sha, branch_name, author, release_url, release_assets, pull_id, pr_base_repo, pr_base_ref)
+      PotentialBuild.new(client, token, repo, tag_name, commit_sha, branch_name, author, release_url, release_assets, pull_id, pr_base_repo, pr_base_ref)
     end
   end
   context 'when calling needs_release_package' do
