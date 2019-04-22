@@ -29,7 +29,7 @@ describe 'Runners Testing' do
     it 'should return a non-zero result when any script fails' do
       dir1 = Dir.mktmpdir
       _, _, result = run_scripts(@config, ["ls #{dir1}", "ls #{dir1}asdf", "ls #{dir1}"])
-      expect(result).to eql 2  # an ls to an invalid directory returns 2
+      expect(result > 0).to be_truthy  # an ls to an invalid directory returns 2 on Linux, 1 on Mac...GROSS
     end
     it 'should capture stuff on stdout and stderr both' do
       dir1 = Dir.mktmpdir
