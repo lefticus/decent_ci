@@ -22,6 +22,7 @@ matrix:
       name: Windows Unit Tests
       language: cpp  # just a placeholder
       install: bundle install
+      before_script: gem install bundler
       script: bundle exec rake
 after_script:
   - bundle exec rake coveralls:push
