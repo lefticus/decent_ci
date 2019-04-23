@@ -5,6 +5,7 @@ matrix:
       language: ruby
       rvm: 2.4.1
       cache: bundler
+      script: bundle exec rake
     - os: linux
       name: Rubocop
       script: bundle exec rubocop lib
@@ -16,10 +17,11 @@ matrix:
       language: ruby
       rvm: 2.4.1
       cache: bundler
+      script: bundle exec rake
     - os: windows
       name: Windows Unit Tests
       language: cpp  # just a placeholder
-scripts:
-  - bundle exec rspec spec
+      install: bundle install
+      script: bundle exec rake
 after_script:
   - bundle exec rake coveralls:push
