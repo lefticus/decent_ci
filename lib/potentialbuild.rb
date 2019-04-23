@@ -330,6 +330,7 @@ class PotentialBuild
     build_dir = this_build_dir
     start_time = Time.now
     checkout_succeeded = checkout src_dir
+    # TODO: Abort if checkout did not succeed...
     if compiler[:name] == 'custom_check'
       @test_results = custom_check @config, compiler, src_dir, build_dir
     elsif compiler[:name] == 'cppcheck'
