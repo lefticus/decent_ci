@@ -172,7 +172,7 @@ class PotentialBuild
         @config,
         [
           "cd #{src_dir} && git init",
-          "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} refs/pull/#{@config.pull_id}/head",
+          "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} refs/pull/#{@pull_id}/head",
           "cd #{src_dir} && git checkout FETCH_HEAD"
         ]
       )
