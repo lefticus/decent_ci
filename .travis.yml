@@ -18,13 +18,13 @@ matrix:
       rvm: 2.4.1
       cache: bundler
       script: bundle exec rake
-    - os: windows
-      name: Windows Unit Tests
-      language: cpp  # just a placeholder
-      install:
-        - ridk install
-        - gem install bundler
-        - bundle install
-      script: bundle exec rake
+#    - os: windows
+#      name: Windows Unit Tests
+#      language: cpp  # just a placeholder
+#      install:
+#        - ridk install
+#        - gem install bundler
+#        - bundle install
+#      script: bundle exec rake
 after_script:
   - bundle exec rake coveralls:push
