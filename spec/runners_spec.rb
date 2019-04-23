@@ -20,7 +20,7 @@ describe 'Runners Testing' do
       open(File.join(dir1, 'a'), 'w') { |f| f << "HAI" }
       open(File.join(dir1, 'b'), 'w') { |f| f << "HAI" }
       out, = run_scripts(@config, ["ls #{dir1}"])
-      expect(out).to eql "a\nb\n"
+      expect(out).to eql "a\nb\n" unless RbConfig::CONFIG['host_os'] =~ /darwin/i
     end
     it 'should return empty output for successful but empty scripts' do
       dir1 = Dir.mktmpdir
