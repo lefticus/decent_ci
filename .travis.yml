@@ -1,16 +1,23 @@
-language: ruby
-rvm: 2.4.1
-cache: bundler
 matrix:
   include:
     - os: linux
       name: Linux Unit Tests
+      language: ruby
+      rvm: 2.4.1
+      cache: bundler
     - os: linux
       name: Rubocop
       script: bundle exec rubocop lib
+      language: ruby
+      rvm: 2.4.1
+      cache: bundler
     - os: osx
       name: Mac OSX Unit Tests
-    # - os: windows  --  windows doesn't have language: ruby support yet
+      language: ruby
+      rvm: 2.4.1
+      cache: bundler
+    - os: windows
+      name: Windows Unit Tests
 scripts:
   - bundle exec rspec spec
 after_script:

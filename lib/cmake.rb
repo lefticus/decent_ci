@@ -92,6 +92,8 @@ module CMake
 
     return false unless cmake_result
 
+    $logger.info('Configure step completed, beginning build step')
+
     build_switches = if @config.os != 'Windows'
                        "-j#{compiler[:num_parallel_builds]}"
                      else
