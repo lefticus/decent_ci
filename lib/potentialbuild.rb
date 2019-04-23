@@ -113,7 +113,7 @@ class PotentialBuild
   end
 
   def running_extra_tests
-    $logger.info("Checking if running_extra_tests on branch: #{@branch_name} extra tests branches #{@config.extra_tests_branches}")
+    # TODO: I think we can get rid of this function and accompanying variables
     if !@branch_name.nil? && !@config.extra_tests_branches.nil? && @config.extra_tests_branches.count(@branch_name) != 0
       true
     else
