@@ -247,7 +247,12 @@ did_any_builds = false
     b.potential_builds.each {|p|
 
       if ENV["DECENT_CI_BRANCH_FILTER"].nil? || ENV["DECENT_CI_BRANCH_FILTER"] == '' || p.branch_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.tag_name =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/ || p.descriptive_string =~ /#{ENV["DECENT_CI_BRANCH_FILTER"]}/
-        $logger.info "Looping over compilers"
+        if p.branch_name
+          $logger.info "Working on branch \"#{p.branch_name}\": Looping over compilers"
+        elsif p.tag_name
+          $logger.info "Working on tag \"#{p.tag_name}\": Looping over compilers"
+        end
+
         p.compilers.each {|compiler|
           $current_log_deviceid = p.device_id compiler
 
@@ -318,7 +323,7 @@ did_any_builds = false
               p.post_results compiler, false
 
             else
-              $logger.info "Skipping build, already completed, for #{compiler} #{p.descriptive_string}"
+              $logger.info "Skipping build, already completed, for #{compiler[:name]} #{p.descriptive_string}"
             end
           rescue => e
             $logger.error "Error creating build: #{compiler} #{p.descriptive_string}: #{e} #{e.backtrace}"
