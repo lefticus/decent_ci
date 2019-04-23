@@ -339,7 +339,7 @@ did_any_builds = false
 
 if did_any_builds
   $logger.info "Execution completed, since builds were run we wont sleep}"
-  sleep(options[:delay_after_run])
+  sleep(5)
 else
   $logger.info "No builds were run, sleeping for #{options[:delay_after_run]}"
   sleep(options[:delay_after_run])

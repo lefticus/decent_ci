@@ -341,6 +341,7 @@ class PotentialBuild
     end
     @build_time = 0 if @build_time.nil?
     @build_time += (Time.now - start_time)
+    # TODO: Should we return true here?
   end
 
   def do_test(compiler, regression_baseline)
