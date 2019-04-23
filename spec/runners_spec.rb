@@ -1,3 +1,4 @@
+require 'rbconfig'
 require 'rspec'
 require_relative '../lib/runners'
 
@@ -46,7 +47,7 @@ describe 'Runners Testing' do
       open(script_file, 'w') { |f| f << "#!/bin/bash\necho Hello\necho something >&2\nexit 0" }
       out, err, result = run_scripts(@config, ["bash #{script_file}", "bash #{script_file}"])
       expect(out).to eql "Hello\nHello\n"
-      expect(err).to eql "something\nsomething\n"
+      expect(err).to eql "something\nsomething\n" unless RbConfig::CONFIG['host_os'] =~ /darwin/i
       expect(result).to eql 0
     end
     it 'should timeout on supported platforms' do
