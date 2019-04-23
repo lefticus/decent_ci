@@ -129,7 +129,7 @@ class PotentialBuild
   end
 
   def device_id(compiler)
-    "#{compiler[:architecture_description]}-#{@config.os}-#{@config.os_release}-#{compiler[:description]}#{device_tag(compiler)}"
+    "#{compiler[:architecture]}-#{@config.os}-#{@config.os_release}-#{compiler[:description]}#{device_tag(compiler)}"
   end
 
   def build_base_name(compiler)
@@ -141,7 +141,7 @@ class PotentialBuild
   end
 
   def short_build_base_name(compiler)
-    "#{@config.repository_name}-#{compiler[:architecture_description]}-#{@config.os}-#{@buildid}"
+    "#{@config.repository_name}-#{compiler[:architecture]}-#{@config.os}-#{@buildid}"
   end
 
   def needs_release_package(compiler)
@@ -306,7 +306,7 @@ class PotentialBuild
   end
 
   def get_full_build_name(compiler)
-    "#{get_short_form(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture_description]}-#{get_short_form(compiler[:description])}#{get_short_form(device_tag(compiler))}"
+    "#{get_short_form(@config.repository_name)}-#{@short_buildid}-#{compiler[:architecture]}-#{get_short_form(compiler[:description])}#{get_short_form(device_tag(compiler))}"
   end
 
   def this_src_dir
