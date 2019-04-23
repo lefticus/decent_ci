@@ -18,6 +18,7 @@ matrix:
       cache: bundler
     - os: windows
       name: Windows Unit Tests
+      language: cpp  # just a placeholder
 scripts:
   - bundle exec rspec spec
 after_script:
