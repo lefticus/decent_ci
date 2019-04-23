@@ -334,8 +334,10 @@ class PotentialBuild
     checkout_succeeded = checkout src_dir
     # TODO: Abort if checkout did not succeed...
     if compiler[:name] == 'custom_check'
+      $logger.info('Running custom_check')
       @test_results = custom_check @config, compiler, src_dir, build_dir
     elsif compiler[:name] == 'cppcheck'
+      $logger.info('Running cppcheck')
       cppcheck @config, compiler, src_dir, build_dir
     else
       this_device_id = device_id compiler
