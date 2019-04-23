@@ -1,4 +1,4 @@
-# encoding: UTF-8 
+# frozen_string_literal: true
 
 # warnings and errors from code compilation
 class CodeMessage
@@ -18,17 +18,17 @@ class CodeMessage
     @message = message
   end
 
-  def is_warning
+  def warning?
     @messagetype =~ /.*warn.*/i
   end
 
-  def is_error
+  def error?
     @messagetype =~ /.*err.*/i
   end
 
   def inspect
     hash = {}
-    instance_variables.each {|var| hash[var.to_s.delete("@")] = instance_variable_get(var)}
+    instance_variables.each { |var| hash[var.to_s.delete('@')] = instance_variable_get(var) }
     hash
   end
 
@@ -37,7 +37,7 @@ class CodeMessage
   end
 
   def eql?(other)
-    (self <=> other) == 0
+    (self <=> other).zero?
   end
 
   def <=>(other)
@@ -47,19 +47,17 @@ class CodeMessage
     mt = @messagetype <=> other.messagetype
     m = @message[0..10] <=> other.message[0..10]
 
-    if f != 0
-      ret = f
-    elsif l != 0
-      ret = l
-    elsif c != 0
-      ret = c
-    elsif mt != 0
-      ret = mt
-    else
-      ret = m
-    end
+    ret = if f != 0
+            f
+          elsif l != 0
+            l
+          elsif c != 0
+            c
+          elsif mt != 0
+            mt
+          else
+            m
+          end
     ret
   end
-
 end
-

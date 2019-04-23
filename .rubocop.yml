@@ -1,0 +1,70 @@
+AllCops:
+  TargetRubyVersion: 2.4
+
+# *** Permanent Settings *** #
+
+# This could be adjusted but does not bother me
+Metrics/LineLength:
+  Max: 200
+
+# This is the one allowed global :-)
+Style/GlobalVars:
+  AllowedVariables:
+    - "$logger"
+
+# This could be adjusted but does not bother me
+# There is actually one exception to this, PotentialBuild, that would be crazy to refactor away
+Metrics/ParameterLists:
+  Max: 7
+
+# I don't really care which style we use here but we'll always be consistent within each Hash
+Style/HashSyntax:
+  EnforcedStyle: no_mixed_keys
+
+# our heredocs are carefully crafted and need to have no whitespace indentation
+Layout/IndentHeredoc:
+  Enabled: false
+
+# This requires a semantic change and I'm not doing that anytime soon
+Security/YAMLLoad:
+  Enabled: false
+
+# ************************** #
+
+
+# *** Temporary Settings *** #
+
+# This is just going to take a while
+Style/RescueStandardError:
+  Enabled: false
+
+# I need to learn more about this before enabling it
+Style/EachWithObject:
+  Enabled: false
+
+# We're letting codeclimate do this analysis
+Metrics/BlockNesting:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+# ************************** #

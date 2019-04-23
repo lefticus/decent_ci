@@ -1,4 +1,4 @@
-# encoding: UTF-8 
+# frozen_string_literal: true
 
 require 'octokit'
 require 'json'
@@ -13,96 +13,98 @@ require 'yaml'
 require 'base64'
 
 require_relative 'codemessage.rb'
+require_relative 'decent_exceptions'
 require_relative 'testresult.rb'
 require_relative 'potentialbuild.rb'
 require_relative 'github.rb'
 
 # Top level class that loads the list of potential builds from github
 class Build
+  attr_reader :client
+  attr_accessor :potential_builds
+  attr_reader :pull_request_details
+
   def initialize(token, repository, max_age)
     @client = Octokit::Client.new(:access_token => token)
     @token = token
     @repository = repository
-    @user = github_query(@client) {@client.user}
-    github_query(@client) {@user.login}
+    @user = github_query(@client) { @client.user }
+    github_query(@client) { @user.login }
     @potential_builds = []
     @max_age = max_age
-
-    github_check_rate_limit(@client.last_response.headers);
+    github_check_rate_limit(@client.last_response.headers)
   end
 
   def query_releases
-    releases = github_query(@client) {@client.releases(@repository)}
+    releases = github_query(@client) { @client.releases(@repository) }
 
-    releases.each {|r|
+    releases.each do |r|
       begin
         days = (DateTime.now - DateTime.parse(r.published_at.to_s)).round
         if days <= @max_age
           @potential_builds << PotentialBuild.new(@client, @token, @repository, r.tag_name, nil, nil, r.author.login, r.url, r.assets, nil, nil, nil)
+          $logger.info("Found a tag to add to potential_builds: #{r.tag_name}")
         else
-          $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{r.tag_name}");
+          $logger.info("Skipping potential tag (#{r.tag_name}), it hasn't been updated in #{days} days")
         end
+      rescue DecentCIKnownError => e
+        $logger.info("Skipping potential tag (#{r.tag_name}): #{e}")
       rescue => e
-        $logger.info("Skipping potential build: #{e} #{e.backtrace} #{r.tag_name}")
+        $logger.info("Skipping potential tag (#{r.tag_name}): #{e} #{e.backtrace}")
       end
-    }
+    end
   end
 
   def query_branches
-    # todo properly handle paginated results from github
-    branches = github_query(@client) {@client.branches(@repository, :per_page => 100)}
+    # TODO: properly handle paginated results from github
+    branches = github_query(@client) { @client.branches(@repository, :per_page => 100) }
 
-    branches.each {|b|
+    branches.each do |b|
       $logger.debug("Querying potential build: #{b.name}")
-      branch_details = github_query(@client) {@client.branch(@repository, b.name)}
+      branch_details = github_query(@client) { @client.branch(@repository, b.name) }
       begin
         days = (DateTime.now - DateTime.parse(branch_details.commit.commit.author.date.to_s)).round
         if days <= @max_age
-          login = "Unknown"
+          login = 'Unknown'
           if !branch_details.commit.author.nil?
             login = branch_details.commit.author.login
           else
-            $logger.debug("Commit author is nil, getting login details from committer information")
-            unless branch_details.commit.committer.nil?
-              login = branch_details.commit.committer.login
-            end
+            $logger.debug('Commit author is nil, getting login details from committer information')
+            login = branch_details.commit.committer.login unless branch_details.commit.committer.nil?
+
             $logger.debug("Login set to #{login}")
           end
 
           @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, login, nil, nil, nil, nil, nil)
+          $logger.info("Found a branch to add to potential_builds: #{b.name}")
         else
-          $logger.info("Skipping potential build, it hasn't been updated in #{days} days; #{b.name}");
+          $logger.info("Skipping potential build (#{b.name}), it hasn't been updated in #{days} days")
         end
+      rescue DecentCIKnownError => e
+        $logger.info("Skipping potential branch (#{b.name}): #{e}")
       rescue => e
-        $logger.info("Skipping potential build: #{e} #{e.backtrace} #{b.name}")
+        $logger.info("Skipping potential branch (#{b.name}): #{e} #{e.backtrace}")
       end
-    }
+    end
   end
 
   # note, only builds 'external' pull_requests. Internal ones would have already
   # been built as a branch
   def query_pull_requests
-    pull_requests = github_query(@client) {@client.pull_requests(@repository, :state => "open")}
+    pull_requests = github_query(@client) { @client.pull_requests(@repository, :state => 'open') }
 
     @pull_request_details = []
 
-
-    pull_requests.each {|p|
-
-      issue = github_query(@client) {@client.issue(@repository, p.number)}
+    pull_requests.each do |p|
+      issue = github_query(@client) { @client.issue(@repository, p.number) }
 
       $logger.debug("Issue loaded: #{issue}")
 
-
       notification_users = Set.new
 
-      if issue.assignee
-        notification_users << issue.assignee.login
-      end
+      notification_users << issue.assignee.login if issue.assignee
 
-      if p.user.login
-        notification_users << p.user.login
-      end
+      notification_users << p.user.login if p.user.login
 
       aging_pull_requests_notify = true
       aging_pull_requests_num_days = 7
@@ -119,20 +121,28 @@ class Build
         aging_pull_requests_num_days = pb.configuration.aging_pull_requests_numdays
 
         if p.head.repo.full_name == p.base.repo.full_name
-          $logger.info("Skipping pull-request originating from head repo")
+          $logger.info("Skipping pull-request originating from head repo: #{p.number}")
         else
+          $logger.info("Found an external PR to add to potential_builds: #{p.number}")
           @potential_builds << pb
         end
+      rescue DecentCIKnownError => e
+        $logger.info("Skipping potential PR (#{p.number}): #{e}")
       rescue => e
-        $logger.info("Skipping potential build: #{e} #{e.backtrace} #{p}")
+        $logger.info("Skipping potential PR (#{p.number}): #{e} #{e.backtrace}")
       end
 
-      @pull_request_details << {:id => p.number, :creator => p.user.login, :owner => (issue.assignee ? issue.assignee.login : nil), :last_updated => issue.updated_at, :repo => @repository, :notification_users => notification_users, :aging_pull_requests_notification => aging_pull_requests_notify, :aging_pull_requests_numdays => aging_pull_requests_num_days}
-    }
-  end
-
-  def get_pull_request_details
-    @pull_request_details
+      @pull_request_details << {
+        :id => p.number,
+        :creator => p.user.login,
+        :owner => (issue.assignee ? issue.assignee.login : nil),
+        :last_updated => issue.updated_at,
+        :repo => @repository,
+        :notification_users => notification_users,
+        :aging_pull_requests_notification => aging_pull_requests_notify,
+        :aging_pull_requests_numdays => aging_pull_requests_num_days
+      }
+    end
   end
 
   def get_regression_base(t_potential_build)
@@ -140,79 +150,62 @@ class Build
     defined_baseline = config.send("regression_baseline_#{t_potential_build.branch_name}")
 
     default_baseline = config.regression_baseline_default
-    default_baseline = "develop" if default_baseline.nil? && t_potential_build.branch_name != "develop" && t_potential_build.branch_name != "master"
+    default_baseline = 'develop' if default_baseline.nil? && t_potential_build.branch_name != 'develop' && t_potential_build.branch_name != 'master'
 
-    baseline = defined_baseline ? defined_baseline : default_baseline
+    baseline = defined_baseline || default_baseline
 
     $logger.info("Baseline defined as: '#{baseline}' for branch '#{t_potential_build.branch_name}'")
 
-    baseline = nil if baseline == t_potential_build.branch_name || baseline == ""
+    baseline = nil if [t_potential_build.branch_name, ''].include? baseline
 
     $logger.info("Baseline refined to: '#{baseline}' for branch '#{t_potential_build.branch_name}'")
 
-    if baseline.nil? || baseline == ""
-      return nil
-    end
+    return nil if baseline.nil? || baseline == ''
 
-    @potential_builds.each {|p|
+    @potential_builds.each do |p|
       # TODO: Protect other fork develop branches from inadvertently becoming the baseline branch
-      if p.branch_name == baseline
-        return p
-      end
-    }
+      return p if p.branch_name == baseline
+    end
 
     nil
   end
 
-  def potential_builds
-    @potential_builds
-  end
-
   def needs_daily_task(results_repo, results_path)
-    begin
-      dateprefix = DateTime.now.utc.strftime("%F")
-      document =
-          <<-eos
+    dateprefix = DateTime.now.utc.strftime('%F')
+    document =
+      <<-HEADER
 ---
 title: #{dateprefix} Daily Task
 tags: daily_task
-date: #{DateTime.now.utc.strftime("%F %T")}
+date: #{DateTime.now.utc.strftime('%F %T')}
 repository: #{@repository}
 machine_name: #{Socket.gethostname}
-machine_ip: #{Socket.ip_address_list.find {|ai| ai.ipv4? && !ai.ipv4_loopback?}.ip_address}
+machine_ip: #{Socket.ip_address_list.find { |ai| ai.ipv4? && !ai.ipv4_loopback? }.ip_address}
 ---
 
-      eos
+      HEADER
 
-      response = github_query(@client) {@client.create_contents(results_repo,
-                                                                "#{results_path}/#{dateprefix}-DailyTaskRun",
-                                                                "Commit daily task run file: #{dateprefix}-DailyTaskRun",
-                                                                document)}
-
-      $logger.info("Daily task document sha: #{response.content.sha}")
-      return true
-    rescue
-      $logger.info("Daily task file not created, skipping daily task")
-      return false
+    response = github_query(@client) do
+      @client.create_contents(
+        results_repo,
+        "#{results_path}/#{dateprefix}-DailyTaskRun",
+        "Commit daily task run file: #{dateprefix}-DailyTaskRun",
+        document
+      )
     end
 
-  end
-
-  def client
-    @client
+    $logger.info("Daily task document sha: #{response.content.sha}")
+    true
+  rescue
+    $logger.info('Daily task file not created, skipping daily task')
+    false
   end
 
   def results_repositories
     s = Set.new
-    @potential_builds.each {|p|
-      unless p.is_pull_request
-        s << [p.configuration.repository, p.configuration.results_repository, p.configuration.results_path]
-      end
-    }
+    @potential_builds.each do |p|
+      s << [p.configuration.repository, p.configuration.results_repository, p.configuration.results_path] unless p.pull_request?
+    end
     s
   end
-
 end
-
-
-

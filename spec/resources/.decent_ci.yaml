@@ -1,0 +1,4 @@
+compilers:
+  - name: "gcc"
+    version: 1
+regression_script: hi

@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 def github_check_rate_limit(headers)
-  rate_limit = headers["x-ratelimit-limit"].to_i
-  rate_limit_remaining = headers["x-ratelimit-remaining"].to_i
-  rate_limit_reset = headers["x-ratelimit-reset"].to_i
+  rate_limit = headers['x-ratelimit-limit'].to_i
+  rate_limit_remaining = headers['x-ratelimit-remaining'].to_i
+  rate_limit_reset = headers['x-ratelimit-reset'].to_i
   rate_limit_start = rate_limit_reset - 60 * 60 # 60 minutes in seconds
 
   t = Time.now
@@ -23,25 +25,21 @@ end
 
 def github_query(client, num_retries = 2)
   count = 0
-  while true
+  loop do
     begin
       return yield
     rescue Octokit::TooManyRequests
       count += 1
 
       if count > num_retries
-        $logger.error("Rate limit has been exceeded retries exhausted, re-throwing error")
+        $logger.error('Rate limit has been exceeded retries exhausted, re-throwing error')
         raise
       end
-      time_to_sleep = github_check_rate_limit(client.last_response.headers)
+      time_to_sleep = github_check_rate_limit(client.last_response.headers) + 3 # add a little buffer to the delay time
       $logger.info("Rate limit has been exceeded, rate limit will be reset in: #{time_to_sleep}s")
-      time_to_sleep += Random.rand(10)
       $logger.info("Rate limit has been exceeded, sleeping for: #{time_to_sleep}s")
 
-      if time_to_sleep > 0
-        sleep(time_to_sleep)
-      end
+      sleep(time_to_sleep) if time_to_sleep.positive?
     end
   end
 end
-

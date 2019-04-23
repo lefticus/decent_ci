@@ -4,6 +4,7 @@
 EnergyPlus*
 Gemfile.lock
 *.log
+*.swp
 decent_ci.log*
 clone_baseline
 clone_branch

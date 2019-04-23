@@ -5,19 +5,19 @@ describe 'CodeMessage Testing' do
   context 'when constructing code messages' do
     it 'should properly check warning type' do
       c = CodeMessage.new("filename", 1, 1, "warning", "message")
-      expect(c.is_warning).to be_truthy
+      expect(c.warning?).to be_truthy
       c = CodeMessage.new("filename", 1, 1, "WaRning", "message")
-      expect(c.is_warning).to be_truthy
+      expect(c.warning?).to be_truthy
       c = CodeMessage.new("filename", 1, 1, "warMing", "message")
-      expect(c.is_warning).to be_nil
+      expect(c.warning?).to be_nil
     end
     it 'should properly check error type' do
       c = CodeMessage.new("filename", 1, 1, "error", "message")
-      expect(c.is_error).to be_truthy
+      expect(c.error?).to be_truthy
       c = CodeMessage.new("filename", 1, 1, "ERror", "message")
-      expect(c.is_error).to be_truthy
+      expect(c.error?).to be_truthy
       c = CodeMessage.new("filename", 1, 1, "Airer", "message")
-      expect(c.is_error).to be_nil
+      expect(c.error?).to be_nil
     end
     it 'should properly compare code messages' do
       c_base = CodeMessage.new("filename", 1, 1, "warning", "message")
