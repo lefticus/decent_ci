@@ -157,6 +157,7 @@ class PotentialBuild
     FileUtils.mkdir_p src_dir
 
     if @pull_id.nil?
+      $logger.info("Checking out branch \"#{@refspec}\"")
       _, _, result = run_scripts(
         @config,
         [
@@ -168,6 +169,7 @@ class PotentialBuild
       success = !@commit_sha.nil? && @commit_sha != '' && result.zero?
       _, _, result = run_scripts(@config, ["cd #{src_dir} && git checkout #{@commit_sha}"]) if success
     else
+      $logger.info("Checking out PR \"#{@pull_id}\"")
       _, _, result = run_scripts(
         @config,
         [
