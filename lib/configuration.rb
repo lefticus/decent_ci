@@ -288,6 +288,7 @@ module Configuration
 
       return 'Win32'
     end
+    compiler[:architecture]
   end
 
   def _setup_cc_and_cxx(compiler, cc_name, cxx_name)
