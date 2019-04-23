@@ -172,7 +172,7 @@ class PotentialBuild
         @config,
         [
           "cd #{src_dir} && git init",
-          "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@repository} refs/pull/#{@pull_id}/head",
+          "cd #{src_dir} && git pull https://#{@config.token}@github.com/#{@pull_request_base_repository} refs/pull/#{@pull_id}/head",
           "cd #{src_dir} && git checkout FETCH_HEAD"
         ]
       )
@@ -330,6 +330,7 @@ class PotentialBuild
     build_dir = this_build_dir
     start_time = Time.now
     checkout_succeeded = checkout src_dir
+    # TODO: Abort if checkout did not succeed...
     if compiler[:name] == 'custom_check'
       @test_results = custom_check @config, compiler, src_dir, build_dir
     elsif compiler[:name] == 'cppcheck'
