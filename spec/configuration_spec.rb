@@ -285,7 +285,7 @@ describe 'Configuration Testing' do
       expect(cc).to be_nil
       expect(cxx).to be_nil
     end
-    it 'should find gcc stuff on path' do
+    it 'should find gcc stuff on path without version number' do
       dir1 = Dir.mktmpdir
       binary_name = "gcc"
       binary_extension = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';')[0] : ''
@@ -301,7 +301,7 @@ describe 'Configuration Testing' do
       File.chmod(0777, cxx_binary)
       cur_path = ENV['PATH']
       ENV['PATH'] = dir1
-      cc, cxx = setup_gcc_style_cc_and_cxx({:name => 'gcc', :version => "1"})
+      cc, cxx = setup_gcc_style_cc_and_cxx({:name => 'gcc'})
       expect(cc).to eql cc_binary
       expect(cxx).to eql cxx_binary
       ENV['PATH'] = cur_path
