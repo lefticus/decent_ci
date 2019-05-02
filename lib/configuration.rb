@@ -311,7 +311,7 @@ module Configuration
   def setup_gcc_style_cc_and_cxx(compiler)
     return [compiler[:cc_bin], compiler[:cxx_bin]] unless compiler[:cc_bin].nil? || compiler[:cxx_bin].nil?
 
-    return [nil, nil] if compiler[:name].nil? || compiler[:version].nil? || !%w[clang gcc].include?(compiler[:name])
+    return [nil, nil] if compiler[:name].nil? || !%w[clang gcc].include?(compiler[:name])
 
     if compiler[:name] == 'clang'
       cc_bin, cxx_bin = _setup_cc_and_cxx(compiler, 'clang', 'clang++')

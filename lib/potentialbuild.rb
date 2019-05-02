@@ -157,6 +157,7 @@ class PotentialBuild
     FileUtils.mkdir_p src_dir
 
     if @pull_id.nil?
+      $logger.info("Checking out branch \"#{@refspec}\"")
       _, _, result = run_scripts(
         @config,
         [
@@ -168,6 +169,7 @@ class PotentialBuild
       success = !@commit_sha.nil? && @commit_sha != '' && result.zero?
       _, _, result = run_scripts(@config, ["cd #{src_dir} && git checkout #{@commit_sha}"]) if success
     else
+      $logger.info("Checking out PR \"#{@pull_id}\"")
       _, _, result = run_scripts(
         @config,
         [
@@ -332,8 +334,10 @@ class PotentialBuild
     checkout_succeeded = checkout src_dir
     # TODO: Abort if checkout did not succeed...
     if compiler[:name] == 'custom_check'
+      $logger.info('Running custom_check')
       @test_results = custom_check @config, compiler, src_dir, build_dir
     elsif compiler[:name] == 'cppcheck'
+      $logger.info('Running cppcheck')
       cppcheck @config, compiler, src_dir, build_dir
     else
       this_device_id = device_id compiler

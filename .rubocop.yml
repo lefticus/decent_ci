@@ -29,6 +29,9 @@ Layout/IndentHeredoc:
 Security/YAMLLoad:
   Enabled: false
 
+Lint/UnneededCopDisableDirective:
+  Enabled: false
+
 # ************************** #
 
 
