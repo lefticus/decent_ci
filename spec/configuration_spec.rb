@@ -281,9 +281,6 @@ describe 'Configuration Testing' do
       cc, cxx = setup_gcc_style_cc_and_cxx({:name => "Visual Studio"}) # invalid compiler for this function
       expect(cc).to be_nil
       expect(cxx).to be_nil
-      cc, cxx = setup_gcc_style_cc_and_cxx({:name => "gcc"}) # valid compiler but missing version
-      expect(cc).to be_nil
-      expect(cxx).to be_nil
     end
     it 'should find gcc stuff on path without version number' do
       dir1 = Dir.mktmpdir
