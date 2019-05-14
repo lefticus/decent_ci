@@ -60,6 +60,10 @@ class Build
     branches = github_query(@client) { @client.branches(@repository, :per_page => 100) }
 
     branches.each do |b|
+      if b.name.start_with?('#')
+        $logger.warn("Skipping branch that starts with hash symbol: #{b.name}")
+        next
+      end
       $logger.debug("Querying potential build: #{b.name}")
       branch_details = github_query(@client) { @client.branch(@repository, b.name) }
       begin
