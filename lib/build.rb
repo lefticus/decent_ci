@@ -60,7 +60,7 @@ class Build
     branches = github_query(@client) { @client.branches(@repository, :per_page => 100) }
 
     branches.each do |b|
-      if b.name.start_with?('#')
+      if b.name.include?('#')
         $logger.warn("Skipping branch that starts with hash symbol: #{b.name}")
         next
       end

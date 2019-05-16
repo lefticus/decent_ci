@@ -5,10 +5,10 @@ require_relative '../lib/decent_exceptions'
 require_relative '../lib/potentialbuild'
 require_relative '../lib/build'
 
-class DummyResponse
-  # def headers
-  #   {'a' => true}
-  # end
+class DummyResponse2
+  def headers
+    {'a' => true}
+  end
 end
 
 class DummyUser
@@ -167,7 +167,8 @@ class DummyClient2
       DummyBranch.new(t_recent, 'b'),
       DummyBranch.new(-1, 'c'),
       DummyBranch.new(t_recent, 'd', true),
-      DummyBranch.new(t_recent, 'e', false, true)
+      DummyBranch.new(t_recent, 'e', false, true),
+      DummyBranch.new(t_recent, 'fixes-#191-dialog')
     ]
     @my_prs = [
       DummyPR.new(1, true, false),
@@ -178,7 +179,7 @@ class DummyClient2
     @content_response = DummyContentResponse.new
   end
   def last_response
-    return DummyResponse.new
+    return DummyResponse2.new
   end
   def user
     DummyUser.new(-1)
@@ -324,4 +325,3 @@ describe 'Build Testing' do
     end
   end
 end
-
