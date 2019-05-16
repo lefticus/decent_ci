@@ -5,10 +5,10 @@ require_relative '../lib/decent_exceptions'
 require_relative '../lib/potentialbuild'
 require_relative '../lib/build'
 
-class DummyResponse
-  # def headers
-  #   {'a' => true}
-  # end
+class DummyResponse2
+  def headers
+    {'a' => true}
+  end
 end
 
 class DummyUser
@@ -167,7 +167,8 @@ class DummyClient2
       DummyBranch.new(t_recent, 'b'),
       DummyBranch.new(-1, 'c'),
       DummyBranch.new(t_recent, 'd', true),
-      DummyBranch.new(t_recent, 'e', false, true)
+      DummyBranch.new(t_recent, 'e', false, true),
+      DummyBranch.new(t_recent, 'fixes-#191-dialog')
     ]
     @my_prs = [
       DummyPR.new(1, true, false),
@@ -178,7 +179,7 @@ class DummyClient2
     @content_response = DummyContentResponse.new
   end
   def last_response
-    return DummyResponse.new
+    return DummyResponse2.new
   end
   def user
     DummyUser.new(-1)
@@ -262,7 +263,7 @@ describe 'Build Testing' do
       allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
       allow(PotentialBuild).to receive(:new).and_return(true)
       b = Build.new('abcdef', 'spec/resources', 10)
-      expect(b.client.branches('', 1).length).to eql 5 # should have four total total branches
+      expect(b.client.branches('', 1).length).to eql 6 # should have four total total branches
       b.query_branches
       expect(b.potential_builds.length).to eql 2 # but only two are valid and new enough to build
     end
@@ -324,4 +325,3 @@ describe 'Build Testing' do
     end
   end
 end
-
