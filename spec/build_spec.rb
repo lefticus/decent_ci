@@ -263,7 +263,7 @@ describe 'Build Testing' do
       allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
       allow(PotentialBuild).to receive(:new).and_return(true)
       b = Build.new('abcdef', 'spec/resources', 10)
-      expect(b.client.branches('', 1).length).to eql 5 # should have four total total branches
+      expect(b.client.branches('', 1).length).to eql 6 # should have four total total branches
       b.query_branches
       expect(b.potential_builds.length).to eql 2 # but only two are valid and new enough to build
     end
