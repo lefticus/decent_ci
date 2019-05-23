@@ -647,16 +647,15 @@ class PotentialBuild
     build_results_data = []
 
     unless @build_results.nil?
-      @build_results.each do |b|
-        begin
+      begin
+        @build_results.each do |b|
           build_errors += 1 if b.error?
           build_results_data << b.inspect
-        rescue
-          build_errors += 1
-          build_results_data << { 'message' => 'CI Issue: Error occurred when processing build results on this test' }
-          $logger.warn('Error in processing build_results, bad codemessage follows...')
-          $logger.warn(b)
         end
+      rescue
+        build_errors += 1
+        build_results_data << { 'message' => 'CI Issue: Error occurred when processing build results on this test' }
+        $logger.warn('Error in processing build_results, maybe a duplicate build_result...?')
       end
       build_warnings = @build_results.count - build_errors
     end
