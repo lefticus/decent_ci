@@ -60,5 +60,10 @@ cd ci_script
 ruby run_ci.rb ~/ci <AWS_STUFF> <true/false test mode> <GH_TOKEN> NREL/EnergyPlus
 ```
 
+# Documentation
 
-
+Documentation is currently stubbed out, and needs to be fully fleshed out.
+In any case, the docs are built using Yard.
+To get started, `gem install yard` or bundle it from the doc section of the Gemfile.
+Then from the root of the repo, just run `yardoc`, and it will scan the lib directory, generating html docs and dropping them into the `docs/` folder.
+GitHub then hosts the documentation on the GitHub page: https://myoldmopar.github.io/decent_ci/ 
