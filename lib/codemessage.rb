@@ -36,10 +36,18 @@ class CodeMessage
     inspect.hash
   end
 
+  # Checks if two CodeMessage objects are equal
+  #
+  # @param other [CodeMessage] a second CodeMessage instance to compare against self
+  # @return [Boolean] true if the objects are data-equal, false otherwise
   def eql?(other)
     (self <=> other).zero?
   end
 
+  # Checks if two CodeMessage objects are different
+  #
+  # @param other [CodeMessage] a second CodeMessage instance to compare against self
+  # @return [Boolean] false if the objects are data-equal, true otherwise
   def <=>(other)
     f = @filename <=> other.filename
     l = @linenumber.to_i <=> other.linenumber.to_i

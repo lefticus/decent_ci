@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Module: ResultsProcessor
+  
+    &mdash; Documentation by YARD 0.9.19
+  
+</title>
+
+  <link rel="stylesheet" href="css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  pathId = "ResultsProcessor";
+  relpath = '';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="_index.html">Index (R)</a> &raquo;
+    
+    
+    <span class="title">ResultsProcessor</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Module: ResultsProcessor
+  
+  
+  
+</h1>
+<div class="box_info">
+  
+
+  
+  
+  
+  
+  
+
+  
+  <dl>
+    <dt>Included in:</dt>
+    <dd><span class='object_link'><a href="PotentialBuild.html" title="PotentialBuild (class)">PotentialBuild</a></span></dd>
+  </dl>
+  
+
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>lib/resultsprocessor.rb</dd>
+  </dl>
+  
+</div>
+
+<h2>Overview</h2><div class="docstring">
+  <div class="discussion">
+    
+<p>Implementation for parsing of build messages</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
+
+
+
+
+
+
+  
+    <h2>
+      Instance Method Summary
+      <small><a href="#" class="summary_toggle">collapse</a></small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#get_win32_filename-instance_method" title="#get_win32_filename (instance method)">#<strong>get_win32_filename</strong>(function, name)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#match_type_to_possible_fortran-instance_method" title="#match_type_to_possible_fortran (instance method)">#<strong>match_type_to_possible_fortran</strong>(err_line)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parse_cppcheck_line-instance_method" title="#parse_cppcheck_line (instance method)">#<strong>parse_cppcheck_line</strong>(src_path, build_path, line)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parse_custom_check_line-instance_method" title="#parse_custom_check_line (instance method)">#<strong>parse_custom_check_line</strong>(src_path, build_path, line)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parse_error_messages-instance_method" title="#parse_error_messages (instance method)">#<strong>parse_error_messages</strong>(src_dir, build_dir, output)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parse_gcc_line-instance_method" title="#parse_gcc_line (instance method)">#<strong>parse_gcc_line</strong>(src_path, build_path, line)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parse_generic_line-instance_method" title="#parse_generic_line (instance method)">#<strong>parse_generic_line</strong>(src_dir, build_dir, line)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parse_msvc_line-instance_method" title="#parse_msvc_line (instance method)">#<strong>parse_msvc_line</strong>(src_dir, build_dir, line)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parse_package_names-instance_method" title="#parse_package_names (instance method)">#<strong>parse_package_names</strong>(output)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#parse_python_or_latex_line-instance_method" title="#parse_python_or_latex_line (instance method)">#<strong>parse_python_or_latex_line</strong>(src_dir, build_dir, line)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#process_cmake_results-instance_method" title="#process_cmake_results (instance method)">#<strong>process_cmake_results</strong>(src_dir, build_dir, stderr, cmake_exit_code, is_package)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#process_cppcheck_results-instance_method" title="#process_cppcheck_results (instance method)">#<strong>process_cppcheck_results</strong>(src_dir, build_dir, stderr, result)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#process_ctest_results-instance_method" title="#process_ctest_results (instance method)">#<strong>process_ctest_results</strong>(src_dir, build_dir, test_dir)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#process_custom_check_results-instance_method" title="#process_custom_check_results (instance method)">#<strong>process_custom_check_results</strong>(src_dir, build_dir, stdout, stderr, result)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#process_gcc_results-instance_method" title="#process_gcc_results (instance method)">#<strong>process_gcc_results</strong>(src_path, build_path, stderr, gcc_exit_code)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#process_lcov_results-instance_method" title="#process_lcov_results (instance method)">#<strong>process_lcov_results</strong>(out)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#process_msvc_results-instance_method" title="#process_msvc_results (instance method)">#<strong>process_msvc_results</strong>(src_dir, build_dir, stdout, msvc_exit_code)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#process_python_results-instance_method" title="#process_python_results (instance method)">#<strong>process_python_results</strong>(src_dir, build_dir, stdout, stderr, python_exit_code)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#recover_file_case-instance_method" title="#recover_file_case (instance method)">#<strong>recover_file_case</strong>(name)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#relative_path-instance_method" title="#relative_path (instance method)">#<strong>relative_path</strong>(path, src_dir, build_dir)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'></div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+
+
+  <div id="instance_method_details" class="method_details_list">
+    <h2>Instance Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="get_win32_filename-instance_method">
+  
+    #<strong>get_win32_filename</strong>(function, name)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+25
+26
+27
+28
+29
+30
+31
+32</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 25</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_get_win32_filename'>get_win32_filename</span><span class='lparen'>(</span><span class='id identifier rubyid_function'>function</span><span class='comma'>,</span> <span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span>
+  <span class='comment'># :nocov: we don&#39;t test on windows currently
+</span>  <span class='id identifier rubyid_max_path'>max_path</span> <span class='op'>=</span> <span class='int'>1024</span>
+  <span class='id identifier rubyid_short_name'>short_name</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'> </span><span class='tstring_end'>&#39;</span></span> <span class='op'>*</span> <span class='id identifier rubyid_max_path'>max_path</span>
+  <span class='id identifier rubyid_lfn_size'>lfn_size</span> <span class='op'>=</span> <span class='const'>Win32API</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>kernel32</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_function'>function</span><span class='comma'>,</span> <span class='qwords_beg'>%w[</span><span class='tstring_content'>P</span><span class='words_sep'> </span><span class='tstring_content'>P</span><span class='words_sep'> </span><span class='tstring_content'>L</span><span class='tstring_end'>]</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>L</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='comma'>,</span> <span class='id identifier rubyid_short_name'>short_name</span><span class='comma'>,</span> <span class='id identifier rubyid_max_path'>max_path</span><span class='rparen'>)</span>
+  <span class='lparen'>(</span><span class='int'>1</span><span class='op'>..</span><span class='id identifier rubyid_max_path'>max_path</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span><span class='lparen'>(</span><span class='id identifier rubyid_lfn_size'>lfn_size</span><span class='rparen'>)</span> <span class='op'>?</span> <span class='id identifier rubyid_short_name'>short_name</span><span class='lbracket'>[</span><span class='int'>0</span><span class='op'>..</span><span class='id identifier rubyid_lfn_size'>lfn_size</span> <span class='op'>-</span> <span class='int'>1</span><span class='rbracket'>]</span> <span class='op'>:</span> <span class='id identifier rubyid_name'>name</span> <span class='comment'># rubocop:disable Performance/RangeInclude
+</span>  <span class='comment'># :nocov:
+</span><span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="match_type_to_possible_fortran-instance_method">
+  
+    #<strong>match_type_to_possible_fortran</strong>(err_line)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+129
+130
+131
+132
+133</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 129</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_match_type_to_possible_fortran'>match_type_to_possible_fortran</span><span class='lparen'>(</span><span class='id identifier rubyid_err_line'>err_line</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_type'>type</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span>
+  <span class='id identifier rubyid_type'>type</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>warning</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>if</span> <span class='id identifier rubyid_err_line'>err_line</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>.f90</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='comment'># this is a bad assumption, but right now fortran warnings are being taken as uncategorized build errors
+</span>  <span class='id identifier rubyid_type'>type</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parse_cppcheck_line-instance_method">
+  
+    #<strong>parse_cppcheck_line</strong>(src_path, build_path, line)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+96
+97
+98
+99
+100
+101</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 96</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parse_cppcheck_line'>parse_cppcheck_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+  <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>\[(?&lt;filename&gt;.*)\]:(?&lt;line_number&gt;[0-9]+):(?&lt;message_type&gt;\S+):(?&lt;message&gt;.*)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+  <span class='kw'>return</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span><span class='comma'>,</span> <span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line_number'>line_number</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='comma'>,</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span> <span class='kw'>unless</span> <span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>||</span> <span class='id identifier rubyid_filename'>filename</span> <span class='op'>==</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span> <span class='op'>||</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+
+  <span class='kw'>nil</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parse_custom_check_line-instance_method">
+  
+    #<strong>parse_custom_check_line</strong>(src_path, build_path, line)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 54</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parse_custom_check_line'>parse_custom_check_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+  <span class='comment'># JSON formatted output is expected here
+</span>  <span class='kw'>begin</span>
+    <span class='id identifier rubyid_json'>json</span> <span class='op'>=</span> <span class='const'>JSON</span><span class='period'>.</span><span class='id identifier rubyid_parse'>parse</span><span class='lparen'>(</span><span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+  <span class='kw'>rescue</span> <span class='const'>JSON</span><span class='op'>::</span><span class='const'>ParserError</span>
+    <span class='kw'>return</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span>
+      <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>DecentCI::resultsprocessor::parse_custom_check_line</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='kw'>__LINE__</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span>
+      <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Output of custom_check script was not formatted properly; should be individual line-by-line JSON objects</span><span class='tstring_end'>&#39;</span></span>
+    <span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>if</span> <span class='id identifier rubyid_json'>json</span><span class='period'>.</span><span class='id identifier rubyid_is_a?'>is_a?</span><span class='lparen'>(</span><span class='const'>Array</span><span class='rparen'>)</span>
+    <span class='kw'>return</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span>
+      <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>DecentCI::resultsprocessor::parse_custom_check_line</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='kw'>__LINE__</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span>
+      <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Output of custom_check script was not formatted properly, it was an array; should be individual line-by-line JSON objects</span><span class='tstring_end'>&#39;</span></span>
+    <span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># a quick helper function to read the varying keys in the hash
+</span>  <span class='id identifier rubyid_get_string_maybe'>get_string_maybe</span> <span class='op'>=</span> <span class='id identifier rubyid_lambda'>lambda</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_hash'>hash</span><span class='comma'>,</span> <span class='id identifier rubyid_key'>key</span><span class='comma'>,</span> <span class='id identifier rubyid_default_value'>default_value</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span><span class='op'>|</span>
+    <span class='id identifier rubyid_returner'>returner</span> <span class='op'>=</span> <span class='id identifier rubyid_default_value'>default_value</span>
+    <span class='id identifier rubyid_returner'>returner</span> <span class='op'>=</span> <span class='id identifier rubyid_hash'>hash</span><span class='lbracket'>[</span><span class='id identifier rubyid_key'>key</span><span class='rbracket'>]</span> <span class='kw'>unless</span> <span class='id identifier rubyid_hash'>hash</span><span class='lbracket'>[</span><span class='id identifier rubyid_key'>key</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_returner'>returner</span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># read each string, giving a good default value
+</span>  <span class='id identifier rubyid_tool'>tool</span> <span class='op'>=</span> <span class='id identifier rubyid_get_string_maybe'>get_string_maybe</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>tool</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_file'>file</span> <span class='op'>=</span> <span class='id identifier rubyid_get_string_maybe'>get_string_maybe</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>file</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>(Unknown file)</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_line_num'>line_num</span> <span class='op'>=</span> <span class='id identifier rubyid_get_string_maybe'>get_string_maybe</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>line</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='int'>0</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_column'>column</span> <span class='op'>=</span> <span class='id identifier rubyid_get_string_maybe'>get_string_maybe</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>column</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='int'>0</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_messagetype'>messagetype</span> <span class='op'>=</span> <span class='id identifier rubyid_get_string_maybe'>get_string_maybe</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>messagetype</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_message'>message</span> <span class='op'>=</span> <span class='id identifier rubyid_get_string_maybe'>get_string_maybe</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>message</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>(No message)</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_id'>id</span> <span class='op'>=</span> <span class='id identifier rubyid_get_string_maybe'>get_string_maybe</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_json'>json</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>id</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+
+  <span class='comment'># make the message nice based on what keys are there
+</span>  <span class='id identifier rubyid_message'>message</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_id'>id</span><span class='embexpr_end'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_message'>message</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>unless</span> <span class='id identifier rubyid_id'>id</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='id identifier rubyid_message'>message</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_tool'>tool</span><span class='embexpr_end'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_message'>message</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>unless</span> <span class='id identifier rubyid_tool'>tool</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+
+  <span class='comment'># then just return a good codemessage
+</span>  <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_file'>file</span><span class='comma'>,</span> <span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line_num'>line_num</span><span class='comma'>,</span> <span class='id identifier rubyid_column'>column</span><span class='comma'>,</span> <span class='id identifier rubyid_messagetype'>messagetype</span><span class='comma'>,</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parse_error_messages-instance_method">
+  
+    #<strong>parse_error_messages</strong>(src_dir, build_dir, output)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 316</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parse_error_messages'>parse_error_messages</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_output'>output</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_output'>output</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_l'>l</span><span class='op'>|</span>
+    <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_gcc_line'>parse_gcc_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_l'>l</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_msvc_line'>parse_msvc_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_l'>l</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_generic_line'>parse_generic_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_l'>l</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_msg'>msg</span> <span class='kw'>unless</span> <span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_results'>results</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parse_gcc_line-instance_method">
+  
+    #<strong>parse_gcc_line</strong>(src_path, build_path, line)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 267</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parse_gcc_line'>parse_gcc_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+  <span class='comment'># &#39;Something.cc:32:4: multiple definition of variable&#39;
+</span>  <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>(?&lt;filename&gt;.*):(?&lt;line_number&gt;[0-9]+):(?&lt;column_number&gt;[0-9]+): (?&lt;message_type&gt;.+?): (?&lt;message&gt;.*)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+  <span class='id identifier rubyid_pattern_found'>pattern_found</span> <span class='op'>=</span> <span class='op'>!</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_message_type'>message_type</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='id identifier rubyid_message_is_error'>message_is_error</span> <span class='op'>=</span> <span class='op'>!</span><span class='lparen'>(</span><span class='qwords_beg'>%w[</span><span class='tstring_content'>info</span><span class='words_sep'> </span><span class='tstring_content'>note</span><span class='tstring_end'>]</span></span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_pattern_found'>pattern_found</span> <span class='op'>&amp;&amp;</span> <span class='id identifier rubyid_message_is_error'>message_is_error</span>
+    <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span><span class='comma'>,</span> <span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line_number'>line_number</span><span class='comma'>,</span> <span class='id identifier rubyid_column_number'>column_number</span><span class='comma'>,</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='comma'>,</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+  <span class='kw'>else</span>
+    <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>(?&lt;filename&gt;.*):(?&lt;line_number&gt;[0-9]+): (?&lt;message&gt;.*)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+    <span class='comment'># catch linker errors
+</span>    <span class='id identifier rubyid_pattern_found'>pattern_found</span> <span class='op'>=</span> <span class='op'>!</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_linker_error'>linker_error</span> <span class='op'>=</span> <span class='kw'>false</span>
+    <span class='id identifier rubyid_linker_error'>linker_error</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>multiple definition</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>undefined</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_any?'>any?</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_word'>word</span><span class='op'>|</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span> <span class='id identifier rubyid_word'>word</span> <span class='rbrace'>}</span> <span class='kw'>unless</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='kw'>return</span> <span class='kw'>nil</span> <span class='kw'>unless</span> <span class='id identifier rubyid_pattern_found'>pattern_found</span> <span class='op'>&amp;&amp;</span> <span class='id identifier rubyid_linker_error'>linker_error</span>
+
+    <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span><span class='comma'>,</span> <span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line_number'>line_number</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parse_generic_line-instance_method">
+  
+    #<strong>parse_generic_line</strong>(src_dir, build_dir, line)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+234
+235
+236
+237
+238
+239</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 234</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parse_generic_line'>parse_generic_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+  <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>\s*(?&lt;filename&gt;\S+):(?&lt;line_number&gt;[0-9]+): (?&lt;message&gt;.*)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+  <span class='kw'>return</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line_number'>line_number</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+
+  <span class='kw'>nil</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parse_msvc_line-instance_method">
+  
+    #<strong>parse_msvc_line</strong>(src_dir, build_dir, line)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 241</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parse_msvc_line'>parse_msvc_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+  <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>(?&lt;filename&gt;.+)\((?&lt;line_number&gt;[0-9]+)\): (?&lt;message_type&gt;.+?) (?&lt;message_code&gt;\S+): (?&lt;message&gt;.*) \[.*\]?</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+  <span class='id identifier rubyid_pattern_found'>pattern_found</span> <span class='op'>=</span> <span class='op'>!</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_message_type'>message_type</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='id identifier rubyid_message_is_error'>message_is_error</span> <span class='op'>=</span> <span class='op'>!</span><span class='lparen'>(</span><span class='qwords_beg'>%w[</span><span class='tstring_content'>info</span><span class='words_sep'> </span><span class='tstring_content'>note</span><span class='tstring_end'>]</span></span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_pattern_found'>pattern_found</span> <span class='op'>&amp;&amp;</span> <span class='id identifier rubyid_message_is_error'>message_is_error</span>
+    <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_recover_file_case'>recover_file_case</span><span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line_number'>line_number</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='comma'>,</span> <span class='id identifier rubyid_message_code'>message_code</span> <span class='op'>+</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'> </span><span class='tstring_end'>&#39;</span></span> <span class='op'>+</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+  <span class='kw'>else</span>
+    <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>(?&lt;filename&gt;.+) : (?&lt;message_type&gt;\S+) (?&lt;message_code&gt;\S+): (?&lt;message&gt;.*) \[.*\]?</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+    <span class='id identifier rubyid_pattern_2_found'>pattern_2_found</span> <span class='op'>=</span> <span class='op'>!</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_message_type'>message_type</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_message_2_is_error'>message_2_is_error</span> <span class='op'>=</span> <span class='op'>!</span><span class='lparen'>(</span><span class='qwords_beg'>%w[</span><span class='tstring_content'>info</span><span class='words_sep'> </span><span class='tstring_content'>note</span><span class='tstring_end'>]</span></span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='rparen'>)</span>
+    <span class='kw'>return</span> <span class='kw'>nil</span> <span class='kw'>unless</span> <span class='id identifier rubyid_pattern_2_found'>pattern_2_found</span> <span class='op'>&amp;&amp;</span> <span class='id identifier rubyid_message_2_is_error'>message_2_is_error</span>
+
+    <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_recover_file_case'>recover_file_case</span><span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='comma'>,</span> <span class='id identifier rubyid_message_code'>message_code</span> <span class='op'>+</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'> </span><span class='tstring_end'>&#39;</span></span> <span class='op'>+</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parse_package_names-instance_method">
+  
+    #<strong>parse_package_names</strong>(output)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+367
+368
+369
+370
+371
+372
+373
+374</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 367</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parse_package_names'>parse_package_names</span><span class='lparen'>(</span><span class='id identifier rubyid_output'>output</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_output'>output</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_l'>l</span><span class='op'>|</span>
+    <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>CPack: - package: (?&lt;filename&gt;.*) generated.</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_l'>l</span>
+    <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_filename'>filename</span> <span class='kw'>if</span> <span class='id identifier rubyid_filename'>filename</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_results'>results</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="parse_python_or_latex_line-instance_method">
+  
+    #<strong>parse_python_or_latex_line</strong>(src_dir, build_dir, line)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 327</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_parse_python_or_latex_line'>parse_python_or_latex_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_line_number'>line_number</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='comment'># Since we are just doing line-by-line parsing, it really limits what we can get, but we&#39;ll try our best anyway
+</span>  <span class='kw'>if</span> <span class='id identifier rubyid_line'>line</span><span class='period'>.</span><span class='id identifier rubyid_include?'>include?</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>LaTeX Error</span><span class='tstring_end'>&#39;</span></span>
+    <span class='comment'># ! LaTeX Error: Environment itemize undefined.
+</span>    <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^.*Error: (?&lt;message&gt;.+)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+    <span class='id identifier rubyid_compiler_string'>compiler_string</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>LaTeX</span><span class='tstring_end'>&#39;</span></span>
+  <span class='kw'>else</span>
+    <span class='comment'># assume Python
+</span>    <span class='comment'># TypeError: cannot concatenate &#39;str&#39; and &#39;int&#39; objects
+</span>    <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>File &quot;(?&lt;filename&gt;.+)&quot;, line (?&lt;line_number&gt;[0-9]+),.*</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+    <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^.*Error: (?&lt;message&gt;.+)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+    <span class='id identifier rubyid_compiler_string'>compiler_string</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Python</span><span class='tstring_end'>&#39;</span></span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>return</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line_number'>line_number</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_line_number'>line_number</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+
+  <span class='kw'>return</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_compiler_string'>compiler_string</span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span> <span class='kw'>unless</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+
+  <span class='kw'>nil</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="process_cmake_results-instance_method">
+  
+    #<strong>process_cmake_results</strong>(src_dir, build_dir, stderr, cmake_exit_code, is_package)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 135</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_process_cmake_results'>process_cmake_results</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_stderr'>stderr</span><span class='comma'>,</span> <span class='id identifier rubyid_cmake_exit_code'>cmake_exit_code</span><span class='comma'>,</span> <span class='id identifier rubyid_is_package'>is_package</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+
+  <span class='id identifier rubyid_file'>file</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='id identifier rubyid_line'>line</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+  <span class='id identifier rubyid_type'>type</span> <span class='op'>=</span> <span class='kw'>nil</span>
+
+  <span class='gvar'>$logger</span><span class='period'>.</span><span class='id identifier rubyid_info'>info</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Parsing cmake error results</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+
+  <span class='id identifier rubyid_previous_line'>previous_line</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+  <span class='id identifier rubyid_last_was_error_line'>last_was_error_line</span> <span class='op'>=</span> <span class='kw'>false</span>
+
+  <span class='id identifier rubyid_stderr'>stderr</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_err'>err</span><span class='op'>|</span>
+    <span class='comment'># Append next line to the message context for a CMake error
+</span>    <span class='kw'>if</span> <span class='id identifier rubyid_last_was_error_line'>last_was_error_line</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_results'>results</span><span class='period'>.</span><span class='id identifier rubyid_empty?'>empty?</span>
+      <span class='id identifier rubyid_stripped'>stripped</span> <span class='op'>=</span> <span class='id identifier rubyid_err'>err</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span>
+      <span class='kw'>if</span> <span class='id identifier rubyid_stripped'>stripped</span> <span class='op'>!=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+        <span class='id identifier rubyid_last_item'>last_item</span> <span class='op'>=</span> <span class='id identifier rubyid_results'>results</span><span class='period'>.</span><span class='id identifier rubyid_last'>last</span>
+        <span class='id identifier rubyid_last_item'>last_item</span><span class='period'>.</span><span class='id identifier rubyid_message'>message</span> <span class='op'>=</span> <span class='id identifier rubyid_last_item'>last_item</span><span class='period'>.</span><span class='id identifier rubyid_message'>message</span> <span class='op'>+</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>; </span><span class='tstring_end'>&#39;</span></span> <span class='op'>+</span> <span class='id identifier rubyid_stripped'>stripped</span>
+        <span class='id identifier rubyid_results'>results</span><span class='lbracket'>[</span><span class='id identifier rubyid_results'>results</span><span class='period'>.</span><span class='id identifier rubyid_length'>length</span> <span class='op'>-</span> <span class='int'>1</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='id identifier rubyid_last_item'>last_item</span>
+      <span class='kw'>end</span>
+    <span class='kw'>end</span>
+
+    <span class='id identifier rubyid_last_was_error_line'>last_was_error_line</span> <span class='op'>=</span> <span class='kw'>false</span>
+
+    <span class='gvar'>$logger</span><span class='period'>.</span><span class='id identifier rubyid_debug'>debug</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Parsing cmake error Line: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_err'>err</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+    <span class='kw'>if</span> <span class='id identifier rubyid_err'>err</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span> <span class='op'>==</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+      <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_file'>file</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_line'>line</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+        <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_file'>file</span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='id identifier rubyid_type'>type</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_previous_line'>previous_line</span><span class='embexpr_end'>}</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_err'>err</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+        <span class='id identifier rubyid_last_was_error_line'>last_was_error_line</span> <span class='op'>=</span> <span class='kw'>true</span>
+      <span class='kw'>end</span>
+      <span class='id identifier rubyid_file'>file</span> <span class='op'>=</span> <span class='kw'>nil</span>
+      <span class='id identifier rubyid_line'>line</span> <span class='op'>=</span> <span class='kw'>nil</span>
+      <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+      <span class='id identifier rubyid_type'>type</span> <span class='op'>=</span> <span class='kw'>nil</span>
+    <span class='kw'>elsif</span> <span class='id identifier rubyid_file'>file</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+      <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^CPack Error: (?&lt;message&gt;.*)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_err'>err</span>
+      <span class='kw'>unless</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+        <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>CMakeLists.txt</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='int'>1</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_previous_line'>previous_line</span><span class='embexpr_end'>}</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_err'>err</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+        <span class='id identifier rubyid_last_was_error_line'>last_was_error_line</span> <span class='op'>=</span> <span class='kw'>true</span>
+      <span class='kw'>end</span>
+
+      <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^CMake Error: (?&lt;message&gt;.*)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_err'>err</span>
+      <span class='kw'>unless</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+        <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>CMakeLists.txt</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='int'>1</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_previous_line'>previous_line</span><span class='embexpr_end'>}</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_err'>err</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+        <span class='id identifier rubyid_last_was_error_line'>last_was_error_line</span> <span class='op'>=</span> <span class='kw'>true</span>
+      <span class='kw'>end</span>
+
+      <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^ERROR: (?&lt;message&gt;.*)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_err'>err</span>
+      <span class='kw'>unless</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+        <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>CMakeLists.txt</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='int'>1</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_previous_line'>previous_line</span><span class='embexpr_end'>}</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_err'>err</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+        <span class='id identifier rubyid_last_was_error_line'>last_was_error_line</span> <span class='op'>=</span> <span class='kw'>true</span>
+      <span class='kw'>end</span>
+
+      <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^WARNING: (?&lt;message&gt;.*)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_err'>err</span>
+      <span class='kw'>unless</span> <span class='id identifier rubyid_message'>message</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+        <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>CMakeLists.txt</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='int'>1</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>warning</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_previous_line'>previous_line</span><span class='embexpr_end'>}</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_err'>err</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+        <span class='id identifier rubyid_last_was_error_line'>last_was_error_line</span> <span class='op'>=</span> <span class='kw'>true</span>
+      <span class='kw'>end</span>
+
+      <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>CMake (?&lt;message_type&gt;\S+) at (?&lt;filename&gt;.*):(?&lt;line_number&gt;[0-9]+) \(\S+\):$</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_err'>err</span>
+
+      <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_line_number'>line_number</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+        <span class='id identifier rubyid_file'>file</span> <span class='op'>=</span> <span class='id identifier rubyid_filename'>filename</span>
+        <span class='id identifier rubyid_line'>line</span> <span class='op'>=</span> <span class='id identifier rubyid_line_number'>line_number</span>
+        <span class='id identifier rubyid_type'>type</span> <span class='op'>=</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>?</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span> <span class='op'>:</span> <span class='id identifier rubyid_message_type'>message_type</span><span class='period'>.</span><span class='id identifier rubyid_downcase'>downcase</span>
+      <span class='kw'>else</span>
+        <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>(?&lt;filename&gt;.*):(?&lt;line_number&gt;[0-9]+):$</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_err'>err</span>
+
+        <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_filename'>filename</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_line_number'>line_number</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span> <span class='op'>!~</span> <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>file included</span><span class='regexp_end'>/i</span></span><span class='rparen'>)</span> <span class='op'>&amp;&amp;</span> <span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span> <span class='op'>!~</span> <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^\s*from\s+</span><span class='regexp_end'>/i</span></span><span class='rparen'>)</span>
+          <span class='id identifier rubyid_file'>file</span> <span class='op'>=</span> <span class='id identifier rubyid_filename'>filename</span>
+          <span class='id identifier rubyid_line'>line</span> <span class='op'>=</span> <span class='id identifier rubyid_line_number'>line_number</span>
+          <span class='id identifier rubyid_type'>type</span> <span class='op'>=</span> <span class='id identifier rubyid_match_type_to_possible_fortran'>match_type_to_possible_fortran</span><span class='lparen'>(</span><span class='id identifier rubyid_err'>err</span><span class='rparen'>)</span>
+        <span class='kw'>end</span>
+      <span class='kw'>end</span>
+    <span class='kw'>else</span>
+      <span class='op'>+</span><span class='id identifier rubyid_msg'>msg</span> <span class='op'>&lt;&lt;</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span> <span class='kw'>if</span> <span class='id identifier rubyid_msg'>msg</span> <span class='op'>!=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+      <span class='op'>+</span><span class='id identifier rubyid_msg'>msg</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_err'>err</span>
+    <span class='kw'>end</span>
+
+    <span class='id identifier rubyid_previous_line'>previous_line</span> <span class='op'>=</span> <span class='id identifier rubyid_err'>err</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span>
+    <span class='id identifier rubyid_previous_line'>previous_line</span> <span class='op'>+=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>; </span><span class='tstring_end'>&#39;</span></span> <span class='kw'>if</span> <span class='id identifier rubyid_previous_line'>previous_line</span> <span class='op'>!=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># get any lingering message from the last line
+</span>  <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_file'>file</span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='id identifier rubyid_type'>type</span><span class='comma'>,</span> <span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_file'>file</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_line'>line</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+
+  <span class='id identifier rubyid_results'>results</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_r'>r</span><span class='op'>|</span> <span class='gvar'>$logger</span><span class='period'>.</span><span class='id identifier rubyid_debug'>debug</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>CMake error message parsed: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_r'>r</span><span class='period'>.</span><span class='id identifier rubyid_inspect'>inspect</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+
+  <span class='kw'>if</span> <span class='id identifier rubyid_is_package'>is_package</span>
+    <span class='ivar'>@package_results</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_results'>results</span><span class='rparen'>)</span>
+  <span class='kw'>else</span>
+    <span class='ivar'>@build_results</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_results'>results</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_cmake_exit_code'>cmake_exit_code</span><span class='period'>.</span><span class='id identifier rubyid_zero?'>zero?</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="process_cppcheck_results-instance_method">
+  
+    #<strong>process_cppcheck_results</strong>(src_dir, build_dir, stderr, result)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 117</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_process_cppcheck_results'>process_cppcheck_results</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_stderr'>stderr</span><span class='comma'>,</span> <span class='id identifier rubyid_result'>result</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_stderr'>stderr</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_line'>line</span><span class='op'>|</span>
+    <span class='kw'>next</span> <span class='kw'>if</span> <span class='id identifier rubyid_line'>line</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span> <span class='op'>==</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+
+    <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_cppcheck_line'>parse_cppcheck_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_msg'>msg</span> <span class='kw'>unless</span> <span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@build_results</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_results'>results</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_zero?'>zero?</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="process_ctest_results-instance_method">
+  
+    #<strong>process_ctest_results</strong>(src_dir, build_dir, test_dir)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 403</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_process_ctest_results'>process_ctest_results</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_test_dir'>test_dir</span><span class='rparen'>)</span>
+  <span class='kw'>unless</span> <span class='const'>File</span><span class='period'>.</span><span class='id identifier rubyid_directory?'>directory?</span><span class='lparen'>(</span><span class='id identifier rubyid_test_dir'>test_dir</span><span class='rparen'>)</span>
+    <span class='gvar'>$logger</span><span class='period'>.</span><span class='id identifier rubyid_error'>error</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Error: test_dir </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_test_dir'>test_dir</span><span class='embexpr_end'>}</span><span class='tstring_content'> does not exist, cannot parse test results</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+    <span class='kw'>return</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_messages'>messages</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+
+  <span class='const'>Find</span><span class='period'>.</span><span class='id identifier rubyid_find'>find</span><span class='lparen'>(</span><span class='id identifier rubyid_test_dir'>test_dir</span><span class='rparen'>)</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_path'>path</span><span class='op'>|</span>
+    <span class='kw'>next</span> <span class='kw'>unless</span> <span class='id identifier rubyid_path'>path</span><span class='period'>.</span><span class='id identifier rubyid_match?'>match?</span><span class='lparen'>(</span><span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>.*Test.xml</span><span class='regexp_end'>/</span></span><span class='rparen'>)</span>
+
+    <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+    <span class='comment'># read the test.xml file but make sure to close it
+</span>    <span class='id identifier rubyid_f'>f</span> <span class='op'>=</span> <span class='const'>File</span><span class='period'>.</span><span class='id identifier rubyid_open'>open</span><span class='lparen'>(</span><span class='id identifier rubyid_path'>path</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>r</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_contents'>contents</span> <span class='op'>=</span> <span class='id identifier rubyid_f'>f</span><span class='period'>.</span><span class='id identifier rubyid_read'>read</span>
+    <span class='id identifier rubyid_f'>f</span><span class='period'>.</span><span class='id identifier rubyid_close'>close</span>
+    <span class='comment'># then get the XML contents into a Ruby Hash
+</span>    <span class='id identifier rubyid_xml'>xml</span> <span class='op'>=</span> <span class='const'>Hash</span><span class='period'>.</span><span class='id identifier rubyid_from_xml'>from_xml</span><span class='lparen'>(</span><span class='id identifier rubyid_contents'>contents</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_test_results'>test_results</span> <span class='op'>=</span> <span class='id identifier rubyid_xml'>xml</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Site</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Testing</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_t'>t</span> <span class='op'>=</span> <span class='id identifier rubyid_test_results'>test_results</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Test</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+    <span class='kw'>unless</span> <span class='id identifier rubyid_t'>t</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+      <span class='id identifier rubyid_tests'>tests</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+      <span class='id identifier rubyid_tests'>tests</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_t'>t</span>
+      <span class='id identifier rubyid_tests'>tests</span><span class='period'>.</span><span class='id identifier rubyid_flatten!'>flatten!</span>
+
+      <span class='id identifier rubyid_tests'>tests</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_n'>n</span><span class='op'>|</span>
+        <span class='gvar'>$logger</span><span class='period'>.</span><span class='id identifier rubyid_debug'>debug</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>N: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_n'>n</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+        <span class='gvar'>$logger</span><span class='period'>.</span><span class='id identifier rubyid_debug'>debug</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Results: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_n'>n</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Results</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+        <span class='id identifier rubyid_r'>r</span> <span class='op'>=</span> <span class='id identifier rubyid_n'>n</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Results</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+        <span class='kw'>if</span> <span class='id identifier rubyid_n'>n</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Status</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span> <span class='op'>==</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>notrun</span><span class='tstring_end'>&#39;</span></span>
+          <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="TestResult.html" title="TestResult (class)">TestResult</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="TestResult.html#initialize-instance_method" title="TestResult#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_n'>n</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Name</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_n'>n</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Status</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>notrun</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+        <span class='kw'>elsif</span> <span class='id identifier rubyid_r'>r</span>
+          <span class='id identifier rubyid_m'>m</span> <span class='op'>=</span> <span class='id identifier rubyid_r'>r</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Measurement</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+          <span class='id identifier rubyid_value'>value</span> <span class='op'>=</span> <span class='kw'>nil</span>
+          <span class='id identifier rubyid_errors'>errors</span> <span class='op'>=</span> <span class='kw'>nil</span>
+
+          <span class='kw'>unless</span> <span class='id identifier rubyid_m'>m</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>||</span> <span class='id identifier rubyid_m'>m</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Value</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+            <span class='id identifier rubyid_value'>value</span> <span class='op'>=</span> <span class='id identifier rubyid_m'>m</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Value</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+            <span class='id identifier rubyid_errors'>errors</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_error_messages'>parse_error_messages</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_value'>value</span><span class='rparen'>)</span>
+            <span class='id identifier rubyid_value'>value</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_line'>line</span><span class='op'>|</span>
+              <span class='kw'>if</span> <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>\[decent_ci:test_result:message\] (?&lt;message&gt;.+)</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_line'>line</span>
+                <span class='id identifier rubyid_messages'>messages</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="TestMessage.html" title="TestMessage (class)">TestMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="TestMessage.html#initialize-instance_method" title="TestMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_n'>n</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Name</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_message'>message</span><span class='rparen'>)</span>
+              <span class='kw'>end</span>
+            <span class='kw'>end</span>
+          <span class='kw'>end</span>
+
+          <span class='id identifier rubyid_nm'>nm</span> <span class='op'>=</span> <span class='id identifier rubyid_r'>r</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>NamedMeasurement</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+
+          <span class='kw'>unless</span> <span class='id identifier rubyid_nm'>nm</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+            <span class='id identifier rubyid_failure_type'>failure_type</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+            <span class='id identifier rubyid_nm'>nm</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_measurement'>measurement</span><span class='op'>|</span>
+              <span class='kw'>next</span> <span class='kw'>if</span> <span class='id identifier rubyid_measurement'>measurement</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>name</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span> <span class='op'>!=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Exit Code</span><span class='tstring_end'>&#39;</span></span>
+
+              <span class='id identifier rubyid_ft'>ft</span> <span class='op'>=</span> <span class='id identifier rubyid_measurement'>measurement</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Value</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+              <span class='id identifier rubyid_failure_type'>failure_type</span> <span class='op'>=</span> <span class='id identifier rubyid_ft'>ft</span> <span class='kw'>unless</span> <span class='id identifier rubyid_ft'>ft</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+            <span class='kw'>end</span>
+
+            <span class='id identifier rubyid_nm'>nm</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_measurement'>measurement</span><span class='op'>|</span>
+              <span class='kw'>next</span> <span class='kw'>if</span> <span class='id identifier rubyid_measurement'>measurement</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>name</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span> <span class='op'>!=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Execution Time</span><span class='tstring_end'>&#39;</span></span>
+
+              <span class='id identifier rubyid_status_string'>status_string</span> <span class='op'>=</span> <span class='id identifier rubyid_n'>n</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Status</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span>
+              <span class='id identifier rubyid_status_string'>status_string</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>warning</span><span class='tstring_end'>&#39;</span></span> <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_value'>value</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span> <span class='op'>&amp;&amp;</span> <span class='id identifier rubyid_value'>value</span> <span class='op'>=~</span> <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>\[decent_ci:test_result:warn\]</span><span class='regexp_end'>/</span></span> <span class='op'>&amp;&amp;</span> <span class='id identifier rubyid_status_string'>status_string</span> <span class='op'>==</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>passed</span><span class='tstring_end'>&#39;</span></span>
+              <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="TestResult.html" title="TestResult (class)">TestResult</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="TestResult.html#initialize-instance_method" title="TestResult#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_n'>n</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Name</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_status_string'>status_string</span><span class='comma'>,</span> <span class='id identifier rubyid_measurement'>measurement</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>Value</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_value'>value</span><span class='comma'>,</span> <span class='id identifier rubyid_errors'>errors</span><span class='comma'>,</span> <span class='id identifier rubyid_failure_type'>failure_type</span><span class='rparen'>)</span>
+            <span class='kw'>end</span>
+          <span class='kw'>end</span>
+        <span class='kw'>end</span>
+      <span class='kw'>end</span>
+    <span class='kw'>end</span>
+
+    <span class='kw'>return</span> <span class='kw'>nil</span><span class='comma'>,</span> <span class='id identifier rubyid_messages'>messages</span> <span class='kw'>if</span> <span class='id identifier rubyid_results'>results</span><span class='period'>.</span><span class='id identifier rubyid_empty?'>empty?</span>
+
+    <span class='kw'>return</span> <span class='id identifier rubyid_results'>results</span><span class='comma'>,</span> <span class='id identifier rubyid_messages'>messages</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="process_custom_check_results-instance_method">
+  
+    #<strong>process_custom_check_results</strong>(src_dir, build_dir, stdout, stderr, result)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 103</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_process_custom_check_results'>process_custom_check_results</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_stdout'>stdout</span><span class='comma'>,</span> <span class='id identifier rubyid_stderr'>stderr</span><span class='comma'>,</span> <span class='id identifier rubyid_result'>result</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='lbracket'>[</span><span class='id identifier rubyid_stdout'>stdout</span><span class='comma'>,</span> <span class='id identifier rubyid_stderr'>stderr</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_output_stream'>output_stream</span><span class='op'>|</span>
+    <span class='id identifier rubyid_output_stream'>output_stream</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_line'>line</span><span class='op'>|</span>
+      <span class='kw'>next</span> <span class='kw'>if</span> <span class='id identifier rubyid_line'>line</span><span class='period'>.</span><span class='id identifier rubyid_strip'>strip</span> <span class='op'>==</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_end'>&#39;</span></span>
+
+      <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_custom_check_line'>parse_custom_check_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+      <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_msg'>msg</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@build_results</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_results'>results</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_result'>result</span><span class='period'>.</span><span class='id identifier rubyid_zero?'>zero?</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="process_gcc_results-instance_method">
+  
+    #<strong>process_gcc_results</strong>(src_path, build_path, stderr, gcc_exit_code)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 286</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_process_gcc_results'>process_gcc_results</span><span class='lparen'>(</span><span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='comma'>,</span> <span class='id identifier rubyid_stderr'>stderr</span><span class='comma'>,</span> <span class='id identifier rubyid_gcc_exit_code'>gcc_exit_code</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_linker_msg'>linker_msg</span> <span class='op'>=</span> <span class='kw'>nil</span>
+
+  <span class='id identifier rubyid_stderr'>stderr</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_line'>line</span><span class='op'>|</span>
+    <span class='kw'>unless</span> <span class='id identifier rubyid_linker_msg'>linker_msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+      <span class='kw'>if</span> <span class='id identifier rubyid_line'>line</span><span class='period'>.</span><span class='id identifier rubyid_match?'>match?</span><span class='lparen'>(</span><span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^\s.*</span><span class='regexp_end'>/</span></span><span class='rparen'>)</span>
+        <span class='id identifier rubyid_linker_msg'>linker_msg</span> <span class='op'>+=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span> <span class='op'>+</span> <span class='id identifier rubyid_line'>line</span>
+      <span class='kw'>else</span>
+        <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>CMakeLists.txt</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_linker_msg'>linker_msg</span><span class='rparen'>)</span>
+        <span class='id identifier rubyid_linker_msg'>linker_msg</span> <span class='op'>=</span> <span class='kw'>nil</span>
+      <span class='kw'>end</span>
+    <span class='kw'>end</span>
+
+    <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_gcc_line'>parse_gcc_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_path'>src_path</span><span class='comma'>,</span> <span class='id identifier rubyid_build_path'>build_path</span><span class='comma'>,</span> <span class='id identifier rubyid_line'>line</span><span class='rparen'>)</span>
+    <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+      <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_msg'>msg</span>
+    <span class='kw'>elsif</span> <span class='id identifier rubyid_line'>line</span><span class='period'>.</span><span class='id identifier rubyid_match?'>match?</span><span class='lparen'>(</span><span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>^Undefined symbols for architecture.*</span><span class='regexp_end'>/</span></span><span class='rparen'>)</span>
+      <span class='comment'># try to catch some goofy clang linker errors that don&#39;t give us very much info
+</span>      <span class='id identifier rubyid_linker_msg'>linker_msg</span> <span class='op'>=</span> <span class='id identifier rubyid_line'>line</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='const'><span class='object_link'><a href="CodeMessage.html" title="CodeMessage (class)">CodeMessage</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="CodeMessage.html#initialize-instance_method" title="CodeMessage#initialize (method)">new</a></span></span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>CMakeLists.txt</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='int'>0</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>error</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_linker_msg'>linker_msg</span><span class='rparen'>)</span> <span class='kw'>unless</span> <span class='id identifier rubyid_linker_msg'>linker_msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+
+  <span class='ivar'>@build_results</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_results'>results</span><span class='rparen'>)</span>
+
+  <span class='id identifier rubyid_gcc_exit_code'>gcc_exit_code</span><span class='period'>.</span><span class='id identifier rubyid_zero?'>zero?</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="process_lcov_results-instance_method">
+  
+    #<strong>process_lcov_results</strong>(out)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 376</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_process_lcov_results'>process_lcov_results</span><span class='lparen'>(</span><span class='id identifier rubyid_out'>out</span><span class='rparen'>)</span>
+  <span class='comment'># Overall coverage rate:
+</span>  <span class='comment'>#  lines......: 67.9% (173188 of 255018 lines)
+</span>  <span class='comment'>#  functions..: 83.8% (6228 of 7433 functions)
+</span>
+  <span class='id identifier rubyid_total_lines'>total_lines</span> <span class='op'>=</span> <span class='int'>0</span>
+  <span class='id identifier rubyid_covered_lines'>covered_lines</span> <span class='op'>=</span> <span class='int'>0</span>
+  <span class='id identifier rubyid_total_functions'>total_functions</span> <span class='op'>=</span> <span class='int'>0</span>
+  <span class='id identifier rubyid_covered_functions'>covered_functions</span> <span class='op'>=</span> <span class='int'>0</span>
+  <span class='id identifier rubyid_total_lines_str'>total_lines_str</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='id identifier rubyid_covered_lines_str'>covered_lines_str</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='id identifier rubyid_total_functions_str'>total_functions_str</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='id identifier rubyid_covered_functions_str'>covered_functions_str</span> <span class='op'>=</span> <span class='kw'>nil</span>
+
+  <span class='id identifier rubyid_out'>out</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_l'>l</span><span class='op'>|</span>
+    <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>.*\((?&lt;covered_lines_str&gt;[0-9]+) of (?&lt;total_lines_str&gt;[0-9]+) lines.*</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_l'>l</span>
+    <span class='id identifier rubyid_covered_lines'>covered_lines</span> <span class='op'>=</span> <span class='id identifier rubyid_covered_lines_str'>covered_lines_str</span><span class='period'>.</span><span class='id identifier rubyid_to_i'>to_i</span> <span class='kw'>unless</span> <span class='id identifier rubyid_covered_lines_str'>covered_lines_str</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_total_lines'>total_lines</span> <span class='op'>=</span> <span class='id identifier rubyid_total_lines_str'>total_lines_str</span><span class='period'>.</span><span class='id identifier rubyid_to_i'>to_i</span> <span class='kw'>unless</span> <span class='id identifier rubyid_total_lines_str'>total_lines_str</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+
+    <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>.*\((?&lt;covered_functions_str&gt;[0-9]+) of (?&lt;total_functions_str&gt;[0-9]+) functions.*</span><span class='regexp_end'>/</span></span> <span class='op'>=~</span> <span class='id identifier rubyid_l'>l</span>
+    <span class='id identifier rubyid_covered_functions'>covered_functions</span> <span class='op'>=</span> <span class='id identifier rubyid_covered_functions_str'>covered_functions_str</span><span class='period'>.</span><span class='id identifier rubyid_to_i'>to_i</span> <span class='kw'>unless</span> <span class='id identifier rubyid_covered_functions_str'>covered_functions_str</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_total_functions'>total_functions</span> <span class='op'>=</span> <span class='id identifier rubyid_total_functions_str'>total_functions_str</span><span class='period'>.</span><span class='id identifier rubyid_to_i'>to_i</span> <span class='kw'>unless</span> <span class='id identifier rubyid_total_functions_str'>total_functions_str</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='kw'>end</span>
+
+  <span class='lbracket'>[</span><span class='id identifier rubyid_total_lines'>total_lines</span><span class='comma'>,</span> <span class='id identifier rubyid_covered_lines'>covered_lines</span><span class='comma'>,</span> <span class='id identifier rubyid_total_functions'>total_functions</span><span class='comma'>,</span> <span class='id identifier rubyid_covered_functions'>covered_functions</span><span class='rbracket'>]</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="process_msvc_results-instance_method">
+  
+    #<strong>process_msvc_results</strong>(src_dir, build_dir, stdout, msvc_exit_code)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+257
+258
+259
+260
+261
+262
+263
+264
+265</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 257</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_process_msvc_results'>process_msvc_results</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_stdout'>stdout</span><span class='comma'>,</span> <span class='id identifier rubyid_msvc_exit_code'>msvc_exit_code</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_stdout'>stdout</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_err'>err</span><span class='op'>|</span>
+    <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_msvc_line'>parse_msvc_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_err'>err</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_msg'>msg</span> <span class='kw'>unless</span> <span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='kw'>end</span>
+  <span class='ivar'>@build_results</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_results'>results</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_msvc_exit_code'>msvc_exit_code</span><span class='period'>.</span><span class='id identifier rubyid_zero?'>zero?</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="process_python_results-instance_method">
+  
+    #<strong>process_python_results</strong>(src_dir, build_dir, stdout, stderr, python_exit_code)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 349</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_process_python_results'>process_python_results</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_stdout'>stdout</span><span class='comma'>,</span> <span class='id identifier rubyid_stderr'>stderr</span><span class='comma'>,</span> <span class='id identifier rubyid_python_exit_code'>python_exit_code</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_stdout'>stdout</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_err'>err</span><span class='op'>|</span>
+    <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_python_or_latex_line'>parse_python_or_latex_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_err'>err</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_msg'>msg</span> <span class='kw'>unless</span> <span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='kw'>end</span>
+  <span class='gvar'>$logger</span><span class='period'>.</span><span class='id identifier rubyid_debug'>debug</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>stdout results: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_results'>results</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='ivar'>@build_results</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_results'>results</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_results'>results</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_stderr'>stderr</span><span class='period'>.</span><span class='id identifier rubyid_encode'>encode</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>UTF-8</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='symbol'>:invalid</span> <span class='op'>=&gt;</span> <span class='symbol'>:replace</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_split'>split</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>\n</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_err'>err</span><span class='op'>|</span>
+    <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_parse_python_or_latex_line'>parse_python_or_latex_line</span><span class='lparen'>(</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_err'>err</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_results'>results</span> <span class='op'>&lt;&lt;</span> <span class='id identifier rubyid_msg'>msg</span> <span class='kw'>unless</span> <span class='id identifier rubyid_msg'>msg</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+  <span class='kw'>end</span>
+  <span class='gvar'>$logger</span><span class='period'>.</span><span class='id identifier rubyid_debug'>debug</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>stderr results: </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_results'>results</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='ivar'>@build_results</span><span class='period'>.</span><span class='id identifier rubyid_merge'>merge</span><span class='lparen'>(</span><span class='id identifier rubyid_results'>results</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_python_exit_code'>python_exit_code</span><span class='period'>.</span><span class='id identifier rubyid_zero?'>zero?</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="recover_file_case-instance_method">
+  
+    #<strong>recover_file_case</strong>(name)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 34</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_recover_file_case'>recover_file_case</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='const'>RbConfig</span><span class='op'>::</span><span class='const'>CONFIG</span><span class='lbracket'>[</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>target_os</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_match?'>match?</span><span class='lparen'>(</span><span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>mingw|mswin</span><span class='regexp_end'>/</span></span><span class='rparen'>)</span>
+    <span class='comment'># :nocov: we don&#39;t test on windows currently
+</span>    <span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>win32api</span><span class='tstring_end'>&#39;</span></span>
+
+    <span class='id identifier rubyid_get_short_win32_filename'>get_short_win32_filename</span> <span class='op'>=</span> <span class='id identifier rubyid_lambda'>lambda</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_this_name'>this_name</span><span class='op'>|</span>
+      <span class='id identifier rubyid_get_win32_filename'>get_win32_filename</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>GetShortPathName</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_this_name'>this_name</span><span class='rparen'>)</span>
+    <span class='kw'>end</span>
+
+    <span class='id identifier rubyid_get_long_win32_filename'>get_long_win32_filename</span> <span class='op'>=</span> <span class='id identifier rubyid_lambda'>lambda</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_this_name'>this_name</span><span class='op'>|</span>
+      <span class='id identifier rubyid_get_win32_filename'>get_win32_filename</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>GetLongPathName</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_this_name'>this_name</span><span class='rparen'>)</span>
+    <span class='kw'>end</span>
+
+    <span class='id identifier rubyid_get_long_win32_filename'>get_long_win32_filename</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_get_short_win32_filename'>get_short_win32_filename</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span><span class='lparen'>(</span><span class='id identifier rubyid_name'>name</span><span class='rparen'>)</span><span class='rparen'>)</span>
+    <span class='comment'># :nocov:
+</span>  <span class='kw'>else</span>
+    <span class='id identifier rubyid_name'>name</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="relative_path-instance_method">
+  
+    #<strong>relative_path</strong>(path, src_dir, build_dir)  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/resultsprocessor.rb', line 11</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_relative_path'>relative_path</span><span class='lparen'>(</span><span class='id identifier rubyid_path'>path</span><span class='comma'>,</span> <span class='id identifier rubyid_src_dir'>src_dir</span><span class='comma'>,</span> <span class='id identifier rubyid_build_dir'>build_dir</span><span class='rparen'>)</span>
+  <span class='const'>Pathname</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_src_dir'>src_dir</span><span class='embexpr_end'>}</span><span class='tstring_content'>/</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_path'>path</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_realpath'>realpath</span><span class='period'>.</span><span class='id identifier rubyid_relative_path_from'>relative_path_from</span><span class='lparen'>(</span><span class='const'>Pathname</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_this_src_dir'>this_src_dir</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_realdirpath'>realdirpath</span><span class='rparen'>)</span>
+<span class='kw'>rescue</span>
+  <span class='kw'>begin</span>
+    <span class='kw'>return</span> <span class='const'>Pathname</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_build_dir'>build_dir</span><span class='embexpr_end'>}</span><span class='tstring_content'>/</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_path'>path</span><span class='embexpr_end'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_realpath'>realpath</span><span class='period'>.</span><span class='id identifier rubyid_relative_path_from'>relative_path_from</span><span class='lparen'>(</span><span class='const'>Pathname</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_this_src_dir'>this_src_dir</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_realdirpath'>realdirpath</span><span class='rparen'>)</span>
+  <span class='kw'>rescue</span>
+    <span class='kw'>begin</span>
+      <span class='kw'>return</span> <span class='const'>Pathname</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_path'>path</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_realpath'>realpath</span><span class='period'>.</span><span class='id identifier rubyid_relative_path_from'>relative_path_from</span><span class='lparen'>(</span><span class='const'>Pathname</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_this_src_dir'>this_src_dir</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_realdirpath'>realdirpath</span><span class='rparen'>)</span>
+    <span class='kw'>rescue</span>
+      <span class='kw'>return</span> <span class='const'>Pathname</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_path'>path</span><span class='rparen'>)</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+</div>
+
+      <div id="footer">
+  Generated on Wed May 29 11:46:01 2019 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.19 (ruby-2.5.1).
+</div>
+
+    </div>
+  </body>
+</html>
