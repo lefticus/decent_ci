@@ -18,6 +18,9 @@ class CodeMessage
     @message = message
   end
 
+  # Checks if this instance constitutes a warning
+  #
+  # @return [Boolean] true if the code message is a warning, false otherwise
   def warning?
     @messagetype =~ /.*warn.*/i
   end
