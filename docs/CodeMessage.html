@@ -435,7 +435,9 @@
   
 
   
-    <span class="summary_desc"><div class='inline'></div></span>
+    <span class="summary_desc"><div class='inline'>
+<p>Checks if this instance constitutes a warning.</p>
+</div></span>
   
 </li>
 
@@ -787,9 +789,6 @@
       <pre class="lines">
 
 
-51
-52
-53
 54
 55
 56
@@ -806,10 +805,13 @@
 67
 68
 69
-70</pre>
+70
+71
+72
+73</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 51</span>
+      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 54</span>
 
 <span class='kw'>def</span> <span class='op'>&lt;=&gt;</span><span class='lparen'>(</span><span class='id identifier rubyid_other'>other</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_f'>f</span> <span class='op'>=</span> <span class='ivar'>@filename</span> <span class='op'>&lt;=&gt;</span> <span class='id identifier rubyid_other'>other</span><span class='period'>.</span><span class='id identifier rubyid_filename'>filename</span>
@@ -900,12 +902,12 @@
       <pre class="lines">
 
 
-43
-44
-45</pre>
+46
+47
+48</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 43</span>
+      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 46</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_eql?'>eql?</span><span class='lparen'>(</span><span class='id identifier rubyid_other'>other</span><span class='rparen'>)</span>
   <span class='lparen'>(</span><span class='kw'>self</span> <span class='op'>&lt;=&gt;</span> <span class='id identifier rubyid_other'>other</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_zero?'>zero?</span>
@@ -952,12 +954,12 @@
       <pre class="lines">
 
 
-25
-26
-27</pre>
+28
+29
+30</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 25</span>
+      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 28</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_error?'>error?</span>
   <span class='ivar'>@messagetype</span> <span class='op'>=~</span> <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>.*err.*</span><span class='regexp_end'>/i</span></span>
@@ -982,12 +984,12 @@
       <pre class="lines">
 
 
-35
-36
-37</pre>
+38
+39
+40</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 35</span>
+      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 38</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_hash'>hash</span>
   <span class='id identifier rubyid_inspect'>inspect</span><span class='period'>.</span><span class='id identifier rubyid_hash'>hash</span>
@@ -1012,14 +1014,14 @@
       <pre class="lines">
 
 
-29
-30
-31
 32
-33</pre>
+33
+34
+35
+36</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 29</span>
+      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 32</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_inspect'>inspect</span>
   <span class='id identifier rubyid_hash'>hash</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
@@ -1043,6 +1045,8 @@
 </h3><div class="docstring">
   <div class="discussion">
     
+<p>Checks if this instance constitutes a warning</p>
+
 
   </div>
 </div>
@@ -1058,6 +1062,11 @@
       
       
       
+        &mdash;
+        <div class='inline'>
+<p>true if the code message is a warning, false otherwise</p>
+</div>
+      
     </li>
   
 </ul>
@@ -1068,12 +1077,12 @@
       <pre class="lines">
 
 
-21
-22
-23</pre>
+24
+25
+26</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 21</span>
+      <pre class="code"><span class="info file"># File 'lib/codemessage.rb', line 24</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_warning?'>warning?</span>
   <span class='ivar'>@messagetype</span> <span class='op'>=~</span> <span class='tstring'><span class='regexp_beg'>/</span><span class='tstring_content'>.*warn.*</span><span class='regexp_end'>/i</span></span>
@@ -1088,7 +1097,7 @@
 </div>
 
       <div id="footer">
-  Generated on Wed May 29 11:46:01 2019 by
+  Generated on Wed May 29 12:01:52 2019 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.19 (ruby-2.5.1).
 </div>
