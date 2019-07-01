@@ -94,7 +94,8 @@ module ResultsProcessor
   end
 
   def parse_cppcheck_line(src_path, build_path, line)
-    /\[(?<filename>.*)\]:(?<line_number>[0-9]+):(?<message_type>\S+):(?<message>.*)/ =~ line
+    /\[(?<filename>.*):(?<line_number>[0-9]+)\]: (?<message_type>\S+) (?<message>.*)/ =~ line
+    message_type.tr!('()', '') unless message_type.nil?
     return CodeMessage.new(relative_path(filename, src_path, build_path), line_number, 0, message_type, message) unless filename.nil? || filename == '' || message_type.nil?
 
     nil

@@ -81,15 +81,18 @@ describe 'ResultsProcessor Testing' do
 
   context 'when calling parse_cppcheck_line' do
     it 'should properly parse a few variations' do
-      message = '[File.cc]:23:Error:Hey'
+      message = '[File.cc:23]: (error) Hey'
       response = parse_cppcheck_line('/src/path/', '/build/path', message)
       expect(response.error?).to be_truthy
-      message = '[File.cc]:23:PASS:Hey'
+      message = '[File.cc:23]: (PASS) Hey'
       response = parse_cppcheck_line('/src/path/', '/build/path', message)
       expect(response.error?).to be_falsey
-      message = '[]:23:PASS:Hey'
+      message = '[:23]: (PASS) Hey'
       response = parse_cppcheck_line('/src/path/', '/build/path', message)
       expect(response).to be_nil
+      message = '[src/EnergyPlus/PipeHeatTransfer.cc:1895]: (error) Uninitialized variable: AirVel'
+      response = parse_cppcheck_line('/src/path/', '/build/path', message)
+      expect(response).to be_truthy
     end
   end
 
