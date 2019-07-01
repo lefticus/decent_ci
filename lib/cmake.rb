@@ -197,7 +197,7 @@ module CMake
     ctest_filter = '' if ctest_filter.nil?
 
     test_dirs.each do |test_dir|
-      $logger.info("Running tests in dir: '#{test_dir}'")
+      $logger.info("Running tests in dir: '#{build_dir}/#{test_dir}'")
       env = { 'PATH' => cmake_remove_git_from_path(ENV['PATH']) }
       _, test_stderr, test_result = run_scripts(
         @config,

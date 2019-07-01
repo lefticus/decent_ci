@@ -689,7 +689,7 @@ class PotentialBuild
     unless @package_locations.nil?
       package_names_string = ''
       @package_locations.each do |location|
-        package_names_string += '; ' + Pathname.new(location).basename
+        package_names_string += '; ' + Pathname.new(location).basename.to_s
       end
     end
 
