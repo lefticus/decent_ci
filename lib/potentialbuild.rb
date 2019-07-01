@@ -69,7 +69,7 @@ class PotentialBuild
       @short_buildid = "#{@short_buildid}-PR#{@pull_id}"
     end
 
-    @package_location = nil
+    @package_locations = nil
     @test_results = nil
     @test_messages = []
     @build_results = SortedSet.new
@@ -245,7 +245,7 @@ class PotentialBuild
 
     start_time = Time.now
     begin
-      @package_location = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
+      @package_locations = cmake_package compiler, src_dir, build_dir, compiler[:build_type]
     rescue => e
       $logger.error("Error creating package #{e}")
       @package_time = Time.now - start_time
@@ -253,7 +253,7 @@ class PotentialBuild
     end
 
     @package_time = Time.now - start_time
-    @package_location
+    @package_locations
   end
 
   def needs_run(compiler)
@@ -397,7 +397,7 @@ class PotentialBuild
   end
 
   def next_build
-    @package_location = nil
+    @package_locations = nil
     @test_results = nil
     @test_messages = []
     @build_results = SortedSet.new
@@ -565,50 +565,52 @@ class PotentialBuild
     @dateprefix = DateTime.now.utc.strftime('%F') if @dateprefix.nil?
 
     unless @test_run
-      if !@package_location.nil? && @config.post_release_package
-        $logger.info("Uploading package #{@package_location}")
+      if !@package_locations.nil? && @config.post_release_package
+        $logger.info("Attempting to upload #{@package_locations.length} packages")
+        @package_locations.each do |location|
+          $logger.info("Uploading package #{location}")
 
-        num_tries = 3
-        try_num = 0
-        succeeded = false
+          num_tries = 3
+          try_num = 0
+          succeeded = false
 
-        fatal_failure = false
+          fatal_failure = false
 
-        asset_name = Pathname.new(@package_location).basename.to_s
-        while try_num < num_tries && !succeeded && !fatal_failure
-          response = nil
+          asset_name = Pathname.new(location).basename.to_s
+          while try_num < num_tries && !succeeded && !fatal_failure
+            response = nil
 
-          begin
-            response = github_query(@client) { @client.upload_asset(@release_url, @package_location, :content_type => compiler[:package_mimetype], :name => asset_name) }
-          rescue => e
-            if try_num.zero? && e.to_s.include?('already_exists')
-              $logger.error('already_exists error on 0th attempt, fatal, we shall not overwrite existing upload')
-              @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'error', "Error, asset already_exists on 0th try, refusing to upload asset: #{e}")
-              fatal_failure = true
-              try_num += 1
-              next
-            else
-              $logger.error("Error uploading asset, trying again: #{e}")
-              @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error while attempting to upload release asset.\nDuring attempt #{try_num}\n#{e}")
+            begin
+              response = github_query(@client) { @client.upload_asset(@release_url, location, :content_type => compiler[:package_mimetype], :name => asset_name) }
+            rescue => e
+              if try_num.zero? && e.to_s.include?('already_exists')
+                $logger.error('already_exists error on 0th attempt, fatal, we shall not overwrite existing upload')
+                @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'error', "Error, asset already_exists on 0th try, refusing to upload asset: #{e}")
+                fatal_failure = true
+                try_num += 1
+                next
+              else
+                $logger.error("Error uploading asset, trying again: #{e}")
+                @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error while attempting to upload release asset.\nDuring attempt #{try_num}\n#{e}")
+              end
             end
+
+            if response && response.state != 'new'
+              $logger.info("Asset upload appears to have succeeded. url: #{response.url}, state: #{response.state}")
+              succeeded = true
+            else
+              $logger.error('Asset upload appears to have failed, going to try and delete the failed bits.')
+              try_to_repost_asset(response, asset_name)
+            end
+
+            try_num += 1
           end
 
-          if response && response.state != 'new'
-            $logger.info("Asset upload appears to have succeeded. url: #{response.url}, state: #{response.state}")
-            succeeded = true
-          else
-            $logger.error('Asset upload appears to have failed, going to try and delete the failed bits.')
-            try_to_repost_asset(response, asset_name)
+          unless succeeded
+            $logger.error("After #{try_num} tries we still failed to upload the release asset.")
+            @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'error', "#{try_num} attempts where made to upload release assets and all failed")
           end
-
-          try_num += 1
         end
-
-        unless succeeded
-          $logger.error("After #{try_num} tries we still failed to upload the release asset.")
-          @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'error', "#{try_num} attempts where made to upload release assets and all failed")
-        end
-
       end
     end
 
@@ -683,6 +685,14 @@ class PotentialBuild
       end
     end
 
+    package_names_string = nil
+    unless @package_locations.nil?
+      package_names_string = ''
+      @package_locations.each do |location|
+        package_names_string += '; ' + Pathname.new(location).basename
+      end
+    end
+
     yaml_data = {
       'title' => build_base_name(compiler),
       'permalink' => "#{build_base_name(compiler)}.html",
@@ -703,9 +713,9 @@ class PotentialBuild
       'os' => @config.os,
       'os_release' => @config.os_release,
       'is_release' => release?,
-      'release_packaged' => !@package_location.nil?,
+      'release_packaged' => !@package_locations.nil?,
       'packaging_skipped' => compiler[:skip_packaging],
-      'package_name' => @package_location.nil? ? nil : Pathname.new(@package_location).basename,
+      'package_name' => package_names_string,
       'tag_name' => @tag_name,
       'commit_sha' => @commit_sha,
       'branch_name' => @branch_name,

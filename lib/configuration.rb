@@ -211,34 +211,6 @@ module Configuration
     generator
   end
 
-  def setup_compiler_package_extension(compiler, package_generator)
-    return compiler[:package_extension] unless compiler[:package_extension].nil?
-
-    case package_generator
-    when /.*NSIS.*/
-      extension = 'exe'
-    when /.*IFW.*/
-      extension = 'dmg'
-    when /.*STGZ.*/
-      extension = 'sh'
-    when /T.*/
-      /T(?<tar_type>[A-Z]+)/ =~ package_generator
-      extension = "tar.#{tar_type.downcase}"  # TGZ, e.g.
-    else
-      extension = package_generator.downcase  # ZIP, e.g.
-    end
-    extension
-  end
-
-  def setup_compiler_package_mimetype(compiler)
-    case compiler[:package_extension]
-    when 'DEB'
-      'application/x-deb'
-    else
-      'application/octet-stream'
-    end
-  end
-
   def setup_compiler_extra_flags(compiler, is_release)
     if is_release && !compiler[:cmake_extra_flags_release].nil?
       compiler[:cmake_extra_flags_release]
@@ -336,8 +308,7 @@ module Configuration
     compiler[:build_type] = 'Release' if compiler[:build_type].nil? || compiler[:build_type] == ''
     compiler[:build_generator] = setup_compiler_build_generator(compiler)
     compiler[:target_arch] = setup_compiler_target_arch(compiler)
-    compiler[:package_extension] = setup_compiler_package_extension(compiler, compiler[:build_package_generator])
-    compiler[:package_mimetype] = setup_compiler_package_mimetype(compiler)
+    compiler[:package_mimetype] = 'application/octet-stream'
     compiler[:skip_regression] = false if compiler[:skip_regression].nil?
     compiler[:collect_performance_results] = false if compiler[:collect_performance_results].nil?
     compiler[:ctest_filter] = '' if compiler[:ctest_filter].nil?

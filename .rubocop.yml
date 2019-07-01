@@ -37,6 +37,10 @@ Lint/UnneededCopDisableDirective:
 
 # *** Temporary Settings *** #
 
+# I just need to learn the best way to handle this
+Style/FloatDivision:
+  Enabled: false
+
 # This is just going to take a while
 Style/RescueStandardError:
   Enabled: false

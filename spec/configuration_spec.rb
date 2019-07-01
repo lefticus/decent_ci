@@ -199,22 +199,6 @@ describe 'Configuration Testing' do
       expect{ setup_compiler_package_generator({}, 'WHATOS') }.to raise_error(RuntimeError)  # bad OS
     end
   end
-  context 'when calling setup_compiler_package_extension' do
-    it 'should return the correct extension' do
-      expect(setup_compiler_package_extension({:package_extension => 'Already here'}, nil)).to eql 'Already here'
-      expect(setup_compiler_package_extension({}, 'NSIS')).to eql 'exe'
-      expect(setup_compiler_package_extension({}, 'IFW')).to eql 'dmg'
-      expect(setup_compiler_package_extension({}, 'STGZ')).to eql 'sh'
-      expect(setup_compiler_package_extension({}, 'TGZ')).to eql 'tar.gz'
-      expect(setup_compiler_package_extension({}, 'ZIP')).to eql 'zip'
-    end
-  end
-  context 'when calling setup_compiler_package_mimetype' do
-    it 'should return the correct mimetype' do
-      expect(setup_compiler_package_mimetype({:package_extension => 'DEB'})).to include 'x-deb'
-      expect(setup_compiler_package_mimetype({:package_extension => 'ELSE'})).to include 'octet'
-    end
-  end
   context 'when calling setup_compiler_extra_flags' do
     it 'should return the correct flags for non-releases' do
       expect(setup_compiler_extra_flags({:cmake_extra_flags => '-dg 1'}, false)).to eql '-dg 1'

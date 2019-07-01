@@ -151,34 +151,39 @@ module CMake
       # :nocov:
     end
 
-    if !compiler[:package_command].nil?
-      pack_stdout, pack_stderr, pack_result = run_scripts(
+    # initialize some variables to accrue over all generators
+    pack_stdout = ''
+    pack_stderr = ''
+    pack_result = 0
+
+    # convert the generator to an array if only one was given
+    generators_to_use = compiler[:build_package_generator]
+    generators_to_use = [generators_to_use] unless generators_to_use.is_a?(Array)
+
+    # then loop over each generator and call cpack
+    generators_to_use.each do |gen|
+      this_pack_stdout, this_pack_stderr, this_pack_result = run_scripts(
         @config,
-        ["cd #{build_dir} && #{compiler[:package_command]} "], 'PATH' => new_path
+        ["cd #{build_dir} && #{@config.cpack_bin} -G #{gen} -C #{build_type} "], 'PATH' => new_path
       )
-    else
-      pack_stdout, pack_stderr, pack_result = run_scripts(
-        @config,
-        ["cd #{build_dir} && #{@config.cpack_bin} -G #{compiler[:build_package_generator]} -C #{build_type} "], 'PATH' => new_path
-      )
+      pack_stdout += this_pack_stdout
+      pack_stderr += this_pack_stderr
+      pack_result += this_pack_result
     end
 
-    cmake_result = process_cmake_results(src_dir, build_dir, pack_stderr, pack_result, true)
+    cmake_result_is_true = process_cmake_results(src_dir, build_dir, pack_stderr, pack_result, true)
 
-    unless cmake_result
+    unless cmake_result_is_true
       raise "Error building package: #{pack_stderr}" if @package_results.empty?
 
       return nil
     end
 
     package_names = parse_package_names(pack_stdout)
-
     $logger.debug("package names parsed: #{package_names}")
     return nil if package_names.empty?
 
-    $logger.error("More than one package name was returned #{package_names}, returning the 1st one only") if package_names.size > 1
-
-    package_names[0]
+    package_names
   end
 
   def cmake_test(compiler, src_dir, build_dir, build_type, running_extra_here)
