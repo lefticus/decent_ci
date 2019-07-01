@@ -152,12 +152,13 @@ module CMake
     end
 
     # initialize some variables to accrue over all generators
-    pack_stdout, pack_stderr = '', ''
+    pack_stdout = ''
+    pack_stderr = ''
     pack_result = 0
 
     # convert the generator to an array if only one was given
     generators_to_use = compiler[:build_package_generator]
-    generators_to_use = [generators_to_use] unless generators_to_use.kind_of?(Array)
+    generators_to_use = [generators_to_use] unless generators_to_use.is_a?(Array)
 
     # then loop over each generator and call cpack
     generators_to_use.each do |gen|

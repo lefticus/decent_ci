@@ -95,7 +95,8 @@ class Build
   # note, only builds 'external' pull_requests. Internal ones would have already
   # been built as a branch
   def query_pull_requests
-    pull_requests = github_query(@client) { @client.pull_requests(@repository, :state => 'open', :per_page => 50) }  # I think this is where we want to add :accept => 'application/vnd.github.shadow-cat-preview+json' for draft PRs
+    # This line is where we want to add :accept => 'application/vnd.github.shadow-cat-preview+json' for draft PRs
+    pull_requests = github_query(@client) { @client.pull_requests(@repository, :state => 'open', :per_page => 50) }
 
     @pull_request_details = []
 
