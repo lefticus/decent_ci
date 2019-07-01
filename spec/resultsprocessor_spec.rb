@@ -104,13 +104,13 @@ describe 'ResultsProcessor Testing' do
     end
     it 'should handle invalid lines by ignoring them' do
       @build_results = SortedSet.new
-      stderr = "[File.cc]:23:Error:Hey\nOH HIA"
+      stderr = "[File.cc:23]: (Error) Hey\nOH HIA"
       process_cppcheck_results('/src/dir', '/build/dir', stderr, 0)
       expect(@build_results.length).to eql 1
     end
     it 'should handle blank lines by ignoring them' do
       @build_results = SortedSet.new
-      stderr = "[File.cc]:23:Error:Hey\n\n[File2.cc]:23:Error:Hey"
+      stderr = "[File.cc:23]: (Error) Hey\n\n[File2.cc:23]: (Error) Hey"
       process_cppcheck_results('/src/dir', '/build/dir', stderr, 0)
       expect(@build_results.length).to eql 2
     end

@@ -93,18 +93,6 @@ describe 'CMake Testing' do
       @package_results = SortedSet.new
       cmake_package(compiler, src_dir, build_dir, 'Debug')
     end
-    it 'should try to build with package_command defined' do
-      allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
-      @client = Octokit::Client.new(:access_token => 'abc')
-      @config = load_configuration('spec/resources', 'abc', false)
-      compiler = @config.compilers.first
-      compiler[:package_command] = "specialCommand"
-      src_dir = Dir.mktmpdir
-      build_dir = File.join(src_dir, 'build')
-      @package_results = SortedSet.new
-      cmake_package(compiler, src_dir, build_dir, 'Debug')
-    end
     it 'should try to build but fail with no package results' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
       allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
@@ -112,7 +100,6 @@ describe 'CMake Testing' do
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
       compiler = @config.compilers.first
-      compiler[:package_command] = "specialCommand"
       src_dir = Dir.mktmpdir
       build_dir = File.join(src_dir, 'build')
       @package_results = SortedSet.new
@@ -125,7 +112,6 @@ describe 'CMake Testing' do
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
       compiler = @config.compilers.first
-      compiler[:package_command] = "specialCommand"
       src_dir = Dir.mktmpdir
       build_dir = File.join(src_dir, 'build')
       @package_results = SortedSet.new([1, 2])
@@ -139,11 +125,12 @@ describe 'CMake Testing' do
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
       compiler = @config.compilers.first
-      compiler[:package_command] = "specialCommand"
       src_dir = Dir.mktmpdir
       build_dir = File.join(src_dir, 'build')
       @package_results = SortedSet.new([1, 2])
-      expect(cmake_package(compiler, src_dir, build_dir, 'Debug')).to eql 'hello'
+      response = cmake_package(compiler, src_dir, build_dir, 'Debug')
+      expect(response.length).to eql 1
+      expect(response[0]).to eql 'hello'
     end
   end
   context 'when calling cmake_test' do
