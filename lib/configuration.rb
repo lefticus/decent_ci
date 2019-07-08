@@ -250,7 +250,7 @@ module Configuration
   def setup_compiler_build_generator(compiler)
     return compiler[:build_generator] unless compiler[:build_generator].nil?
 
-    if compiler[:name].match?(/.*Visual Studio.*/i)
+    if compiler[:name].match(/.*Visual Studio.*/i)
       'Visual Studio 16 2019'
     else
       'Unix Makefiles'
@@ -258,9 +258,9 @@ module Configuration
   end
 
   def setup_compiler_target_arch(compiler)
-    if compiler[:name].match?(/.*Visual Studio.*/i)
+    if compiler[:name].match(/.*Visual Studio.*/i)
       # Visual Studio 2019+ generator behaves slightly different, need to add -A
-      return 'x64' if !compiler[:architecture].nil? && compiler[:architecture].match?(/.*64.*/)
+      return 'x64' if !compiler[:architecture].nil? && compiler[:architecture].match(/.*64.*/)
 
       return 'Win32'
     end
