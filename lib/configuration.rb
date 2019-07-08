@@ -97,8 +97,8 @@ module Configuration
 
   def establish_os_characteristics
     # if RUBY_VERSION[0..2].to_f < 2.4
-      # we must not use match?, it isn't available...
-      # for now I'll just try to use without ? everywhere, we'll see
+    # we must not use match?, it isn't available...
+    # for now I'll just try to use without ? everywhere, we'll see
     # end
     if RUBY_PLATFORM.match(/darwin/i)
       os_distribution = nil
