@@ -96,14 +96,18 @@ module Configuration
   # :nocov:
 
   def establish_os_characteristics
-    if RUBY_PLATFORM.match?(/darwin/i)
+    # if RUBY_VERSION[0..2].to_f < 2.4
+      # we must not use match?, it isn't available...
+      # for now I'll just try to use without ? everywhere, we'll see
+    # end
+    if RUBY_PLATFORM.match(/darwin/i)
       os_distribution = nil
       os_version = 'MacOS'
       ver_string = `uname -v`.strip
       /.* Version (?<ver_major>[0-9]+)\.([0-9]+)\.([0-9]+).*:.*/ =~ ver_string
       # the darwin version number - 4 = the point release of macosx
       os_release = "10.#{ver_major.to_i - 4}"
-    elsif RUBY_PLATFORM.match?(/linux/i)
+    elsif RUBY_PLATFORM.match(/linux/i)
       os_distribution = `lsb_release -is`.strip
       os_version = 'Linux'
       os_release = "#{`lsb_release -is`.strip}-#{`lsb_release -rs`.strip}"
