@@ -42,7 +42,7 @@ TO BE UPDATED
  1. Install ruby gems octokit and activesupport. You may need to follow these instructions http://stackoverflow.com/questions/22352838/ruby-gem-install-json-fails-on-mavericks-and-xcode-5-1-unknown-argument-mul, then  `sudo gem install octokit activesupport`
  2. Need to get-pip: `curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py`, then `sudo python get-pip.py`
  3. Install Python deps: `sudo pip install boto beautifulsoup4 soupsieve`
- 4. Install CMake (download from web)
+ 4. Install CMake (download from web), install command line tools
  5. Install GFortran (download from https://github.com/fxcoudert/gfortran-for-macOS/releases)
  6. Install MacTeX (download from web)
  7. Install IFW (download from https://download.qt.io/official_releases/qt-installer-framework/)
