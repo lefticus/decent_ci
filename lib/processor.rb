@@ -2,7 +2,7 @@
 
 def processor_count
   os_name = RbConfig::CONFIG['target_os']
-  if os_name.match?(/mingw|mswin/)
+  if os_name.match(/mingw|mswin/)
     require 'win32ole'
     result = WIN32OLE.connect('winmgmts://').ExecQuery('select NumberOfLogicalProcessors from Win32_Processor')
     result.to_enum.collect(&:NumberOfLogicalProcessors).reduce(:+)

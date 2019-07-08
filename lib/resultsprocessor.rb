@@ -32,7 +32,7 @@ module ResultsProcessor
   end
 
   def recover_file_case(name)
-    if RbConfig::CONFIG['target_os'].match?(/mingw|mswin/)
+    if RbConfig::CONFIG['target_os'].match(/mingw|mswin/)
       # :nocov: we don't test on windows currently
       require 'win32api'
 
@@ -290,7 +290,7 @@ module ResultsProcessor
 
     stderr.encode('UTF-8', :invalid => :replace).split("\n").each do |line|
       unless linker_msg.nil?
-        if line.match?(/^\s.*/)
+        if line.match(/^\s.*/)
           linker_msg += "\n" + line
         else
           results << CodeMessage.new('CMakeLists.txt', 0, 0, 'error', linker_msg)
@@ -301,7 +301,7 @@ module ResultsProcessor
       msg = parse_gcc_line(src_path, build_path, line)
       if !msg.nil?
         results << msg
-      elsif line.match?(/^Undefined symbols for architecture.*/)
+      elsif line.match(/^Undefined symbols for architecture.*/)
         # try to catch some goofy clang linker errors that don't give us very much info
         linker_msg = line
       end
@@ -410,7 +410,7 @@ module ResultsProcessor
     messages = []
 
     Find.find(test_dir) do |path|
-      next unless path.match?(/.*Test.xml/)
+      next unless path.match(/.*Test.xml/)
 
       results = []
       # read the test.xml file but make sure to close it
