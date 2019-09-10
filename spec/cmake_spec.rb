@@ -29,7 +29,7 @@ describe 'CMake Testing' do
       regression_dir = nil
       regression_baseline = nil
       @build_results = SortedSet.new
-      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true, true)
+      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true,)
       response = cmake_build(compiler,src_dir, build_dir, regression_dir, regression_baseline, args)
       expect(response).to be_truthy
     end
@@ -45,7 +45,7 @@ describe 'CMake Testing' do
       regression_dir = nil
       regression_baseline = nil
       @build_results = SortedSet.new
-      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true, true)
+      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true)
       response = cmake_build(compiler,src_dir, build_dir, regression_dir, regression_baseline, args)
       expect(response).to be_truthy
     end
@@ -61,7 +61,7 @@ describe 'CMake Testing' do
       regression_dir = nil
       regression_baseline = nil
       @build_results = SortedSet.new
-      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true, true)
+      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true)
       response = cmake_build(compiler,src_dir, build_dir, regression_dir, regression_baseline, args)
       expect(response).to be_truthy
     end
@@ -76,7 +76,7 @@ describe 'CMake Testing' do
       regression_dir = Dir.mktmpdir
       regression_baseline = DummyRegressionBuild.new('/dir/', 'abcd')
       @build_results = SortedSet.new
-      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true, true)
+      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true)
       response = cmake_build(compiler,src_dir, build_dir, regression_dir, regression_baseline, args)
       expect(response).to be_truthy
     end

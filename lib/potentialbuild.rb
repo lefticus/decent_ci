@@ -112,15 +112,6 @@ class PotentialBuild
     !@pull_id.nil?
   end
 
-  def running_extra_tests
-    # TODO: I think we can get rid of this function and accompanying variables
-    if !@branch_name.nil? && !@config.extra_tests_branches.nil? && @config.extra_tests_branches.count(@branch_name) != 0
-      true
-    else
-      false
-    end
-  end
-
   def device_tag(compiler)
     build_type_tag = ''
     build_type_tag = "-#{compiler[:build_tag]}" unless compiler[:build_tag].nil?
@@ -341,7 +332,7 @@ class PotentialBuild
       cppcheck @config, compiler, src_dir, build_dir
     else
       this_device_id = device_id compiler
-      args = CMakeBuildArgs.new(compiler[:build_type], this_device_id, running_extra_tests, is_release)
+      args = CMakeBuildArgs.new(compiler[:build_type], this_device_id, is_release)
       cmake_build compiler, src_dir, build_dir, this_regression_dir, regression_baseline, args if checkout_succeeded
     end
     @build_time = 0 if @build_time.nil?
@@ -359,7 +350,7 @@ class PotentialBuild
     else
       start_time = Time.now
       if !ENV['DECENT_CI_SKIP_TEST']
-        cmake_test compiler, src_dir, build_dir, compiler[:build_type], running_extra_tests if build_succeeded
+        cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded
       else
         $logger.debug('Skipping test, DECENT_CI_SKIP_TEST is set in the environment')
       end
