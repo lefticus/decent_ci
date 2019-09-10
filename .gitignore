@@ -12,3 +12,4 @@ clone_regressions
 coverage
 .yardoc
 sandbox
+.rakeTasks

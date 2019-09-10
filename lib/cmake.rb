@@ -200,7 +200,7 @@ module CMake
       if @test_results.nil?
         @test_results = test_results
       else
-        @test_results.concat(test_results)
+        @test_results.concat(test_results) unless test_results.nil?
       end
 
       @test_messages.concat(test_messages)
