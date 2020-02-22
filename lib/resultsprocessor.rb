@@ -12,12 +12,12 @@ module ResultsProcessor
     Pathname.new("#{src_dir}/#{path}").realpath.relative_path_from(Pathname.new(this_src_dir).realdirpath)
   rescue
     begin
-      return Pathname.new("#{build_dir}/#{path}").realpath.relative_path_from(Pathname.new(this_src_dir).realdirpath)
+      Pathname.new("#{build_dir}/#{path}").realpath.relative_path_from(Pathname.new(this_src_dir).realdirpath)
     rescue
       begin
-        return Pathname.new(path).realpath.relative_path_from(Pathname.new(this_src_dir).realdirpath)
+        Pathname.new(path).realpath.relative_path_from(Pathname.new(this_src_dir).realdirpath)
       rescue
-        return Pathname.new(path)
+        Pathname.new(path)
       end
     end
   end

@@ -49,6 +49,16 @@ Style/RescueStandardError:
 Style/EachWithObject:
   Enabled: false
 
+# These were added by rubocop later
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
 # We're letting codeclimate do this analysis
 Metrics/BlockNesting:
   Enabled: false

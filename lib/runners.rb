@@ -99,7 +99,7 @@ module Runners
           err << stderr.read_nonblock(4096)
         end
       end
-    rescue IO::WaitReadable # rubocop:disable Lint/HandleExceptions
+    rescue IO::WaitReadable # rubocop:disable Lint/SuppressedException
       # A read would block, so loop around for another select
     rescue EOFError
       # Command has completed, not really an error...

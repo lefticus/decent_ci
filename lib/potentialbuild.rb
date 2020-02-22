@@ -257,7 +257,7 @@ class PotentialBuild
       files.each do |f|
         file_names << f.name
       end
-    rescue Octokit::NotFound # rubocop:disable Lint/HandleExceptions
+    rescue Octokit::NotFound # rubocop:disable Lint/SuppressedException
       # repository doesn't have a _posts folder yet
     end
 
