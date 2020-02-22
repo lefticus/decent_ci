@@ -481,7 +481,7 @@ class PotentialBuild
 
     props['object_files'] = []
 
-    object_files.values.each do |this_file|
+    object_files.each_value do |this_file|
       abs_path = File.absolute_path(this_file, build_dir)
       next unless abs_path.start_with?(File.absolute_path(build_dir)) && File.exist?(abs_path)
 
