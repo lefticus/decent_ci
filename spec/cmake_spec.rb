@@ -12,6 +12,13 @@ class DummyRegressionBuild
   end
 end
 
+class CMakeSpecNamedDummy
+  attr_reader :name
+  def initialize(this_name)
+    @name = this_name
+  end
+end
+
 describe 'CMake Testing' do
   include CMake
   include Configuration
@@ -20,7 +27,7 @@ describe 'CMake Testing' do
   context 'when calling cmake_build' do
     it 'should try to build a base release package' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
       compiler = @config.compilers.first
@@ -29,13 +36,13 @@ describe 'CMake Testing' do
       regression_dir = nil
       regression_baseline = nil
       @build_results = SortedSet.new
-      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true, true)
+      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true,)
       response = cmake_build(compiler,src_dir, build_dir, regression_dir, regression_baseline, args)
       expect(response).to be_truthy
     end
     it 'should try to build a release package with a target_arch key' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
       compiler = @config.compilers.first
@@ -45,13 +52,13 @@ describe 'CMake Testing' do
       regression_dir = nil
       regression_baseline = nil
       @build_results = SortedSet.new
-      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true, true)
+      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true)
       response = cmake_build(compiler,src_dir, build_dir, regression_dir, regression_baseline, args)
       expect(response).to be_truthy
     end
     it 'should try to build a release without ccbin' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
       compiler = @config.compilers.first
@@ -61,13 +68,13 @@ describe 'CMake Testing' do
       regression_dir = nil
       regression_baseline = nil
       @build_results = SortedSet.new
-      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true, true)
+      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true)
       response = cmake_build(compiler,src_dir, build_dir, regression_dir, regression_baseline, args)
       expect(response).to be_truthy
     end
     it 'should try to build a release with regressions' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
       compiler = @config.compilers.first
@@ -76,7 +83,7 @@ describe 'CMake Testing' do
       regression_dir = Dir.mktmpdir
       regression_baseline = DummyRegressionBuild.new('/dir/', 'abcd')
       @build_results = SortedSet.new
-      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true, true)
+      args = CMakeBuildArgs.new('Debug', 'thisDeviceIDHere', true)
       response = cmake_build(compiler,src_dir, build_dir, regression_dir, regression_baseline, args)
       expect(response).to be_truthy
     end
@@ -84,7 +91,7 @@ describe 'CMake Testing' do
   context 'when calling cmake_package' do
     it 'should try to build a simple package' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
       compiler = @config.compilers.first
@@ -95,7 +102,7 @@ describe 'CMake Testing' do
     end
     it 'should try to build but fail with no package results' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       allow_any_instance_of(ResultsProcessor).to receive(:process_cmake_results).and_return(nil)
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
@@ -107,7 +114,7 @@ describe 'CMake Testing' do
     end
     it 'should try to build and fail but with some package results' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       allow_any_instance_of(ResultsProcessor).to receive(:process_cmake_results).and_return(nil)
       @client = Octokit::Client.new(:access_token => 'abc')
       @config = load_configuration('spec/resources', 'abc', false)
@@ -119,7 +126,7 @@ describe 'CMake Testing' do
     end
     it 'should complete a build and return a proper name' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       allow_any_instance_of(ResultsProcessor).to receive(:process_cmake_results).and_return(true)
       allow_any_instance_of(ResultsProcessor).to receive(:parse_package_names).and_return(['hello'])
       @client = Octokit::Client.new(:access_token => 'abc')
@@ -136,7 +143,7 @@ describe 'CMake Testing' do
   context 'when calling cmake_test' do
     it 'should run a simple set of tests' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       allow_any_instance_of(ResultsProcessor).to receive(:process_cmake_results).and_return(true)
       allow_any_instance_of(ResultsProcessor).to receive(:process_ctest_results).and_return([[], []])
       @client = Octokit::Client.new(:access_token => 'abc')
@@ -145,11 +152,11 @@ describe 'CMake Testing' do
       src_dir = Dir.mktmpdir
       build_dir = File.join(src_dir, 'build')
       @test_messages = []
-      expect(cmake_test(compiler, src_dir, build_dir, 'Debug', true)).to be_truthy
+      expect(cmake_test(compiler, src_dir, build_dir, 'Debug')).to be_truthy
     end
     it 'should run a simple set of tests and concatenate test_results' do
       allow_any_instance_of(Runners).to receive(:run_scripts).and_return(['stdoutmsg', 'stderrmsg', 0])
-      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([NamedDummy.new('.decent_ci.yaml')])
+      allow_any_instance_of(Octokit::Client).to receive(:content).and_return([CMakeSpecNamedDummy.new('.decent_ci.yaml')])
       allow_any_instance_of(ResultsProcessor).to receive(:process_cmake_results).and_return(true)
       allow_any_instance_of(ResultsProcessor).to receive(:process_ctest_results).and_return([[], []])
       @client = Octokit::Client.new(:access_token => 'abc')
@@ -159,7 +166,7 @@ describe 'CMake Testing' do
       build_dir = File.join(src_dir, 'build')
       @test_results = []
       @test_messages = []
-      expect(cmake_test(compiler, src_dir, build_dir, 'Debug', true)).to be_truthy
+      expect(cmake_test(compiler, src_dir, build_dir, 'Debug')).to be_truthy
     end
   end
 end

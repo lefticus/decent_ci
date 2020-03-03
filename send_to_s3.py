@@ -23,7 +23,7 @@ try:
     buildname = sys.argv[2]
     sourcedir = sys.argv[3]
     destdir = sys.argv[4]
-    filedir = "{0}/{1}-{2}".format(destdir, datetime.datetime.now().date().isoformat(), buildname);
+    filedir = "{0}/{1}-{2}".format(destdir, datetime.datetime.now().date().isoformat(), buildname)
 
     for root, subFolders, files in os.walk(sourcedir):
         for file in files:

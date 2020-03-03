@@ -180,12 +180,12 @@ module Configuration
       raise 'Version number for visual studio must be provided'
     when 'clang'
       /.*clang version (?<version>([0-9]+\.?)+).*/ =~ `clang --version`
-      return version
+      version
     when 'gcc'
-      return `gcc -dumpversion`
+      `gcc -dumpversion`
     when 'cppcheck', 'custom_check'
       # we can actually leave the version nil for cppcheck, it will allow a version-agnostic spec
-      return nil
+      nil
     else
       raise 'Invalid compiler specified, must be one of clang, gcc, custom_check, cppcheck, or a variation on "Visual Studio VV YYYY"'
     end
