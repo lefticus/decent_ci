@@ -264,7 +264,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
   files_for_deletion.each { |file|
     logger.info("Deleting results file: #{file.path}. Source branch #{file_branch[file.path]} removed, or file too old")
     begin
-      #  github_query(client) { client.delete_contents(results_repository, file.path, "Source branch #{file_branch[file.path]} removed. Deleting results.", file.sha) }
+      github_query(client) { client.delete_contents(results_repository, file.path, "Source branch #{file_branch[file.path]} removed. Deleting results.", file.sha) }
     rescue => e
       logger.error("Error deleting file: #{file.path} for branch #{file_branch[file.path]} message: #{e}")
     end
