@@ -143,6 +143,8 @@ def get_limits(t_options, t_client, t_repo)
       $logger.info("'#{e.message}' error while reading limits file")
     rescue Psych::SyntaxError => e
       $logger.info("'#{e.message}' error while reading limits file")
+    rescue Octokit::NotFound => e
+      $logger.info("No limits file found on this repository, moving on...")
     rescue => e
       $logger.info("'#{e.message}' '#{e.backtrace}' error while reading limits file")
     end

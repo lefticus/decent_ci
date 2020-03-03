@@ -50,12 +50,17 @@ def clean_up(client, repository, results_repository, results_path, age_limit, li
     logger.info("Total file limits reached, long running branch names: '#{branches}', feature branch file limit: '#{feature_branch_limit}', long running branch file limit: '#{long_running_branch_limit}'")
   end
 
+  # todo properly handle paginated results from github
+  _branches = github_query(client) { client.branches(repository, :per_page => 200) }
+  _releases = github_query(client) { client.releases(repository, :per_page => 200) }
+  _pull_requests = github_query(client) { client.pull_requests(repository, :state=>"open", :per_page => 50) }
+
   clean_up_impl(client, repository, results_repository, results_path, age_limit,
-                      limit_reached, branches, feature_branch_limit, long_running_branch_limit)
+                      limit_reached, branches, feature_branch_limit, long_running_branch_limit, _branches, _releases, _pull_requests)
 end
 
 def clean_up_impl(client, repository, results_repository, results_path, age_limit,
-                 limit_reached, long_running_branches, feature_branch_limit, long_running_branch_limit)
+                 limit_reached, long_running_branches, feature_branch_limit, long_running_branch_limit, branches, releases, pull_requests)
   if $logger.nil?
     logger = Logger.new(STDOUT)
   else
@@ -72,7 +77,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
     if file.type == "dir"
       # Scan sub-folder
       clean_up_impl(client, repository, results_repository, file.path, age_limit, 
-                    limit_reached, long_running_branches, feature_branch_limit, long_running_branch_limit)
+                    limit_reached, long_running_branches, feature_branch_limit, long_running_branch_limit, branches, releases, pull_requests)
     elsif file.type == "file"
       folder_contains_files = true
     end
@@ -82,7 +87,6 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
     # No reason to continue from here if no files are found
     return
   end
-
 
   branch_history_limit = 20
   file_age_limit = 9000
@@ -109,12 +113,6 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
     end
     logger.info("Hitting directory size limit #{files.size}, reducing history to #{branch_history_limit} data points")
   end
-
-
-  # todo properly handle paginated results from github
-  branches = github_query(client) { client.branches(repository, :per_page => 200) }
-  releases = github_query(client) { client.releases(repository, :per_page => 200) }
-  pull_requests = github_query(client) { client.pull_requests(repository, :state=>"open") }
 
   files_for_deletion = []
   branches_deleted = Set.new
@@ -172,7 +170,7 @@ def clean_up_impl(client, repository, results_repository, results_path, age_limi
             end
           }
           unless pr_found
-            logger.debug("PR not found, queuing results file for deletion: #{file_data["title"]}")
+            logger.info("PR #{file_data["pull_request_issue_id"]} not found, queuing results file for deletion: #{file_data["title"]}")
             files_for_deletion << file
             prs_deleted << file_data["pull_request_issue_id"]
           end
