@@ -337,14 +337,5 @@ fn=func2
       @p.configuration.compilers = 'hello'
       expect(@p.compilers).to eql 'hello'
     end
-    it 'running_extra_tests should only be true in specific conditions' do
-      expect(@p.running_extra_tests).to be_falsey
-      client = Octokit::Client.new(:access_token => 'abc')
-      @p = PotentialBuild.new(client, '', 'spec/resources', '', '', 'abc', '', '', '', 0, '', '')
-      expect(@p.running_extra_tests).to be_falsey
-      @p.configuration.extra_tests_branches = ['abc'] # with a test on this branch name, it should be truthy
-      expect(@p.running_extra_tests).to be_truthy
-    end
   end
 end
-

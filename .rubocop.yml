@@ -4,7 +4,7 @@ AllCops:
 # *** Permanent Settings *** #
 
 # This could be adjusted but does not bother me
-Metrics/LineLength:
+Layout/LineLength:
   Max: 200
 
 # This is the one allowed global :-)
@@ -22,14 +22,14 @@ Style/HashSyntax:
   EnforcedStyle: no_mixed_keys
 
 # our heredocs are carefully crafted and need to have no whitespace indentation
-Layout/IndentHeredoc:
+Layout/HeredocIndentation:
   Enabled: false
 
 # This requires a semantic change and I'm not doing that anytime soon
 Security/YAMLLoad:
   Enabled: false
 
-Lint/UnneededCopDisableDirective:
+Lint/RedundantCopDisableDirective:
   Enabled: false
 
 # ************************** #
@@ -48,6 +48,16 @@ Style/RescueStandardError:
 # I need to learn more about this before enabling it
 Style/EachWithObject:
   Enabled: false
+
+# These were added by rubocop later
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
 
 # We're letting codeclimate do this analysis
 Metrics/BlockNesting:

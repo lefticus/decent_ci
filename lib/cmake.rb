@@ -8,10 +8,9 @@ class CMakeBuildArgs
   attr_reader :this_device_id
   attr_reader :this_running_extra
   attr_reader :is_release
-  def initialize(build_type, device_id, running_extra_tests, is_release = false)
+  def initialize(build_type, device_id, is_release = false)
     @build_type = build_type
     @this_device_id = device_id
-    @this_running_extra = running_extra_tests
     @is_release = is_release
   end
 end
@@ -27,10 +26,6 @@ module CMake
 
     compiler_extra_flags = compiler[:compiler_extra_flags]
     compiler_extra_flags = '' if compiler_extra_flags.nil?
-
-    if cmake_build_args.this_running_extra
-      cmake_flags = cmake_flags + ' ' + @config.extra_tests_cmake_extra_flags unless @config.extra_tests_cmake_extra_flags.nil?
-    end
 
     if cmake_build_args.is_release
       extra_flags = compiler[:release_build_cmake_extra_flags]
@@ -186,12 +181,8 @@ module CMake
     package_names
   end
 
-  def cmake_test(compiler, src_dir, build_dir, build_type, running_extra_here)
+  def cmake_test(compiler, src_dir, build_dir, build_type)
     test_dirs = [''] # always start with the root build directory
-
-    if running_extra_here
-      test_dirs << @config.extra_tests_test_dir unless @config.extra_tests_test_dir.nil?
-    end
 
     ctest_filter = compiler[:ctest_filter]
     ctest_filter = '' if ctest_filter.nil?
