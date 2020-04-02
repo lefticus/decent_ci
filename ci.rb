@@ -284,7 +284,18 @@ did_any_builds = false
               p.post_results compiler, true
               begin
 
-                # if we need regressions and this branch has a valid regression branch, clone, build, and test it
+                # We are going to purposely build the branch first before the baseline.
+                # In some cases, the branch is merged and deleted before CI completes.
+                # By the time CI gets around to it, it first builds the baseline then fails to build the deleted branch.
+                # This waste of time can be eliminated by just doing the build of the branch first, it will fail quick.
+                # We dont run tests on the branch though -- the baseline will need to be built before running them.
+                if File.directory?(p.this_src_dir)
+                  $logger.info "Removing pre-existing branch directory (#{p.this_src_dir})"
+                  FileUtils.rm_rf(p.this_src_dir)
+                end
+                p.do_package compiler, regression_base
+
+                # Now we have a fully built and packaged up branch build, time to build the baseline if applicable
                 regression_base = b.get_regression_base p
                 if p.needs_regression_test(compiler) && regression_base
                   regression_base.set_as_baseline
@@ -303,12 +314,7 @@ did_any_builds = false
                   regression_base.do_test compiler, nil
                 end
 
-                # now build this branch
-                if File.directory?(p.this_src_dir)
-                  $logger.info "Removing pre-existing branch directory (#{p.this_src_dir})"
-                  FileUtils.rm_rf(p.this_src_dir)
-                end
-                p.do_package compiler, regression_base
+                # Now we have a built branch and baseline if applicable, time to run tests and push results.
                 p.do_test compiler, regression_base
                 p.do_coverage compiler
                 p.do_upload compiler
