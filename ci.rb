@@ -289,6 +289,11 @@ did_any_builds = false
                 # By the time CI gets around to it, it first builds the baseline then fails to build the deleted branch.
                 # This waste of time can be eliminated by just doing the build of the branch first, it will fail quick.
                 # We dont run tests on the branch though -- the baseline will need to be built before running them.
+
+                # First at least get a regression_base variable, it can be nil
+                regression_base = b.get_regression_base p
+
+                # Then try to build the branch
                 if File.directory?(p.this_src_dir)
                   $logger.info "Removing pre-existing branch directory (#{p.this_src_dir})"
                   FileUtils.rm_rf(p.this_src_dir)
@@ -296,7 +301,6 @@ did_any_builds = false
                 p.do_package compiler, regression_base
 
                 # Now we have a fully built and packaged up branch build, time to build the baseline if applicable
-                regression_base = b.get_regression_base p
                 if p.needs_regression_test(compiler) && regression_base
                   regression_base.set_as_baseline
                   regression_base.test_run = test_mode
