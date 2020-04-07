@@ -114,29 +114,34 @@ class Build
       aging_pull_requests_notify = true
       aging_pull_requests_num_days = 7
 
-      begin
-        pb = PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p.head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
-        configured_notifications = pb.configuration.notification_recipients
-        unless configured_notifications.nil?
-          $logger.debug("Merging notifications user: #{configured_notifications}")
-          notification_users.merge(configured_notifications)
-        end
+      # TODO: p.head.repo can be null if the fork repo is deleted.  Need to protect that here.
+      if p.head.repo.nil?
+        $logger.info("Skipping potential PR (#{p.number}): Forked repo is null (deleted?)")
+      else
+        begin
+          pb = PotentialBuild.new(@client, @token, p.head.repo.full_name, nil, p.head.sha, p.head.ref, p.head.user.login, nil, nil, p.number, p.base.repo.full_name, p.base.ref)
+          configured_notifications = pb.configuration.notification_recipients
+          unless configured_notifications.nil?
+            $logger.debug("Merging notifications user: #{configured_notifications}")
+            notification_users.merge(configured_notifications)
+          end
 
-        aging_pull_requests_notify = pb.configuration.aging_pull_requests_notification
-        aging_pull_requests_num_days = pb.configuration.aging_pull_requests_numdays
+          aging_pull_requests_notify = pb.configuration.aging_pull_requests_notification
+          aging_pull_requests_num_days = pb.configuration.aging_pull_requests_numdays
 
-        if p.head.repo.full_name == p.base.repo.full_name
-          $logger.info("Skipping pull-request originating from head repo: #{p.number}")
-        else
-          $logger.info("Found an external PR to add to potential_builds: #{p.number}")
-          @potential_builds << pb
+          if p.head.repo.full_name == p.base.repo.full_name
+            $logger.info("Skipping pull-request originating from head repo: #{p.number}")
+          else
+            $logger.info("Found an external PR to add to potential_builds: #{p.number}")
+            @potential_builds << pb
+          end
+        rescue DecentCIKnownError => e
+          $logger.info("Skipping potential PR (#{p.number}): #{e}")
+        rescue => e
+          $logger.info("Skipping potential PR (#{p.number}): #{e} #{e.backtrace}")
         end
-      rescue DecentCIKnownError => e
-        $logger.info("Skipping potential PR (#{p.number}): #{e}")
-      rescue => e
-        $logger.info("Skipping potential PR (#{p.number}): #{e} #{e.backtrace}")
       end
-
+      # TODO: Should this be here?
       @pull_request_details << {
         :id => p.number,
         :creator => p.user.login,
