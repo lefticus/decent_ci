@@ -248,15 +248,12 @@ module ResultsProcessor
     if pattern_found && message_is_error
       CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), line_number, 0, message_type, message_code + ' ' + message)
     else
-      filename = nil
-      message_type = nil
-      message_code = nil
       /(?<filename>.+) : (?<message_type>\S+) (?<message_code>\S+): (?<message>.*) \[.*\]?/ =~ line
       pattern_2_found = !filename.nil? && !message_type.nil?
       message_2_is_error = !(%w[info note].include? message_type)
       unless pattern_2_found && message_2_is_error
         # one last pattern to try, doing it brute force
-        if line.index(': ').positive?
+        if line.index(': ') and line.index(': ').positive?
           tokens = line.split(': ')
           if tokens.length >= 3
             filename = tokens[0]
@@ -271,6 +268,8 @@ module ResultsProcessor
         return nil unless pattern_3_found && message_3_is_error && message_code
 
       end
+      return nil unless filename
+
       CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), 0, 0, message_type, message_code + ' ' + message)
     end
   end
