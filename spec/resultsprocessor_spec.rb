@@ -138,6 +138,9 @@ describe 'ResultsProcessor Testing' do
       message = 'Something.cc : Error 332: ad [message text]'  # second form without line number
       response = parse_msvc_line('/src/path/', '/build/path', message)
       expect(response.error?).to be_truthy
+      message = 'C:\\Blah\\File.hh(21): error C2727: \'some_key\': \'some_value\' and things (compiling a.cc)'
+      response = parse_msvc_line('/src/path/', '/build/path', message)
+      expect(response.error?).to be_truthy
       message = '(32): Error: ad [message text]'  # missing name and error code, should return nil
       response = parse_msvc_line('/src/path/', '/build/path', message)
       expect(response).to be_nil
