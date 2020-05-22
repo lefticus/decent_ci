@@ -253,7 +253,7 @@ module ResultsProcessor
       message_2_is_error = !(%w[info note].include? message_type)
       unless pattern_2_found && message_2_is_error
         # one last pattern to try, doing it brute force
-        if line.index(': ') and line.index(': ').positive?
+        if line.index(': ')&.positive?
           tokens = line.split(': ')
           if tokens.length >= 3
             filename = tokens[0]
