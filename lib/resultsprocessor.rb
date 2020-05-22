@@ -240,19 +240,23 @@ module ResultsProcessor
   end
 
   def parse_msvc_line(src_dir, build_dir, line)
+    return nil if line.nil?
+
     /(?<filename>.+)\((?<line_number>[0-9]+)\): (?<message_type>.+?) (?<message_code>\S+): (?<message>.*) \[.*\]?/ =~ line
     pattern_found = !filename.nil? && !message_type.nil?
     message_is_error = !(%w[info note].include? message_type)
     if pattern_found && message_is_error
       CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), line_number, 0, message_type, message_code + ' ' + message)
     else
+      filename = nil
+      message_type = nil
+      message_code = nil
       /(?<filename>.+) : (?<message_type>\S+) (?<message_code>\S+): (?<message>.*) \[.*\]?/ =~ line
       pattern_2_found = !filename.nil? && !message_type.nil?
       message_2_is_error = !(%w[info note].include? message_type)
-      if pattern_2_found && message_2_is_error
-        CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), 0, 0, message_type, message_code + ' ' + message)
-      else
-        if line.index(': ') > 0
+      unless pattern_2_found && message_2_is_error
+        # one last pattern to try, doing it brute force
+        if line.index(': ').positive?
           tokens = line.split(': ')
           if tokens.length >= 3
             filename = tokens[0]
@@ -266,8 +270,8 @@ module ResultsProcessor
         message_3_is_error = !(%w[info note].include? message_type)
         return nil unless pattern_3_found && message_3_is_error && message_code
 
-        CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), 0, 0, message_type, message_code + ' ' + message)
       end
+      CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), 0, 0, message_type, message_code + ' ' + message)
     end
   end
 
