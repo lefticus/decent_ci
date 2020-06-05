@@ -427,11 +427,41 @@ module ResultsProcessor
     end
 
     messages = []
+    results = []
+
+    # messages can be in two locations:
+    # the ctest generated Test.xml file will contain output from the ctests
+    # but then also, we now have a test that checks the doc build log to make sure nothing was wrong in the LaTeX build
+    # this kinda makes the test_result/build_result difference a bit muddy, but we'll make it work
+    # the docs are built as part of the normal "make" command on CI, then the "ctest" command executes all the tests,
+    #   including the ones that test the build logs, and those tests will have created json blobs.  We should find those
+    #   and try to parse them to produce test results
+    doc_build_dir = File.join(build_dir, "doc")
+    Find.find(doc_build_dir) do |path|
+      next unless path.match(/._errors.json/)
+      f = File.open(path, 'r')
+      contents = f.read
+      json = JSON.parse(contents)
+      json['issues'].each do |issue|
+        severity_raw = issue['severity']
+        status = 'failed'
+        severity = 'error'
+        if severity_raw.upcase == 'WARNING'
+          severity = 'warning'
+        end
+        full_message = ''
+        full_message += issue['type']
+        file_name = issue['locations'][0]['file']
+        line_number = issue['locations'][0]['line']
+        full_message += ': ' + issue['message']
+        doc_errors = [CodeMessage.new(file_name, line_number, 0, severity, full_message)]
+        results << TestResult.new(file_name, status, 0, full_message, doc_errors, 1)
+      end
+    end
 
     Find.find(test_dir) do |path|
       next unless path.match(/.*Test.xml/)
 
-      results = []
       # read the test.xml file but make sure to close it
       f = File.open(path, 'r')
       contents = f.read
@@ -488,10 +518,9 @@ module ResultsProcessor
           end
         end
       end
-
-      return nil, messages if results.empty?
-
-      return results, messages
     end
+    return nil, messages if results.empty?
+
+    [results, messages]
   end
 end
