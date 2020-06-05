@@ -437,7 +437,7 @@ module ResultsProcessor
     #   including the ones that test the build logs, and those tests will have created json blobs.  We should find those
     #   and try to parse them to produce test results
     doc_build_dir = File.join(build_dir, 'doc')
-    if File.exists? doc_build_dir
+    if File.exist? doc_build_dir
       Find.find(doc_build_dir) do |path|
         next unless path.match(/._errors.json/)
 
@@ -472,6 +472,7 @@ module ResultsProcessor
       test_results = xml['Site']['Testing']
       t = test_results['Test']
       next if t.nil?
+
       tests = []
       tests << t
       tests.flatten!
