@@ -427,11 +427,42 @@ module ResultsProcessor
     end
 
     messages = []
+    results = []
+
+    # messages can be in two locations:
+    # the ctest generated Test.xml file will contain output from the ctests
+    # but then also, we now have a test that checks the doc build log to make sure nothing was wrong in the LaTeX build
+    # this kinda makes the test_result/build_result difference a bit muddy, but we'll make it work
+    # the docs are built as part of the normal "make" command on CI, then the "ctest" command executes all the tests,
+    #   including the ones that test the build logs, and those tests will have created json blobs.  We should find those
+    #   and try to parse them to produce test results
+    doc_build_dir = File.join(build_dir, 'doc')
+    if File.exist? doc_build_dir
+      Find.find(doc_build_dir) do |path|
+        next unless path.match(/._errors.json/)
+
+        f = File.open(path, 'r')
+        contents = f.read
+        json = JSON.parse(contents)
+        json['issues'].each do |issue|
+          severity_raw = issue['severity']
+          status = 'failed'
+          severity = 'error'
+          severity = 'warning' if severity_raw.upcase == 'WARNING'
+          full_message = ''
+          full_message += issue['type']
+          file_name = issue['locations'][0]['file']
+          line_number = issue['locations'][0]['line']
+          full_message += ': ' + issue['message']
+          doc_errors = [CodeMessage.new(file_name, line_number, 0, severity, full_message)]
+          results << TestResult.new(file_name, status, 0, full_message, doc_errors, 1)
+        end
+      end
+    end
 
     Find.find(test_dir) do |path|
       next unless path.match(/.*Test.xml/)
 
-      results = []
       # read the test.xml file but make sure to close it
       f = File.open(path, 'r')
       contents = f.read
@@ -440,58 +471,57 @@ module ResultsProcessor
       xml = Hash.from_xml(contents)
       test_results = xml['Site']['Testing']
       t = test_results['Test']
-      unless t.nil?
-        tests = []
-        tests << t
-        tests.flatten!
+      next if t.nil?
 
-        tests.each do |n|
-          $logger.debug("N: #{n}")
-          $logger.debug("Results: #{n['Results']}")
-          r = n['Results']
-          if n['Status'] == 'notrun'
-            results << TestResult.new(n['Name'], n['Status'], 0, '', nil, 'notrun')
-          elsif r
-            m = r['Measurement']
-            value = nil
-            errors = nil
+      tests = []
+      tests << t
+      tests.flatten!
 
-            unless m.nil? || m['Value'].nil?
-              value = m['Value']
-              errors = parse_error_messages(src_dir, build_dir, value)
-              value.split("\n").each do |line|
-                if /\[decent_ci:test_result:message\] (?<message>.+)/ =~ line
-                  messages << TestMessage.new(n['Name'], message)
-                end
+      tests.each do |n|
+        $logger.debug("N: #{n}")
+        $logger.debug("Results: #{n['Results']}")
+        r = n['Results']
+        if n['Status'] == 'notrun'
+          results << TestResult.new(n['Name'], n['Status'], 0, '', nil, 'notrun')
+        elsif r
+          m = r['Measurement']
+          value = nil
+          errors = nil
+
+          unless m.nil? || m['Value'].nil?
+            value = m['Value']
+            errors = parse_error_messages(src_dir, build_dir, value)
+            value.split("\n").each do |line|
+              if /\[decent_ci:test_result:message\] (?<message>.+)/ =~ line
+                messages << TestMessage.new(n['Name'], message)
               end
             end
+          end
 
-            nm = r['NamedMeasurement']
+          nm = r['NamedMeasurement']
 
-            unless nm.nil?
-              failure_type = ''
-              nm.each do |measurement|
-                next if measurement['name'] != 'Exit Code'
+          unless nm.nil?
+            failure_type = ''
+            nm.each do |measurement|
+              next if measurement['name'] != 'Exit Code'
 
-                ft = measurement['Value']
-                failure_type = ft unless ft.nil?
-              end
+              ft = measurement['Value']
+              failure_type = ft unless ft.nil?
+            end
 
-              nm.each do |measurement|
-                next if measurement['name'] != 'Execution Time'
+            nm.each do |measurement|
+              next if measurement['name'] != 'Execution Time'
 
-                status_string = n['Status']
-                status_string = 'warning' if !value.nil? && value =~ /\[decent_ci:test_result:warn\]/ && status_string == 'passed'
-                results << TestResult.new(n['Name'], status_string, measurement['Value'], value, errors, failure_type)
-              end
+              status_string = n['Status']
+              status_string = 'warning' if !value.nil? && value =~ /\[decent_ci:test_result:warn\]/ && status_string == 'passed'
+              results << TestResult.new(n['Name'], status_string, measurement['Value'], value, errors, failure_type)
             end
           end
         end
       end
-
-      return nil, messages if results.empty?
-
-      return results, messages
     end
+    return nil, messages if results.empty?
+
+    [results, messages]
   end
 end
