@@ -57,8 +57,10 @@ class DummyCommit1
   attr_reader :commit
   attr_reader :author
   attr_reader :committer
-  def initialize(published_date, use_committer_login)
+  attr_reader :message
+  def initialize(published_date, use_committer_login, message)
     @commit = DummyCommit2.new(published_date)
+    @message = message
     if use_committer_login
       @author = nil
       @committer = DummyUser.new(published_date)
@@ -74,17 +76,18 @@ end
 
 class DummyBranch
   attr_reader :name
-  def initialize(published_date, name, use_committer_login = false, should_throw = false)
+  def initialize(published_date, name, commit_message, use_committer_login = false, should_throw = false)
     @name = name
     @published_date = published_date
     @use_committer_login = use_committer_login
     @should_throw = should_throw
+    @commit_message = commit_message
   end
   def commit
     if @should_throw
       raise CannotMatchCompiler, "Again!"
     end
-    DummyCommit1.new(@published_date, @use_committer_login)
+    DummyCommit1.new(@published_date, @use_committer_login, @commit_message)
   end
 end
 
@@ -145,7 +148,7 @@ end
 
 class DummyContentResponse
   def content
-    DummyCommit1.new(1, 2)
+    DummyCommit1.new(1, 2, "")
   end
 end
 
@@ -163,12 +166,14 @@ class DummyClient2
       DummyRelease.new(t_recent, true)
     ]
     @my_branches = [
-      DummyBranch.new(t_too_old, 'a'),
-      DummyBranch.new(t_recent, 'b'),
-      DummyBranch.new(-1, 'c'),
-      DummyBranch.new(t_recent, 'd', true),
-      DummyBranch.new(t_recent, 'e', false, true),
-      DummyBranch.new(t_recent, 'fixes-#191-dialog')
+      DummyBranch.new(t_too_old, 'a', 'commit_message'),
+      DummyBranch.new(t_recent, 'b', 'commit_message'),
+      DummyBranch.new(-1, 'c', 'commit_message'),
+      DummyBranch.new(t_recent, 'd', 'commit_message', true),
+      DummyBranch.new(t_recent, 'e', 'commit_message', false, true),
+      DummyBranch.new(t_recent, 'fixes-#191-dialog', 'commit_message'),
+      DummyBranch.new(t_recent, 'g', "[decent_ci_skip]"),
+      DummyBranch.new(t_recent, 'develop', "[decent_ci_skip]")
     ]
     @my_prs = [
       DummyPR.new(1, true, false),
@@ -179,7 +184,7 @@ class DummyClient2
     @content_response = DummyContentResponse.new
   end
   def last_response
-    return DummyResponse2.new
+    DummyResponse2.new
   end
   def user
     DummyUser.new(-1)
@@ -263,9 +268,9 @@ describe 'Build Testing' do
       allow(Octokit::Client).to receive(:new).and_return(DummyClient2.new)
       allow(PotentialBuild).to receive(:new).and_return(true)
       b = Build.new('abcdef', 'spec/resources', 10)
-      expect(b.client.branches('', 1).length).to eql 6 # should have four total total branches
+      expect(b.client.branches('', 1).length).to eql 8 # this is the absolute total
       b.query_branches
-      expect(b.potential_builds.length).to eql 2 # but only two are valid and new enough to build
+      expect(b.potential_builds.length).to eql 3 # this is the number of expected valid ones
     end
   end
   context 'when calling query_pull_requests' do
