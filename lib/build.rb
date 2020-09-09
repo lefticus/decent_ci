@@ -72,7 +72,8 @@ class Build
       rescue
         # Ignored
       end
-      next if skip_message_present and branch_details.name != 'develop'  # only skip if we have the msg on a non-develop branch
+      next if skip_message_present && branch_details.name != 'develop' # only skip if we have the msg on a non-develop branch
+
       begin
         days = (DateTime.now - DateTime.parse(branch_details.commit.commit.author.date.to_s)).round
         if days <= @max_age
