@@ -77,13 +77,13 @@ class Build
         days = (DateTime.now - DateTime.parse(branch_details.commit.commit.author.date.to_s)).round
         if days <= @max_age
           login = 'Unknown'
-          if !branch_details.commit.author.nil?
-            login = branch_details.commit.author.login
-          else
+          if branch_details.commit.author.nil?
             $logger.debug('Commit author is nil, getting login details from committer information')
             login = branch_details.commit.committer.login unless branch_details.commit.committer.nil?
 
             $logger.debug("Login set to #{login}")
+          else
+            login = branch_details.commit.author.login
           end
 
           @potential_builds << PotentialBuild.new(@client, @token, @repository, nil, b.commit.sha, b.name, login, nil, nil, nil, nil, nil)

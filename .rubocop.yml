@@ -1,6 +1,7 @@
 AllCops:
   TargetRubyVersion: 2.4
   NewCops: enable
+  SuggestExtensions: false
 
 # *** Permanent Settings *** #
 
@@ -33,6 +34,9 @@ Security/YAMLLoad:
 Lint/RedundantCopDisableDirective:
   Enabled: false
 
+Style/OptionalBooleanParameter:
+  Enabled: false
+
 # ************************** #
 
 
@@ -48,6 +52,9 @@ Style/RescueStandardError:
 
 # I need to learn more about this before enabling it
 Style/EachWithObject:
+  Enabled: false
+
+Lint/MixedRegexpCaptureTypes:
   Enabled: false
 
 # These were added by rubocop later
@@ -83,6 +90,9 @@ Metrics/ModuleLength:
   Enabled: false
 
 Metrics/ClassLength:
+  Enabled: false
+
+Style/CombinableLoops:
   Enabled: false
 
 # ************************** #

@@ -16,7 +16,7 @@ module Configuration
   def which(cmd, extra_paths = nil)
     exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
     path_array = ENV['PATH'].split(File::PATH_SEPARATOR)
-    path_array = path_array.concat(extra_paths) unless extra_paths.nil?
+    path_array.concat(extra_paths) unless extra_paths.nil?
 
     path_array.each do |path|
       exts.each do |ext|
@@ -34,12 +34,8 @@ module Configuration
       content = @client.content(this_location, :path => name, :ref => this_ref)
       contents = content.content
       return_value = YAML.load(Base64.decode64(contents.to_s))
-    rescue Psych::SyntaxError => e
+    rescue Psych::SyntaxError, SyntaxError => e
       raise "#{e.message} while parsing #{name}@#{this_ref}"
-    rescue SyntaxError => e
-      # :nocov: I don't think we can get to this, it's always a Psych::SyntaxError, but I'm not 100% sure, so leaving this
-      raise "#{e.message} while parsing #{name}@#{this_ref}"
-      # :nocov:
     rescue => e
       $logger.debug("Unable to load yaml file from repository: #{this_location}/#{name}@#{this_ref} error: #{e}")
       path = File.expand_path(name, this_location)
@@ -55,11 +51,12 @@ module Configuration
   end
 
   def symbolize(obj)
-    if obj.is_a? Hash
+    case obj
+    when Hash
       obj.reduce({}) do |memo, (k, v)|
         memo.tap { |m| m[k.to_sym] = symbolize(v) }
       end
-    elsif obj.is_a? Array
+    when Array
       obj.reduce([]) do |memo, v|
         memo << symbolize(v)
         memo
@@ -69,27 +66,13 @@ module Configuration
     end
   end
 
-  def find_windows_6_release(ver_minor)
-    if ver_minor.to_i == 1
-      '7'
-    elsif ver_minor.to_i == 2
-      '8'
-    elsif ver_minor.to_i == 3
-      '8.1'
-    end
-  end
-
   # :nocov: Not doing any testing on Windows right now
   def establish_windows_characteristics
     os_version = 'Windows'
     ver_string = `cmd /c ver`.strip
     /.* \[Version (?<ver_major>[0-9]+)\.(?<ver_minor>[0-9]+)\..*\]/ =~ ver_string
     os_release = nil
-    if ver_major.to_i == 6
-      os_release = find_windows_6_release(ver_minor)
-    elsif ver_major.to_i == 10
-      os_release = '10'
-    end
+    os_release = '10' if ver_major.to_i == 10
     os_release = "Unknown-#{ver_major}.#{ver_minor}" if os_release.nil?
     [nil, os_version, os_release]
   end
@@ -100,14 +83,15 @@ module Configuration
     # we must not use match?, it isn't available...
     # for now I'll just try to use without ? everywhere, we'll see
     # end
-    if RUBY_PLATFORM.match(/darwin/i)
+    case RUBY_PLATFORM
+    when /darwin/i
       os_distribution = nil
       os_version = 'MacOS'
       ver_string = `uname -v`.strip
       /.* Version (?<ver_major>[0-9]+)\.([0-9]+)\.([0-9]+).*:.*/ =~ ver_string
       # the darwin version number - 4 = the point release of macosx
       os_release = "10.#{ver_major.to_i - 4}"
-    elsif RUBY_PLATFORM.match(/linux/i)
+    when /linux/i
       os_distribution = `lsb_release -is`.strip
       os_version = 'Linux'
       os_release = "#{`lsb_release -is`.strip}-#{`lsb_release -rs`.strip}"
@@ -269,12 +253,12 @@ module Configuration
 
   def _setup_cc_and_cxx(compiler, cc_name, cxx_name)
     potential_name = which("#{cc_name}-#{compiler[:version]}")
-    if !potential_name.nil?
-      cc_bin = potential_name
-      cxx_bin = which("#{cxx_name}-#{compiler[:version]}")
-    else
+    if potential_name.nil?
       cc_bin = which(cc_name)
       cxx_bin = which(cxx_name)
+    else
+      cc_bin = potential_name
+      cxx_bin = which("#{cxx_name}-#{compiler[:version]}")
     end
 
     if cc_bin.nil? || cxx_bin.nil? || (`#{cc_bin} --version` !~ /.*#{compiler[:version]}/) || (`#{cxx_bin} --version` !~ /.*#{compiler[:version]}/)

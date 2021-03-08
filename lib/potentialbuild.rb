@@ -183,7 +183,7 @@ class PotentialBuild
     @coverage_total_lines, @coverage_lines, @coverage_total_functions, @coverage_functions = lcov @config, compiler, build_dir
     return if compiler[:coverage_s3_bucket].nil?
 
-    s3_script = File.dirname(File.dirname(__FILE__)) + '/send_to_s3.py'
+    s3_script = "#{File.dirname(File.dirname(__FILE__))}/send_to_s3.py"
 
     $logger.info('Beginning upload of coverage results to s3')
 
@@ -205,7 +205,7 @@ class PotentialBuild
 
     build_dir = this_build_dir
 
-    s3_script = File.dirname(File.dirname(__FILE__)) + '/send_to_s3.py'
+    s3_script = "#{File.dirname(File.dirname(__FILE__))}/send_to_s3.py"
 
     $logger.info('Beginning upload of build assets to s3')
 
@@ -266,7 +266,7 @@ class PotentialBuild
 
   def get_initials(str)
     # extracts just the initials from the string
-    str.gsub(/[^A-Z0-9\.\-a-z_+]/, '').gsub(/[_\-+]./) { |s| s[1].upcase }.sub(/./, &:upcase).gsub(/[^A-Z0-9\.]/, '')
+    str.gsub(/[^A-Z0-9.\-a-z_+]/, '').gsub(/[_\-+]./) { |s| s[1].upcase }.sub(/./, &:upcase).gsub(/[^A-Z0-9.]/, '')
   end
 
   def add_dashes(str)
@@ -276,14 +276,13 @@ class PotentialBuild
   def get_short_form(str)
     return nil if str.nil?
 
-    return_value = if str.length <= 10 && str =~ /[a-zA-Z]/
-                     str
-                   elsif (str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/ || str =~ /.*\+.*/
-                     add_dashes(get_initials(str))
-                   else
-                     str.gsub(/[^a-zA-Z0-9\.+_]/, '')
-                   end
-    return_value
+    if str.length <= 10 && str =~ /[a-zA-Z]/
+      str
+    elsif (str =~ /.*[A-Z].*/ && str =~ /.*[a-z].*/) || str =~ /.*_.*/ || str =~ /.*-.*/ || str =~ /.*\+.*/
+      add_dashes(get_initials(str))
+    else
+      str.gsub(/[^a-zA-Z0-9.+_]/, '')
+    end
   end
 
   def this_branch_folder
@@ -314,16 +313,17 @@ class PotentialBuild
     File.join(Dir.pwd, 'clone_regressions')
   end
 
-  def do_build(compiler, regression_baseline, is_release: false)
+  def do_build(compiler, regression_baseline, is_release = false)
     src_dir = this_src_dir
     build_dir = this_build_dir
     start_time = Time.now
     checkout_succeeded = checkout src_dir
     # TODO: Abort if checkout did not succeed...
-    if compiler[:name] == 'custom_check'
+    case compiler[:name]
+    when 'custom_check'
       $logger.info('Running custom_check')
       @test_results = custom_check @config, compiler, src_dir, build_dir
-    elsif compiler[:name] == 'cppcheck'
+    when 'cppcheck'
       $logger.info('Running cppcheck')
       cppcheck @config, compiler, src_dir, build_dir
     else
@@ -345,10 +345,10 @@ class PotentialBuild
     if compiler[:name] == 'cppcheck' || compiler[:name] == 'custom_check'
     else
       start_time = Time.now
-      if !ENV['DECENT_CI_SKIP_TEST']
-        cmake_test compiler, src_dir, build_dir, compiler[:build_type] if build_succeeded
-      else
+      if ENV['DECENT_CI_SKIP_TEST']
         $logger.debug('Skipping test, DECENT_CI_SKIP_TEST is set in the environment')
+      elsif build_succeeded
+        cmake_test compiler, src_dir, build_dir, compiler[:build_type]
       end
       @test_time = 0 if @test_time.nil?
       # handle the case where test is called more than once
@@ -489,7 +489,7 @@ class PotentialBuild
     most_expensive = called_functions.sort_by { |_, v| v['cost'] }.reverse.slice(0, 50)
     most_called = called_functions.sort_by { |_, v| v['count'] }.reverse.slice(0, 50)
 
-    important_functions = Hash[most_expensive].merge(Hash[most_called]).collect { |k, v| { 'object_file' => k[0], 'source_file' => k[1], 'function_name' => k[2] }.merge(v) }
+    important_functions = most_expensive.to_h.merge(most_called.to_h).collect { |k, v| { 'object_file' => k[0], 'source_file' => k[1], 'function_name' => k[2] }.merge(v) }
 
     props.merge('data' => important_functions)
   end
@@ -499,7 +499,7 @@ class PotentialBuild
 
     results = { 'object_files' => [], 'test_files' => [] }
 
-    Dir[build_dir + '/**/callgrind.*'].each do |file|
+    Dir["#{build_dir}/**/callgrind.*"].each do |file|
       performance_test_name = file.sub(/.*callgrind\./, '')
       call_grind_output = parse_call_grind(build_dir, file)
       object_files = call_grind_output.delete('object_files')
@@ -551,52 +551,50 @@ class PotentialBuild
   def post_results(compiler, pending)
     @dateprefix = DateTime.now.utc.strftime('%F') if @dateprefix.nil?
 
-    unless @test_run
-      if !@package_locations.nil? && @config.post_release_package
-        $logger.info("Attempting to upload #{@package_locations.length} packages")
-        @package_locations.each do |location|
-          $logger.info("Uploading package #{location}")
+    if !@test_run && (!@package_locations.nil? && @config.post_release_package)
+      $logger.info("Attempting to upload #{@package_locations.length} packages")
+      @package_locations.each do |location|
+        $logger.info("Uploading package #{location}")
 
-          num_tries = 3
-          try_num = 0
-          succeeded = false
+        num_tries = 3
+        try_num = 0
+        succeeded = false
 
-          fatal_failure = false
+        fatal_failure = false
 
-          asset_name = Pathname.new(location).basename.to_s
-          while try_num < num_tries && !succeeded && !fatal_failure
-            response = nil
+        asset_name = Pathname.new(location).basename.to_s
+        while try_num < num_tries && !succeeded && !fatal_failure
+          response = nil
 
-            begin
-              response = github_query(@client) { @client.upload_asset(@release_url, location, :content_type => compiler[:package_mimetype], :name => asset_name) }
-            rescue => e
-              if try_num.zero? && e.to_s.include?('already_exists')
-                $logger.error('already_exists error on 0th attempt, fatal, we shall not overwrite existing upload')
-                @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'error', "Error, asset already_exists on 0th try, refusing to upload asset: #{e}")
-                fatal_failure = true
-                try_num += 1
-                next
-              else
-                $logger.error("Error uploading asset, trying again: #{e}")
-                @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error while attempting to upload release asset.\nDuring attempt #{try_num}\n#{e}")
-              end
-            end
-
-            if response && response.state != 'new'
-              $logger.info("Asset upload appears to have succeeded. url: #{response.url}, state: #{response.state}")
-              succeeded = true
+          begin
+            response = github_query(@client) { @client.upload_asset(@release_url, location, :content_type => compiler[:package_mimetype], :name => asset_name) }
+          rescue => e
+            if try_num.zero? && e.to_s.include?('already_exists')
+              $logger.error('already_exists error on 0th attempt, fatal, we shall not overwrite existing upload')
+              @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'error', "Error, asset already_exists on 0th try, refusing to upload asset: #{e}")
+              fatal_failure = true
+              try_num += 1
+              next
             else
-              $logger.error('Asset upload appears to have failed, going to try and delete the failed bits.')
-              try_to_repost_asset(response, asset_name)
+              $logger.error("Error uploading asset, trying again: #{e}")
+              @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'warning', "Error while attempting to upload release asset.\nDuring attempt #{try_num}\n#{e}")
             end
-
-            try_num += 1
           end
 
-          unless succeeded
-            $logger.error("After #{try_num} tries we still failed to upload the release asset.")
-            @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'error', "#{try_num} attempts where made to upload release assets and all failed")
+          if response && response.state != 'new'
+            $logger.info("Asset upload appears to have succeeded. url: #{response.url}, state: #{response.state}")
+            succeeded = true
+          else
+            $logger.error('Asset upload appears to have failed, going to try and delete the failed bits.')
+            try_to_repost_asset(response, asset_name)
           end
+
+          try_num += 1
+        end
+
+        unless succeeded
+          $logger.error("After #{try_num} tries we still failed to upload the release asset.")
+          @package_results << CodeMessage.new('CMakeLists.txt', 1, 0, 'error', "#{try_num} attempts where made to upload release assets and all failed")
         end
       end
     end
@@ -676,7 +674,7 @@ class PotentialBuild
     unless @package_locations.nil?
       package_names_string = ''
       @package_locations.each do |location|
-        package_names_string += '; ' + Pathname.new(location).basename.to_s
+        package_names_string += "; #{Pathname.new(location).basename}"
       end
     end
 
@@ -872,7 +870,7 @@ class PotentialBuild
       end
     end
 
-    github_document = if !@failure.nil?
+    github_document = if @failure.nil?
                         <<-GIT
 <a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>Unhandled Failure</a>
                         GIT
@@ -889,7 +887,11 @@ class PotentialBuild
                         GIT
                       end
 
-    if !@test_run
+    if @test_run
+      File.open("#{@dateprefix}-#{results_file_name compiler}", 'w+') { |f| f.write(json_document) }
+      File.open("#{@dateprefix}-COMMENT-#{results_file_name compiler}", 'w+') { |f| f.write(github_document) }
+
+    else
       begin
         if pending
           $logger.info('Posting pending results file')
@@ -932,16 +934,7 @@ class PotentialBuild
       end
 
       if !@commit_sha.nil? && @config.post_results_status
-        if !@pull_request_base_repository.nil?
-          github_query(@client) do
-            @client.create_status(
-              @pull_request_base_repository,
-              @commit_sha,
-              github_status,
-              :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message
-            )
-          end
-        else
+        if @pull_request_base_repository.nil?
           github_query(@client) do
             @client.create_status(
               @config.repository,
@@ -950,12 +943,17 @@ class PotentialBuild
               :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message
             )
           end
+        else
+          github_query(@client) do
+            @client.create_status(
+              @pull_request_base_repository,
+              @commit_sha,
+              github_status,
+              :context => device_id(compiler), :target_url => "#{@config.results_base_url}/#{build_base_name compiler}.html", :description => github_status_message
+            )
+          end
         end
       end
-
-    else
-      File.open("#{@dateprefix}-#{results_file_name compiler}", 'w+') { |f| f.write(json_document) }
-      File.open("#{@dateprefix}-COMMENT-#{results_file_name compiler}", 'w+') { |f| f.write(github_document) }
     end
   end
 end

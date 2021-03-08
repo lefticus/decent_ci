@@ -257,7 +257,7 @@ module ResultsProcessor
           tokens = line.split(': ')
           if tokens.length >= 3
             filename = tokens[0]
-            section_two_tokens = tokens[1].split(' ')
+            section_two_tokens = tokens[1].split
             message_type = section_two_tokens[0]
             message_code = section_two_tokens[1]
             message = tokens[2..-1].join(': ')

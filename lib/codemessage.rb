@@ -54,17 +54,16 @@ class CodeMessage
     mt = @messagetype <=> other.messagetype
     m = @message[0..10] <=> other.message[0..10]
 
-    ret = if f != 0
-            f
-          elsif l != 0
-            l
-          elsif c != 0
-            c
-          elsif mt != 0
-            mt
-          else
-            m
-          end
-    ret
+    if f != 0
+      f
+    elsif l != 0
+      l
+    elsif c != 0
+      c
+    elsif mt != 0
+      mt
+    else
+      m
+    end
   end
 end

@@ -5,7 +5,8 @@ require_relative 'runners'
 # simple data class for passing args into cmake_build
 class CMakeBuildArgs
   attr_reader :build_type, :this_device_id, :this_running_extra, :is_release
-  def initialize(build_type, device_id, is_release: false)
+
+  def initialize(build_type, device_id, is_release = false)
     @build_type = build_type
     @this_device_id = device_id
     @is_release = is_release
@@ -26,10 +27,18 @@ module CMake
 
     if cmake_build_args.is_release
       extra_flags = compiler[:release_build_cmake_extra_flags]
-      cmake_flags = cmake_flags + ' ' + extra_flags unless extra_flags.nil?
+      cmake_flags = "#{cmake_flags} #{extra_flags}" unless extra_flags.nil?
     end
 
-    if !compiler[:cc_bin].nil?
+    if compiler[:cc_bin].nil?
+      env = {
+        'CXXFLAGS' => "/FC #{compiler_extra_flags}",
+        'CFLAGS' => "/FC #{compiler_extra_flags}",
+        'CCACHE_BASEDIR' => build_dir,
+        'CCACHE_UNIFY' => 'true',
+        'CCACHE_SLOPPINESS' => 'include_file_mtime'
+      }
+    else
       cmake_flags = "-DCMAKE_C_COMPILER:PATH=\"#{compiler[:cc_bin]}\" -DCMAKE_CXX_COMPILER:PATH=\"#{compiler[:cxx_bin]}\" #{cmake_flags}"
       env = {
         'CXXFLAGS' => compiler_extra_flags.to_s,
@@ -40,28 +49,20 @@ module CMake
         'CC' => compiler[:cc_bin],
         'CXX' => compiler[:cxx_bin]
       }
-    else
-      env = {
-        'CXXFLAGS' => "/FC #{compiler_extra_flags}",
-        'CFLAGS' => "/FC #{compiler_extra_flags}",
-        'CCACHE_BASEDIR' => build_dir,
-        'CCACHE_UNIFY' => 'true',
-        'CCACHE_SLOPPINESS' => 'include_file_mtime'
-      }
     end
 
     env['PATH'] = cmake_remove_git_from_path(ENV['PATH'])
 
-    if !regression_baseline.nil?
-      env['REGRESSION_BASELINE'] = File.expand_path(regression_baseline.this_build_dir)
-      env['REGRESSION_DIR'] = File.expand_path(regression_dir)
-      env['REGRESSION_BASELINE_SHA'] = regression_baseline.commit_sha
-      env['COMMIT_SHA'] = @commit_sha && @commit_sha != '' ? @commit_sha : @tag_name
-    else
+    if regression_baseline.nil?
       env['REGRESSION_BASELINE'] = ' '
       env['REGRESSION_DIR'] = ' '
       env['REGRESSION_BASELINE_SHA'] = ' '
       env['COMMIT_SHA'] = ' '
+    else
+      env['REGRESSION_BASELINE'] = File.expand_path(regression_baseline.this_build_dir)
+      env['REGRESSION_DIR'] = File.expand_path(regression_dir)
+      env['REGRESSION_BASELINE_SHA'] = regression_baseline.commit_sha
+      env['COMMIT_SHA'] = @commit_sha && @commit_sha != '' ? @commit_sha : @tag_name
     end
 
     env['GITHUB_TOKEN'] = ENV['GITHUB_TOKEN']
@@ -86,11 +87,11 @@ module CMake
 
     $logger.info('Configure step completed, beginning build step')
 
-    build_switches = if @config.os != 'Windows'
-                       "-j#{compiler[:num_parallel_builds]}"
+    build_switches = if @config.os == 'Windows'
+                       ''
                      else
                        # :nocov: Not covering windows
-                       ''
+                       "-j#{compiler[:num_parallel_builds]}"
                        # :nocov:
                      end
 
