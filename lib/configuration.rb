@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'decent_exceptions'
-require_relative 'processor.rb'
+require_relative 'processor'
 
 # tools for loading and parsing of yaml config files
 # and filling in the details.  A minimal merged config

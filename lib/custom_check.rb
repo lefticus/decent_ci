@@ -3,7 +3,7 @@
 require 'fileutils'
 
 require_relative 'runners'
-require_relative 'testresult.rb'
+require_relative 'testresult'
 
 # contains functions necessary for working with the 'custom_check' scripts
 module CustomCheck

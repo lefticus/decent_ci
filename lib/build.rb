@@ -12,17 +12,16 @@ require 'ostruct'
 require 'yaml'
 require 'base64'
 
-require_relative 'codemessage.rb'
+require_relative 'codemessage'
 require_relative 'decent_exceptions'
-require_relative 'testresult.rb'
-require_relative 'potentialbuild.rb'
-require_relative 'github.rb'
+require_relative 'testresult'
+require_relative 'potentialbuild'
+require_relative 'github'
 
 # Top level class that loads the list of potential builds from github
 class Build
-  attr_reader :client
+  attr_reader :client, :pull_request_details
   attr_accessor :potential_builds
-  attr_reader :pull_request_details
 
   def initialize(token, repository, max_age)
     @client = Octokit::Client.new(:access_token => token)

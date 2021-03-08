@@ -13,16 +13,16 @@ require 'yaml'
 require 'base64'
 require 'socket'
 
-require_relative 'codemessage.rb'
-require_relative 'testresult.rb'
-require_relative 'cmake.rb'
-require_relative 'configuration.rb'
-require_relative 'resultsprocessor.rb'
-require_relative 'cppcheck.rb'
-require_relative 'custom_check.rb'
-require_relative 'github.rb'
-require_relative 'lcov.rb'
-require_relative 'runners.rb'
+require_relative 'codemessage'
+require_relative 'testresult'
+require_relative 'cmake'
+require_relative 'configuration'
+require_relative 'resultsprocessor'
+require_relative 'cppcheck'
+require_relative 'custom_check'
+require_relative 'github'
+require_relative 'lcov'
+require_relative 'runners'
 
 ## Contains the logic flow for executing builds and parsing results
 class PotentialBuild
@@ -34,12 +34,8 @@ class PotentialBuild
   include CustomCheck
   include Runners
 
-  attr_reader :tag_name
-  attr_reader :commit_sha
-  attr_reader :branch_name
-  attr_reader :repository
-  attr_accessor :test_run
-  attr_accessor :failure
+  attr_reader :tag_name, :commit_sha, :branch_name, :repository
+  attr_accessor :test_run, :failure
 
   def initialize(client, token, repository, tag_name, commit_sha, branch_name, author, release_url, release_assets, # rubocop:disable Metrics/ParameterLists
                  pull_id, pr_base_repository, pr_base_ref)
@@ -318,7 +314,7 @@ class PotentialBuild
     File.join(Dir.pwd, 'clone_regressions')
   end
 
-  def do_build(compiler, regression_baseline, is_release = false)
+  def do_build(compiler, regression_baseline, is_release: false)
     src_dir = this_src_dir
     build_dir = this_build_dir
     start_time = Time.now
@@ -475,7 +471,7 @@ class PotentialBuild
           called_source_file = nil
           called_function_name = nil
         end
-      elsif line == "\n"
+        # elsif line == "\n"
       end
     end
 

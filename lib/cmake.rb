@@ -4,11 +4,8 @@ require_relative 'runners'
 
 # simple data class for passing args into cmake_build
 class CMakeBuildArgs
-  attr_reader :build_type
-  attr_reader :this_device_id
-  attr_reader :this_running_extra
-  attr_reader :is_release
-  def initialize(build_type, device_id, is_release = false)
+  attr_reader :build_type, :this_device_id, :this_running_extra, :is_release
+  def initialize(build_type, device_id, is_release: false)
     @build_type = build_type
     @this_device_id = device_id
     @is_release = is_release
