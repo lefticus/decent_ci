@@ -872,10 +872,6 @@ class PotentialBuild
 
     github_document = if @failure.nil?
                         <<-GIT
-<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>Unhandled Failure</a>
-                        GIT
-                      else
-                        <<-GIT
 #{@refspec} (#{@author}) - #{device_id compiler}: #{github_status_message}
 
 #{message_counts_str == '' ? '' : 'Messages:\n'}
@@ -884,6 +880,10 @@ class PotentialBuild
 #{test_failures_counts_str}
 
 #{build_badge} #{test_badge} #{coverage_badge}
+                        GIT
+                      else
+                        <<-GIT
+<a href='#{@config.results_base_url}/#{build_base_name compiler}.html'>Unhandled Failure</a>
                         GIT
                       end
 
