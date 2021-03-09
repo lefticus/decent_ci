@@ -27,7 +27,7 @@ def processor_count
   elsif File.executable?('/sbin/sysctl')
     IO.popen('/sbin/sysctl -n hw.ncpu').read.to_i
   else
-    warn('Unknown platform: ' + RbConfig::CONFIG['target_os'])
+    warn("Unknown platform: #{RbConfig::CONFIG['target_os']}")
     warn('Assuming 1 processor.')
     1
   end

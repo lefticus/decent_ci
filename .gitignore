@@ -13,3 +13,5 @@ coverage
 .yardoc
 sandbox
 .rakeTasks
+.bundle
+vendor

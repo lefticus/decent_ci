@@ -9,12 +9,11 @@ gem 'octokit'
 
 # there are some gems we use for testing the codebase -- not needed for actual use of the library
 group :test do
+  gem 'coveralls_reborn', '~> 0.20.0', require: false
   gem 'rake'
-  gem 'coveralls', require: false
   gem 'rspec'
-  gem 'rubocop'
-  gem 'simplecov', require: false
-  gem 'simplecov-console', require: false
+  gem 'rubocop', '1.11.0'
+  gem 'simplecov-console'
 end
 
 group :docs do

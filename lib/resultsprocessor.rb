@@ -152,7 +152,7 @@ module ResultsProcessor
         stripped = err.strip
         if stripped != ''
           last_item = results.last
-          last_item.message = last_item.message + '; ' + stripped
+          last_item.message = "#{last_item.message}; #{stripped}"
           results[results.length - 1] = last_item
         end
       end
@@ -246,7 +246,7 @@ module ResultsProcessor
     pattern_found = !filename.nil? && !message_type.nil?
     message_is_error = !(%w[info note].include? message_type)
     if pattern_found && message_is_error
-      CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), line_number, 0, message_type, message_code + ' ' + message)
+      CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), line_number, 0, message_type, "#{message_code} #{message}")
     else
       /(?<filename>.+) : (?<message_type>\S+) (?<message_code>\S+): (?<message>.*) \[.*\]?/ =~ line
       pattern_2_found = !filename.nil? && !message_type.nil?
@@ -257,7 +257,7 @@ module ResultsProcessor
           tokens = line.split(': ')
           if tokens.length >= 3
             filename = tokens[0]
-            section_two_tokens = tokens[1].split(' ')
+            section_two_tokens = tokens[1].split
             message_type = section_two_tokens[0]
             message_code = section_two_tokens[1]
             message = tokens[2..-1].join(': ')
@@ -270,7 +270,7 @@ module ResultsProcessor
       end
       return nil unless filename
 
-      CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), 0, 0, message_type, message_code + ' ' + message)
+      CodeMessage.new(relative_path(recover_file_case(filename.strip), src_dir, build_dir), 0, 0, message_type, "#{message_code} #{message}")
     end
   end
 
@@ -310,7 +310,7 @@ module ResultsProcessor
     stderr.encode('UTF-8', :invalid => :replace).split("\n").each do |line|
       unless linker_msg.nil?
         if line.match(/^\s.*/)
-          linker_msg += "\n" + line
+          linker_msg += "\n#{line}"
         else
           results << CodeMessage.new('CMakeLists.txt', 0, 0, 'error', linker_msg)
           linker_msg = nil
@@ -453,7 +453,7 @@ module ResultsProcessor
           full_message += issue['type']
           file_name = issue['locations'][0]['file']
           line_number = issue['locations'][0]['line']
-          full_message += ': ' + issue['message']
+          full_message += ": #{issue['message']}"
           doc_errors = [CodeMessage.new(file_name, line_number, 0, severity, full_message)]
           results << TestResult.new(file_name, status, 0, full_message, doc_errors, 1)
         end

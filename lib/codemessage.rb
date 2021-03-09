@@ -3,12 +3,8 @@
 # warnings and errors from code compilation
 class CodeMessage
   include Comparable
-  attr_reader :filename
-  attr_reader :linenumber
-  attr_reader :colnumber
-  attr_reader :messagetype
-  attr_reader :message
-  attr_writer :message
+  attr_reader :filename, :linenumber, :colnumber, :messagetype
+  attr_accessor :message
 
   def initialize(filename, linenumber, colnumber, messagetype, message)
     @filename = filename
@@ -58,17 +54,16 @@ class CodeMessage
     mt = @messagetype <=> other.messagetype
     m = @message[0..10] <=> other.message[0..10]
 
-    ret = if f != 0
-            f
-          elsif l != 0
-            l
-          elsif c != 0
-            c
-          elsif mt != 0
-            mt
-          else
-            m
-          end
-    ret
+    if f != 0
+      f
+    elsif l != 0
+      l
+    elsif c != 0
+      c
+    elsif mt != 0
+      mt
+    else
+      m
+    end
   end
 end

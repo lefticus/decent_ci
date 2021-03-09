@@ -183,7 +183,7 @@ did_any_builds = false
     test_mode = !(ARGV[0] =~ /false/i)
 
     $logger.info "Querying for updated branches"
-    b.query_releases
+    # b.query_releases  releases are handled with github actions for now
     b.query_branches
     b.query_pull_requests
 

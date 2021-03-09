@@ -104,15 +104,6 @@ describe 'Configuration Testing' do
       expect(symbolized).to include 'alpha beta gamma'.intern
     end
   end
-  context 'when calling find_windows_6_release' do
-    it 'should return a valid number' do
-      expect(find_windows_6_release(0)).to be_nil
-      expect(find_windows_6_release(1)).to eql '7'
-      expect(find_windows_6_release(2)).to eql '8'
-      expect(find_windows_6_release(3)).to eql '8.1'
-      expect(find_windows_6_release(4)).to be_nil
-    end
-  end
   context 'when calling establish_os_characteristics' do
     it 'should return the a few OS parameters' do
       # the responses here will differ based on where we are testing it

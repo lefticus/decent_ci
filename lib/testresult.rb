@@ -14,8 +14,7 @@ require 'base64'
 
 # Parsed test results for reporting back
 class TestResult
-  attr_reader :name
-  attr_reader :failure_type
+  attr_reader :name, :failure_type
 
   def initialize(name, status, time, output, parsed_errors, failure_type)
     @name = name
@@ -52,8 +51,7 @@ end
 
 # Captures a generic test message
 class TestMessage
-  attr_reader :name
-  attr_reader :message
+  attr_reader :name, :message
 
   def initialize(name, message)
     @name = name
