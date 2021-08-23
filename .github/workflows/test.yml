@@ -8,8 +8,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-18.04
-          #- os: ubuntu-20.04
-          #- os: macos-10.15
+          - os: ubuntu-20.04
+          - os: macos-10.15
           # - os: windows-2019
     runs-on: ${{ matrix.os }}
 
@@ -25,7 +25,7 @@ jobs:
           bundle install --jobs 4 --retry 3
       - name: Run Tests
         run: bundle exec rake
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Coveralls
+#        uses: coverallsapp/github-action@v1.1.2
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
