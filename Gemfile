@@ -14,6 +14,7 @@ group :test do
   gem 'rspec'
   gem 'rubocop', '1.11.0'
   gem 'simplecov-console'
+  gem 'simplecov-lcov'
 end
 
 group :docs do
