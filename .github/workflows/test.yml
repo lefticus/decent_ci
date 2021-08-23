@@ -25,3 +25,5 @@ jobs:
           bundle install --jobs 4 --retry 3
       - name: Run Tests
         run: bundle exec rake
+      - name: Submit Coverage
+        run: bundle exec rake coveralls:push
