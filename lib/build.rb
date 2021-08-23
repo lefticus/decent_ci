@@ -67,7 +67,7 @@ class Build
       branch_details = github_query(@client) { @client.branch(@repository, b.name) }
       skip_message_present = false
       begin
-        skip_message_present = branch_details.commit.message['[decent_ci_skip]']
+        skip_message_present = branch_details.commit.commit.message['[decent_ci_skip]']
       rescue
         # Ignored
       end

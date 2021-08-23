@@ -1,0 +1,31 @@
+name: Unit Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-18.04
+          - os: ubuntu-20.04
+          - os: macos-10.15
+          # - os: windows-2019
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby 2.7
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+      - name: Install gems
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+      - name: Run Tests
+        run: bundle exec rake
+#      - name: Coveralls
+#        uses: coverallsapp/github-action@v1.1.2
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
