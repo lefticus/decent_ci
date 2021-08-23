@@ -48,7 +48,9 @@ end
 
 class DummyCommit2
   attr_reader :author
-  def initialize(published_date)
+  attr_reader :message
+  def initialize(published_date, message)
+    @message = message
     @author = DummyUser.new(published_date)
   end
 end
@@ -57,10 +59,8 @@ class DummyCommit1
   attr_reader :commit
   attr_reader :author
   attr_reader :committer
-  attr_reader :message
   def initialize(published_date, use_committer_login, message)
-    @commit = DummyCommit2.new(published_date)
-    @message = message
+    @commit = DummyCommit2.new(published_date, message)
     if use_committer_login
       @author = nil
       @committer = DummyUser.new(published_date)
