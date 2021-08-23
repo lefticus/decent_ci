@@ -6,12 +6,6 @@ matrix:
       rvm: 2.4.1
       cache: bundler
       script: bundle exec rake
-    - os: linux
-      name: Rubocop
-      script: bundle exec rubocop lib
-      language: ruby
-      rvm: 2.4.1
-      cache: bundler
     - os: osx
       name: Mac OSX Unit Tests
       language: ruby
